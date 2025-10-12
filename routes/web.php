@@ -2,13 +2,12 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PropertyController;
 
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/maps', function () {
-    return view('maps');
-});
+
 Route::get('/maps-key', function () {
     return response()->json([
         'key' => env('GOOGLE_MAPS_API_KEY') 
@@ -26,3 +25,11 @@ Route::middleware('auth')->group(function () {
 
 
 require __DIR__.'/auth.php';
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
+    Route::get('/properties/new', [PropertyController::class, 'create'])->name('properties.create');
+    Route::post('/properties/store', [PropertyController::class, 'store'])->name('properties.store');
+});
+
