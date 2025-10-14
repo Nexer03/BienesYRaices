@@ -1,5 +1,7 @@
 ## Instalar el proyecto por primera vez
-
+## Notas
+Si no se muestran las imagenes usa este comando: php artisan storage:link
+Comando para rellenar las amenidades:  php artisan db:seed
 ## Primer paso
 En la linea de comandos ejecutar: git clone -b develop git@github.com:Nexer03/BienesYRaices.git
 ## Segundo paso
