@@ -12,10 +12,23 @@ class PropertyController extends Controller
     /**
      * Muestra una lista de todas las propiedades.
      */
-    public function index()
+   public function index(Request $request)
 {
-    // Añadimos 'amenities' a la lista de relaciones para cargar
-    $properties = Property::with('images', 'amenities')->latest()->get();
+    // Empezamos la consulta
+    $query = Property::query();
+
+    // Si el request trae un filtro de ubicación, lo añadimos
+    if ($request->has('location')) {
+        $query->where('location', 'like', '%' . $request->location . '%');
+    }
+
+    // Si el request trae un filtro de precio máximo
+    if ($request->has('max_price')) {
+        $query->where('price', '<=', $request->max_price);
+    }
+
+    // Al final, ejecutamos la consulta y cargamos las relaciones
+    $properties = $query->with('images', 'amenities')->latest()->get();
 
     return view('properties.index', ['properties' => $properties]);
 }
