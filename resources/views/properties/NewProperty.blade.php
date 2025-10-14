@@ -1,33 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nueva Propiedad</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  #map { height: 400px; width: 100%; margin-bottom: 20px; }
-</style>
+    <meta charset="UTF-8">
+    <title>Crear Nueva Propiedad</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        #map { height: 400px; width: 100%; margin-bottom: 20px; }
+    </style>
 </head>
-<body class="p-6 bg-gray-50">
+<body class="container mt-5">
 
-<h1 class="text-2xl font-bold mb-4">Agregar Nueva Propiedad</h1>
+<h1>Crear Nueva Propiedad</h1>
 
-<form method="POST" action="{{ route('properties.store') }}">
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+
+<form action="{{ route('properties.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Título</label>
-        <input type="text" name="title" class="border p-2 w-full" required>
+
+    <div class="mb-3">
+        <label for="title" class="form-label">Título</label>
+        <input type="text" class="form-control" id="title" name="title" required>
     </div>
 
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Descripción</label>
-        <textarea name="description" class="border p-2 w-full" rows="4"></textarea>
+    <div class="mb-3">
+        <label for="description" class="form-label">Descripción</label>
+        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
     </div>
 
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Tipo</label>
-        <select name="type" class="border p-2 w-full" required>
+    <div class="mb-3">
+        <label for="type" class="form-label">Tipo</label>
+        <select class="form-select" id="type" name="type" required>
             <option value="house">Casa</option>
             <option value="apartment">Departamento</option>
             <option value="land">Terreno</option>
@@ -35,14 +39,14 @@
         </select>
     </div>
 
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Precio</label>
-        <input type="number" name="price" class="border p-2 w-full" required>
+    <div class="mb-3">
+        <label for="price" class="form-label">Precio</label>
+        <input type="number" class="form-control" id="price" name="price" step="0.01" required>
     </div>
 
-    <div class="mb-4">
-        <label class="block font-medium mb-1">Dirección</label>
-        <input id="address-input" type="text" name="location" class="border p-2 w-full" placeholder="Escribe la dirección" required>
+    <div class="mb-3">
+        <label for="address-input" class="form-label">Dirección</label>
+        <input type="text" class="form-control" id="address-input" name="location" placeholder="Escribe la dirección" required>
     </div>
 
     <div id="map"></div>
@@ -50,7 +54,32 @@
     <input type="hidden" name="latitude" id="latitude">
     <input type="hidden" name="longitude" id="longitude">
 
-    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar Propiedad</button>
+    <!-- Subida de imágenes -->
+    <div class="mb-3">
+        <label for="images" class="form-label">Imágenes de la Propiedad</label>
+        <input type="file" name="images[]" class="border p-2 w-full" multiple>
+
+    </div>
+
+    
+    <div class="mb-3">
+        <h3>Amenidades</h3>
+        @foreach($amenityCategories as $category)
+            <h5>{{ $category->name }}</h5>
+            <div class="row mb-2">
+                @foreach($category->amenities as $amenity)
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="amenities[]" value="{{ $amenity->id }}" id="amenity-{{ $amenity->id }}">
+                            <label class="form-check-label" for="amenity-{{ $amenity->id }}">{{ $amenity->name }}</label>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endforeach
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar Propiedad</button>
 </form>
 
 <script>

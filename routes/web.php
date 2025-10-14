@@ -28,8 +28,15 @@ require __DIR__.'/auth.php';
 
 
 Route::middleware('auth')->group(function () {
-    Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
-    Route::get('/properties/new', [PropertyController::class, 'create'])->name('properties.create');
-    Route::post('/properties/store', [PropertyController::class, 'store'])->name('properties.store');
+     Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
+     Route::get('/properties/new', [PropertyController::class, 'create'])->name('properties.create');
+     Route::post('/properties/store', [PropertyController::class, 'store'])->name('properties.store');
+     Route::get('/properties/map', [PropertyController::class, 'map'])->name('properties.map');
 });
+
+Route::middleware('auth')->group(function () {
+    Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
+});
+
+
 
