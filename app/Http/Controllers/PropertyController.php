@@ -5,55 +5,56 @@ namespace App\Http\Controllers;
 use App\Models\Property;
 use App\Models\AmenityCategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Necesario para obtener el usuario logueado
+use Illuminate\Support\Facades\Auth;
 
 class PropertyController extends Controller
 {
-    /**
-     * Muestra una lista de todas las propiedades.
-     */
+    // Mostrar todas las propiedades
     public function index()
-{
-    // Añadimos 'amenities' a la lista de relaciones para cargar
-    $properties = Property::with('images', 'amenities')->latest()->get();
-
-    return view('properties.index', ['properties' => $properties]);
-}
-
-    /**
-     * Muestra el formulario para crear una nueva propiedad.
-     */
-    public function create()
     {
-        // Obtiene las amenidades para mostrarlas en el formulario
-        $amenityCategories = AmenityCategory::with('amenities')->get();
-        return view('properties.create', ['amenityCategories' => $amenityCategories]);
+        $properties = Property::with('images', 'amenities')->get();
+        return view('properties.index', compact('properties'));
     }
 
-    /**
-     * Guarda una nueva propiedad en la base de datos.
-     */
+    // Mostrar formulario para crear propiedad
+    public function create()
+    {
+        // Trae las categorías de amenidades con sus amenidades
+        $amenityCategories = AmenityCategory::with('amenities')->get();
+
+        // Aquí usamos tu vista NewProperty.blade.php
+        return view('properties.NewProperty', compact('amenityCategories'));
+    }
+
+    // Guardar propiedad
     public function store(Request $request)
     {
-        // 1. Validar los datos
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'required|in:house,apartment,land,office',
             'price' => 'required|numeric',
+            'location' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'amenities' => 'array' // Valida que las amenidades sean un array
+            'amenities' => 'array'
         ]);
 
-        // 2. Crear la propiedad
+        // Crear propiedad
         $property = Property::create([
-            'user_id' => Auth::id(), // Asigna la propiedad al usuario logueado
+            'user_id' => Auth::id(),
             'title' => $validatedData['title'],
+            'description' => $validatedData['description'] ?? null,
+            'type' => $validatedData['type'],
             'price' => $validatedData['price'],
-            'location' => 'Ubicación de prueba', // Temporal
-            'type' => 'apartment', // Temporal
-            'status' => 'available' // Temporal
+            'location' => $validatedData['location'],
+            'latitude' => $validatedData['latitude'],
+            'longitude' => $validatedData['longitude'],
+            'status' => 'available'
         ]);
 
-        // 3. Guardar las imágenes
+        // Guardar imágenes
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $imageFile) {
                 $path = $imageFile->store('properties', 'public');
@@ -61,22 +62,23 @@ class PropertyController extends Controller
             }
         }
 
-        // 4. Guardar las amenidades seleccionadas
-        if(isset($validatedData['amenities'])){
+        // Guardar amenidades
+        if (isset($validatedData['amenities'])) {
             $property->amenities()->attach($validatedData['amenities']);
         }
 
-        // 5. Redirigir con mensaje de éxito
         return redirect()->route('properties.create')->with('success', '¡Propiedad guardada con éxito!');
     }
 
-    /**
-     * Muestra el detalle de una propiedad específica.
-     */
+    // Mostrar detalle de propiedad
     public function show(Property $property)
     {
-        // Carga las relaciones para mostrarlas en la vista de detalle
         $property->load('images', 'amenities.category', 'reviews.user', 'user');
-        return view('properties.show', ['property' => $property]);
+        return view('properties.show', compact('property'));
     }
+    public function map()
+{
+    $properties = Property::all(); // O con relaciones si quieres, ej: ->with('images','amenities')
+    return view('properties.properties', compact('properties'));
+}
 }

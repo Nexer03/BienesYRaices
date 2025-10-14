@@ -1,62 +1,48 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PropertyController;
 
-/*
-|--------------------------------------------------------------------------
-| Rutas Públicas (Cualquier visitante puede verlas)
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/', function () {
-    return view('home');
-})->name('home');
-
-// Rutas públicas para las propiedades
-Route::get('/propiedades', [PropertyController::class, 'index'])->name('properties.index');
-
-// Ruta para el mapa y su llave
-Route::get('/maps', function () {
-    return view('maps');
+    return view('welcome');
 });
+
 Route::get('/maps-key', function () {
-    return response()->json(['key' => config('services.google_maps.key')]);
+    return response()->json([
+        'key' => env('GOOGLE_MAPS_API_KEY')
+    ]);
 });
-
-/*
-|--------------------------------------------------------------------------
-| Rutas Protegidas (Requieren que el usuario inicie sesión)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('auth')->group(function () {
-    // La ruta específica 'crear' va aquí.
-    Route::get('/propiedades/crear', [PropertyController::class, 'create'])->name('properties.create');
-    Route::post('/propiedades', [PropertyController::class, 'store'])->name('properties.store');
-
-    // Aquí irían otras rutas que requieran login.
-});
-
-/*
-|--------------------------------------------------------------------------
-| Ruta Pública de Detalle (Va al final de las de propiedades)
-|--------------------------------------------------------------------------
-*/
-
-// ¡CORREGIDO! La ruta de detalle con parámetro ahora está al final.
-Route::get('/propiedades/{property}', [PropertyController::class, 'show'])->name('properties.show');
-
-
-/*
-|--------------------------------------------------------------------------
-| Rutas de Autenticación (Breeze)
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Esta línea carga todas las rutas de login, registro, etc.
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+
 require __DIR__.'/auth.php';
+
+
+Route::middleware('auth')->group(function () {
+     Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
+     Route::get('/properties/new', [PropertyController::class, 'create'])->name('properties.create');
+     Route::post('/properties/store', [PropertyController::class, 'store'])->name('properties.store');
+     Route::get('/properties/map', [PropertyController::class, 'map'])->name('properties.map');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
+});
+
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
+    Route::get('/properties/new', [PropertyController::class, 'create'])->name('properties.create');
+    Route::post('/properties/store', [PropertyController::class, 'store'])->name('properties.store');
+    Route::get('/properties/map', [PropertyController::class, 'map'])->name('properties.map');
+});
