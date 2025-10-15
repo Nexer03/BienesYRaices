@@ -2,7 +2,7 @@
 ## Notas
 Si no se muestran las imagenes usa este comando: php artisan storage:link
 Comando para rellenar las amenidades:  php artisan db:seed
-Añadir en env. esta linea GOOGLE_MAPS_API_KEY=AIzaSyCN1Fn3EDC25pgceJ5svAR_JNIPiLliTZU
+Añadir en env. esta linea: GOOGLE_MAPS_API_KEY=AIzaSyA8dA4hXXBwE_U0-ogf29ABgzuALtN7ORw
 ## Primer paso
 En la linea de comandos ejecutar: git clone -b develop git@github.com:Nexer03/BienesYRaices.git
 ## Segundo paso
