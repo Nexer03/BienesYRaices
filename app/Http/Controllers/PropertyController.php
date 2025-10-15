@@ -29,32 +29,35 @@ class PropertyController extends Controller
     // Guardar propiedad
     public function store(Request $request)
     {
+    // 1. Validar TODOS los nuevos datos
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:house,apartment,land,office',
+            'type' => 'required|string',
             'price' => 'required|numeric',
-            'location' => 'required|string|max:255',
+            'location' => 'required|string',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'amenities' => 'array'
+            'amenities' => 'nullable|array',
+            'listing_type' => 'required|in:sale,rent',
         ]);
 
-        // Crear propiedad
+    // 2. Crear la propiedad con los nuevos campos
         $property = Property::create([
             'user_id' => Auth::id(),
             'title' => $validatedData['title'],
-            'description' => $validatedData['description'] ?? null,
+            'description' => $validatedData['description'],
             'type' => $validatedData['type'],
             'price' => $validatedData['price'],
             'location' => $validatedData['location'],
             'latitude' => $validatedData['latitude'],
             'longitude' => $validatedData['longitude'],
+            'listing_type' => $validatedData['listing_type'], // <-- AÑADIR CAMPO AL CREAR
             'status' => 'available'
         ]);
 
-        // Guardar imágenes
+
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $imageFile) {
                 $path = $imageFile->store('properties', 'public');
@@ -62,14 +65,12 @@ class PropertyController extends Controller
             }
         }
 
-        // Guardar amenidades
         if (isset($validatedData['amenities'])) {
-            $property->amenities()->attach($validatedData['amenities']);
+        $property->amenities()->attach($validatedData['amenities']);
         }
 
         return redirect()->route('properties.create')->with('success', '¡Propiedad guardada con éxito!');
     }
-
     // Mostrar detalle de propiedad
     public function show(Property $property)
     {
