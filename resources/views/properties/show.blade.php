@@ -62,15 +62,22 @@
             @endforelse
             </div>
 
-            <div class="md:col-span-1">
-                <div class="bg-white p-6 rounded-lg shadow-md border sticky top-28">
-                    <p class="text-2xl font-bold">${{ number_format($property->price, 2) }}</p>
-                    <p class="text-gray-500">Precio de renta/venta</p>
-                    <button class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 transition font-semibold">
-                        Contactar al Agente
-                    </button>
-                </div>
+        <div class="md:col-span-1">
+            <div class="bg-white p-6 rounded-lg shadow-md border sticky top-28">
+                <p class="text-2xl font-bold">${{ number_format($property->price, 2) }}</p>
+
+                    {{-- Lógica para mostrar si es Renta o Venta --}}
+                @if($property->listing_type == 'rent')
+                    <p class="text-gray-500">Precio de renta</p>
+                @elseif($property->listing_type == 'sale')
+                    <p class="text-gray-500">Precio de venta</p>
+                @endif
+
+                <button class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 transition font-semibold">
+                    Contactar al Agente
+                </button>
             </div>
+        </div>
         </div>
 
         <div class="mt-8">
