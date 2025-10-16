@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
         AmenitySeeder::class,
+        SaleAmenitySeeder::class, // <-- Add this line
         ]);
     }
 }
