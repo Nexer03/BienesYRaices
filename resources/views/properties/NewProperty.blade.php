@@ -55,7 +55,7 @@
 
     <div class="mb-3">
         <label for="price" class="form-label">Precio</label>
-        <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+        <input type="number" class="form-control" id="price" name="price" step="0.01" required max="99999999.99">
     </div>
 
     <div class="mb-3">
@@ -68,32 +68,39 @@
     <input type="hidden" name="latitude" id="latitude">
     <input type="hidden" name="longitude" id="longitude">
 
-    <!-- Subida de imágenes -->
     <div class="mb-3">
         <label class="form-label">Imágenes de la Propiedad</label>
         <div>
             <label for="images" class="btn btn-secondary">Añadir Imágenes</label>
             <input type="file" id="images" name="images[]" multiple class="d-none">
         </div>
-
-        {{-- Contenedor para la previsualización de imágenes --}}
         <div id="image-preview-container" class="mt-3 row g-3"></div>
     </div>
-
 
     <div class="mb-3">
         <h3>Amenidades</h3>
         @foreach($amenityCategories as $category)
-            <h5>{{ $category->name }}</h5>
-            <div class="row mb-2">
-                @foreach($category->amenities as $amenity)
-                    <div class="col-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="amenities[]" value="{{ $amenity->id }}" id="amenity-{{ $amenity->id }}">
-                            <label class="form-check-label" for="amenity-{{ $amenity->id }}">{{ $amenity->name }}</label>
+            @php
+                $saleCategories = [
+                    'Cocina y Electrodomésticos',
+                    'Exterior y Lote',
+                    'Características Interiores',
+                    'Servicios y Seguridad'
+                ];
+                $type = in_array($category->name, $saleCategories) ? 'sale' : 'rent';
+            @endphp
+            <div class="amenity-category mt-3" data-type="{{ $type }}">
+                <h5>{{ $category->name }}</h5>
+                <div class="row mb-2">
+                    @foreach($category->amenities as $amenity)
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="amenities[]" value="{{ $amenity->id }}" id="amenity-{{ $amenity->id }}">
+                                <label class="form-check-label" for="amenity-{{ $amenity->id }}">{{ $amenity->name }}</label>
+                            </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         @endforeach
     </div>
@@ -101,90 +108,31 @@
     <button type="submit" class="btn btn-primary">Guardar Propiedad</button>
 </form>
 
+{{-- =================== SCRIPT UNIFICADO Y CORREGIDO =================== --}}
 <script>
-fetch('/maps-key')
-  .then(res => res.json())
-  .then(data => {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap&libraries=places`;
-    script.async = true;
-    document.head.appendChild(script);
-  });
-
-  const addressInput = document.getElementById('address-input');
-
-    addressInput.addEventListener('keydown', function(event) {
-    // Verificamos si la tecla presionada es "Enter"
-        if (event.key === 'Enter' || event.keyCode === 13) {
-        // Prevenimos la acción por defecto (enviar el formulario)
-        event.preventDefault();
-        }
-    });
-
-function initMap() {
-    const defaultLocation = { lat: 20.749757, lng: -105.258849 };
-    const map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 14 });
-    const marker = new google.maps.Marker({ map: map, draggable: true, position: defaultLocation });
-
-    const input = document.getElementById("address-input");
-    const autocomplete = new google.maps.places.Autocomplete(input);
-    autocomplete.bindTo("bounds", map);
-
-    autocomplete.addListener("place_changed", function() {
-        const place = autocomplete.getPlace();
-        if (!place.geometry) return;
-        map.setCenter(place.geometry.location);
-        map.setZoom(16);
-        marker.setPosition(place.geometry.location);
-        document.getElementById('latitude').value = place.geometry.location.lat();
-        document.getElementById('longitude').value = place.geometry.location.lng();
-    });
-
-    marker.addListener('dragend', function() {
-        const pos = marker.getPosition();
-        document.getElementById('latitude').value = pos.lat();
-        document.getElementById('longitude').value = pos.lng();
-    });
-}
-</script>
-<script>
-    // Referencias a los elementos del DOM
+    // --- LÓGICA DE PREVISUALIZACIÓN DE IMÁGENES ---
     const imageInput = document.getElementById('images');
     const previewContainer = document.getElementById('image-preview-container');
-    const propertyForm = document.querySelector('form');
-
-    // Usamos un objeto DataTransfer para almacenar los archivos seleccionados
     const fileStore = new DataTransfer();
 
-    // Evento que se dispara cuando el usuario selecciona archivos
     imageInput.addEventListener('change', (e) => {
-        // Añadimos los nuevos archivos seleccionados a nuestro almacén
         for (const file of e.target.files) {
             fileStore.items.add(file);
         }
-
-        // Actualizamos los archivos del input original con nuestra lista curada
         imageInput.files = fileStore.files;
-
-        // Actualizamos la vista previa
         renderPreviews();
     });
 
-    // Función para renderizar las previsualizaciones
     function renderPreviews() {
-        previewContainer.innerHTML = ''; // Limpiamos el contenedor
-
-        // Recorremos los archivos en nuestro almacén
+        previewContainer.innerHTML = '';
         Array.from(fileStore.files).forEach((file, index) => {
             const reader = new FileReader();
-
             reader.onload = () => {
-                // Creamos el HTML para cada imagen
                 const previewWrapper = document.createElement('div');
                 previewWrapper.className = 'col-auto';
                 previewWrapper.innerHTML = `
                     <div class="position-relative">
-                        <img src="${reader.result}" class="img-thumbnail" width="150" height="150" style="object-fit: cover; width: 150px; height: 150px;">
+                        <img src="${reader.result}" class="img-thumbnail" style="object-fit: cover; width: 150px; height: 150px;">
                         <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" onclick="removeImage(${index})">
                             &times;
                         </button>
@@ -192,33 +140,92 @@ function initMap() {
                 `;
                 previewContainer.appendChild(previewWrapper);
             };
-
             reader.readAsDataURL(file);
         });
     }
 
-    // Función para eliminar una imagen
+    // --- FUNCIÓN CORREGIDA ---
     function removeImage(index) {
-        const newFiles = new DataTransfer();
-        const currentFiles = Array.from(fileStore.files);
+        // Creamos un array temporal con los archivos que queremos conservar
+        const keptFiles = Array.from(fileStore.files).filter((_, i) => i !== index);
 
-        // Creamos una nueva lista de archivos sin el que queremos eliminar
-        currentFiles.forEach((file, i) => {
-            if (i !== index) {
-                newFiles.items.add(file);
-            }
+        // Limpiamos el almacén original usando el método correcto
+        fileStore.items.clear();
+
+        // Volvemos a añadir los archivos conservados al almacén
+        keptFiles.forEach(file => {
+            fileStore.items.add(file);
         });
 
-        // Actualizamos nuestro almacén y el input
-        fileStore.clearData();
-        for (const file of newFiles.files) {
-            fileStore.items.add(file);
-        }
+        // Sincronizamos el input del formulario y volvemos a renderizar
         imageInput.files = fileStore.files;
-
-        // Volvemos a renderizar las previsualizaciones
         renderPreviews();
     }
+
+    // --- LÓGICA DE GOOGLE MAPS ---
+    fetch('/maps-key')
+      .then(res => res.json())
+      .then(data => {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap&libraries=places`;
+        script.async = true;
+        document.head.appendChild(script);
+      });
+
+    function initMap() {
+        const defaultLocation = { lat: 20.749757, lng: -105.258849 };
+        const map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 14 });
+        const marker = new google.maps.Marker({ map: map, draggable: true, position: defaultLocation });
+        const geocoder = new google.maps.Geocoder();
+        const addressInput = document.getElementById("address-input");
+        const latInput = document.getElementById('latitude');
+        const lonInput = document.getElementById('longitude');
+        const autocomplete = new google.maps.places.Autocomplete(addressInput);
+        autocomplete.bindTo("bounds", map);
+        autocomplete.addListener("place_changed", function() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
+            map.setCenter(place.geometry.location);
+            map.setZoom(16);
+            marker.setPosition(place.geometry.location);
+            latInput.value = place.geometry.location.lat();
+            lonInput.value = place.geometry.location.lng();
+        });
+        marker.addListener('dragend', function() {
+            const pos = marker.getPosition();
+            latInput.value = pos.lat();
+            lonInput.value = pos.lng();
+            geocoder.geocode({ location: pos })
+                .then((response) => {
+                    addressInput.value = response.results[0] ? response.results[0].formatted_address : "No se pudo encontrar la dirección";
+                })
+                .catch((e) => console.log("Geocoder failed due to: " + e));
+        });
+    }
+
+    // --- LÓGICA DEL FORMULARIO (AMENIDADES Y PREVENCIÓN DE ENTER) ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const listingTypeRadios = document.querySelectorAll('input[name="listing_type"]');
+        const amenityCategories = document.querySelectorAll('.amenity-category');
+
+        function toggleAmenities() {
+            const selectedType = document.querySelector('input[name="listing_type"]:checked').value;
+            amenityCategories.forEach(category => {
+                const categoryType = category.dataset.type;
+                category.style.display = (categoryType === selectedType) ? 'block' : 'none';
+            });
+        }
+        listingTypeRadios.forEach(radio => radio.addEventListener('change', toggleAmenities));
+        toggleAmenities();
+
+        const addressInput = document.getElementById("address-input");
+        addressInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault();
+            }
+        });
+    });
 </script>
+
 </body>
 </html>
