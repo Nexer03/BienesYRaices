@@ -22,14 +22,16 @@ Route::get('/properties/{property}', [PropertyController::class, 'show'])
     ->whereNumber('property') // Restringe a que {property} sea un número
     ->name('properties.show');
 
-// Vista del mapa y su clave (públicas)
-Route::get('/maps', function () {
-    return view('maps');
-})->name('maps');
+
+
 Route::get('/maps-key', function () {
     return response()->json(['key' => config('services.google_maps.key')]);
 })->name('maps.key');
 
+Route::get('/properties-map', function () {
+    $properties = Property::with('images')->get(); // Todas las propiedades para el mapa
+    return view('properties.Properties', ['properties' => $properties]);
+})->name('properties.map');
 
 /*
 |--------------------------------------------------------------------------
