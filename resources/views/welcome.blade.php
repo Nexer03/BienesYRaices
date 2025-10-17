@@ -17,7 +17,7 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
-
+        
     <header class="sticky top-0 bg-white shadow-sm z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
             <div class="text-2xl font-bold text-blue-600 cursor-pointer">
@@ -25,7 +25,7 @@
             </div>
             <nav class="flex items-center space-x-6 text-gray-700 font-medium">
                 <a href="{{ route('properties.index') }}" class="hover:text-blue-600 transition">Propiedades</a>
-                <a href="/maps" class="hover:text-blue-600 transition">Mapa</a>
+                <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
                 <a href="#" class="hover:text-blue-600 transition">Modo vendedor</a>
                 @auth
                     <a href="{{ url('/dashboard') }}" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Panel</a>
