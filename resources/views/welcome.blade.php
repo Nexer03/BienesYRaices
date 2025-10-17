@@ -24,9 +24,8 @@
                 Sin beca<span class="text-gray-700"> no hay renta </span>
             </div>
             <nav class="flex items-center space-x-6 text-gray-700 font-medium">
-                <a href="{{ route('properties.index') }}" class="hover:text-blue-600 transition">Propiedades</a>
                 <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
-                <a href="#" class="hover:text-blue-600 transition">Modo vendedor</a>
+                <a href="{{ route('agent.view') }}" class="hover:text-blue-600 transition">Modo vendedor</a>
                 @auth
                     <a href="{{ url('/dashboard') }}" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Panel</a>
                 @else

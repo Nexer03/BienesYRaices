@@ -64,4 +64,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
+// RUTAS DE LA VISTA DE AGENTE
+Route::get('/agent-view', function () {
+    return view('agent.newAgent');
+})->name('agent.view');
+
+
+
 require __DIR__.'/auth.php';
