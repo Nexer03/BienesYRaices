@@ -54,7 +54,7 @@ class PropertyController extends Controller
             'latitude'     => 'required|numeric',
             'longitude'    => 'required|numeric',
             'listing_type' => 'required|in:sale,rent',
-            'images.*'     => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*'     => 'image|mimes:jpeg,png,jpg,gif|max:65536',
             'amenities'    => 'nullable|array',
         ]);
 
