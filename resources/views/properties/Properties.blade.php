@@ -47,7 +47,7 @@
     <input type="search" placeholder="¿Dónde buscas?" class="border border-gray-300 rounded-full px-4 py-2 w-full md:w-64 focus:ring-2 focus:ring-red-500 focus:outline-none">
     <input type="search" placeholder="Rango de precio" class="border border-gray-300 rounded-full px-4 py-2 w-full md:w-40 focus:ring-2 focus:ring-red-500 focus:outline-none">
     <button class="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition">Buscar</button>
-    <a href="http://127.0.0.1:8000" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition">Volver al inicio</a>
+    <a href="{{ route('home') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition">Volver al inicio</a>
   </div>
 </header>
 
