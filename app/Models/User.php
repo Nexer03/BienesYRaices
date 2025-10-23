@@ -21,6 +21,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Property::class);
     }
+    public function preferences()
+{
+    // Define la relación uno a uno con UserPreference
+    return $this->hasOne(UserPreference::class);
+}
 
     public function favorites()
     {
