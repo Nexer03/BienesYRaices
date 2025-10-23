@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{-- El título de la página será el título de la propiedad --}}
     <title>{{ $property->title }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
     #map {
@@ -27,21 +28,86 @@
             <p class="text-md text-gray-600 mt-1">{{ $property->location }}</p>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-6">
-            @forelse ($property->images as $image)
-            <div class="overflow-hidden rounded-lg">
-                <img src="{{ asset('storage/' . $image->image_path) }}" alt="Imagen de {{ $property->title }}"
-                    class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer">
-            </div>
-            @empty
-            <div class="col-span-full bg-gray-200 h-64 flex items-center justify-center rounded-lg">
-                <p class="text-gray-500">No hay imágenes disponibles.</p>
-            </div>
-            @endforelse
+        <div class="mb-6">
+            @if ($property->images->count() > 0)
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 rounded-lg overflow-hidden" style="max-height: 500px;">
+                    {{-- Imagen Principal (Primera Imagen) --}}
+                    <a href="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                    data-lightbox="property-gallery"
+                    data-title="{{ $property->title }}"
+                    class="col-span-2 row-span-2 relative group"> {{-- Añadimos 'relative group' --}}
+                        <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                            alt="Imagen principal de {{ $property->title }}"
+                            class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition">
+                        <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div> {{-- Overlay al hover --}}
+                    </a>
+
+                    {{-- Imágenes Secundarias (de la 2da a la 4ta) --}}
+                    @foreach ($property->images->slice(1)->take(3) as $image) {{-- Tomamos solo 3 --}}
+            <a href="{{ asset('storage/' . $image->image_path) }}"
+            data-lightbox="property-gallery"
+            data-title="{{ $property->title }}"
+            class="relative group">
+                {{-- LÍNEA CORREGIDA --}}
+                <img src="{{ asset('storage/' . $image->image_path) }}"
+                    alt="Imagen de {{ $property->title }}"
+                    class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition">
+                <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
+            </a>
+        @endforeach
+
+            {{-- QUINTA IMAGEN: Con efecto de más fotos (si existe) --}}
+            @if ($property->images->count() >= 5) {{-- Si hay al menos 5 imágenes --}}
+                @php
+                    $fifthImage = $property->images->slice(4)->first(); // Obtenemos la quinta imagen
+                @endphp
+                <div class="relative group cursor-pointer"
+                     onclick="document.querySelector('[data-lightbox=\'property-gallery\']').click();"> {{-- Hacemos click en la primera para abrir el lightbox --}}
+                    <img src="{{ asset('storage/' . $fifthImage->image_path) }}"
+                         alt="Ver más imágenes de {{ $property->title }}"
+                         class="w-full h-full object-cover filter grayscale hover:filter-none transition-all duration-300">
+
+                    {{-- Overlay oscuro con texto e ícono --}}
+                    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white text-lg font-semibold opacity-100 group-hover:opacity-0 transition-opacity duration-300">
+                        <svg class="h-8 w-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>+ {{ $property->images->count() - 4 }}</span> {{-- Muestra el número de imágenes restantes --}}
+                        <span>fotos</span>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Enlaces ocultos para el resto de las imágenes (para que Lightbox las tenga todas) --}}
+            @if ($property->images->count() > 5)
+                @foreach ($property->images->slice(5) as $image)
+                    <a href="{{ asset('storage/' . $image->image_path) }}"
+                       data-lightbox="property-gallery"
+                       data-title="{{ $property->title }}"
+                       class="hidden"></a>
+                @endforeach
+            @endif
+        </div>
+    @else
+        {{-- Mensaje si no hay imágenes --}}
+        <div class="col-span-full bg-gray-200 h-64 flex items-center justify-center rounded-lg">
+                    <p class="text-gray-500">No hay imágenes disponibles.</p>
+                </div>
+            @endif
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="md:col-span-2">
+                {{-- NUEVA SECCIÓN: Habitaciones y Baños --}}
+        <div class="flex space-x-4 text-gray-700 border-t border-b py-3 mb-4">
+            @if($property->bedrooms)
+                <span>&#128719;️ {{ $property->bedrooms }} Habitaciones</span> {{-- Ícono de cama --}}
+            @endif
+            @if($property->bathrooms)
+                <span>&#128705; {{ $property->bathrooms }} Baños</span> {{-- Ícono de baño --}}
+            @endif
+        </div>
                 <h2 class="text-2xl font-semibold border-b pb-2 mb-4">Descripción</h2>
                 <p class="text-gray-700 leading-relaxed">
                     {{ $property->description ?? 'No hay descripción disponible.' }}
@@ -149,11 +215,11 @@
         const defaultDate = new Date();
         defaultDate.setDate(now.getDate() + 2);
         defaultDate.setHours(10, 0, 0, 0);
-        
+
         const dateTimeInput = document.getElementById('visitDateTime');
         dateTimeInput.min = now.toISOString().slice(0, 16);
         dateTimeInput.value = defaultDate.toISOString().slice(0, 16);
-        
+
         document.getElementById('visitModal').style.display = 'block';
     }
 
@@ -169,7 +235,7 @@
             return;
         }
 
-        
+
         fetch('/visits', {
             method: 'POST',
             headers: {
@@ -197,7 +263,9 @@
         });
     }
     </script>
-    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    {{-- Add Lightbox JS --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
 </body>
 
 </html>

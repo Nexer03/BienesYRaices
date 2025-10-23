@@ -20,6 +20,31 @@
 </head>
 
 <body class="bg-gray-50 text-gray-800">
+    @auth
+        @if (is_null($userPreferences))
+            <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-4" id="preferences-prompt">
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-md text-center">
+                    <h3 class="text-xl font-semibold mb-3">¡Personaliza tu búsqueda!</h3>
+                    <p class="text-gray-600 mb-4">
+                        Aún no has guardado tus preferencias. Añádelas para que podamos mostrarte las propiedades que más te interesan.
+                    </p>
+                    <div class="mb-4 text-left">
+                        <input type="checkbox" id="dont-show-again" class="mr-2">
+                        <label for="dont-show-again" class="text-sm text-gray-600">No volver a mostrar este mensaje</label>
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <a href="{{ route('preferences.edit') }}" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition">
+                            Añadir Preferencias
+                        </a>
+                        {{-- El onclick llama a la función global --}}
+                        <button type="button" onclick="dismissPrompt()" class="bg-gray-300 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-400 transition">
+                            Ahora No
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endauth
 
     <header class="sticky top-0 bg-white shadow-sm z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
@@ -66,6 +91,8 @@
         </div>
     </section>
 
+
+
     <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
 
         <section>
@@ -98,6 +125,38 @@
                 </div>
             </div>
         </section>
+
+        {{-- ========================================================== --}}
+        {{-- == NUEVA SECCIÓN: Recomendaciones Basadas en Preferencias == --}}
+        {{-- ========================================================== --}}
+        @auth {{-- Solo muestra esta sección si el usuario está logueado --}}
+            @if ($recommendedProperties->isNotEmpty()) {{-- Y si hay recomendaciones --}}
+                <section>
+                    <h2 class="text-2xl font-semibold mb-4">Recomendado para Ti</h2>
+                    <div class="relative">
+                        <div class="flex space-x-4 overflow-x-auto scrollbar-hide pb-4">
+                            {{-- Usamos la misma estructura de tarjeta que antes --}}
+                            @foreach ($recommendedProperties as $property)
+                                <a href="{{ route('properties.show', $property) }}" class="block min-w-[250px] bg-white rounded-xl shadow hover:shadow-lg transition">
+                                    @if ($property->images->isNotEmpty())
+                                        <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                            alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
+                                    @else
+                                        <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
+                                            class="w-full h-48 object-cover rounded-t-xl">
+                                    @endif
+                                    <div class="p-3">
+                                        <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                        <p class="text-sm text-gray-500">{{ $property->location ?? 'Ubicación no especificada' }}</p>
+                                        <p class="mt-1 font-semibold">${{ number_format($property->price, 2) }}</p>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
+            @endif
+        @endauth
 
     </main>
 
@@ -140,6 +199,33 @@
             © {{ date('Y') }} Sin Beca No Hay Renta. Todos los derechos reservados.
         </div>
     </footer>
+
+<script>
+    // Obtenemos referencias SOLO si el prompt existe en el HTML
+    const promptElement = document.getElementById('preferences-prompt');
+    const dontShowCheckbox = document.getElementById('dont-show-again');
+
+    // Función global para cerrar el prompt
+    function dismissPrompt() {
+        // Solo intentamos guardar si el checkbox existe y está marcado
+        if (dontShowCheckbox && dontShowCheckbox.checked) {
+            localStorage.setItem('hidePreferencePrompt', 'true');
+        }
+        // Solo intentamos ocultar si el prompt existe
+        if (promptElement) {
+            promptElement.style.display = 'none';
+        }
+    }
+
+    // Al cargar la página, revisamos localStorage SOLO si el prompt existe
+    if (promptElement && localStorage.getItem('hidePreferencePrompt') === 'true') {
+        // Comentado para la prueba, descomenta si quieres ocultar al inicio basado en localStorage
+        promptElement.style.display = 'none';
+        // console.log("LocalStorage flag detected, prompt should be hidden.");
+    } else if (promptElement) {
+        // console.log("LocalStorage flag not found or prompt doesn't exist initially.");
+    }
+</script>
 
 </body>
 

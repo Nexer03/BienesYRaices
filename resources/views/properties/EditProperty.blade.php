@@ -44,6 +44,18 @@
         </select>
     </div>
 
+    {{-- Habitaciones y Baños --}}
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="bedrooms" class="form-label">Habitaciones</label>
+            <input type="number" min="0" class="form-control" id="bedrooms" name="bedrooms" value="{{ old('bedrooms', $property->bedrooms) }}">
+        </div>
+        <div class="col-md-6">
+            <label for="bathrooms" class="form-label">Baños</label>
+            <input type="number" min="0" class="form-control" id="bathrooms" name="bathrooms" value="{{ old('bathrooms', $property->bathrooms) }}">
+        </div>
+    </div>
+
     {{-- Propósito (Renta/Venta) --}}
     <div class="mb-3">
         <label class="form-label">Propósito</label>

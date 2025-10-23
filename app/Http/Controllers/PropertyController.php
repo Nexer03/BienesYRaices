@@ -54,8 +54,11 @@ class PropertyController extends Controller
             'latitude'     => 'required|numeric',
             'longitude'    => 'required|numeric',
             'listing_type' => 'required|in:sale,rent',
+            'bedrooms'     => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
+            'bathrooms'    => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
             'images.*'     => 'image|mimes:jpeg,png,jpg,gif|max:65536',
             'amenities'    => 'nullable|array',
+
         ]);
 
         $property = Property::create([
@@ -68,6 +71,8 @@ class PropertyController extends Controller
             'latitude'     => $validated['latitude'],
             'longitude'    => $validated['longitude'],
             'listing_type' => $validated['listing_type'],
+            'bedrooms'     => $validated['bedrooms'] ?? null, // <-- ADD FIELD
+            'bathrooms'    => $validated['bathrooms'] ?? null, // <-- ADD FIELD
             'status'       => 'available',
         ]);
 
@@ -125,6 +130,8 @@ class PropertyController extends Controller
             'latitude'     => 'required|numeric',
             'longitude'    => 'required|numeric',
             'listing_type' => 'required|in:sale,rent',
+            'bedrooms'     => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
+            'bathrooms'    => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
             'images.*'     => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'amenities'    => 'nullable|array',
         ]);
