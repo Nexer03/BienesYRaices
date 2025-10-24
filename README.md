@@ -7,6 +7,17 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Crear usuario admin
+php artisan tinker
+## todo el comando de abajo junto
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
+$user = User::where('email', 'admin@gmail.com')->first();
+$user->password = Hash::make('admin');
+$user->role = 'admin';
+$user->save();
+
 ## Instalar el proyecto por primera vez
 ## Notas
 Si no se muestran las imagenes usa este comando: php artisan storage:link

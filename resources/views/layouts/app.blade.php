@@ -81,5 +81,6 @@
     </div>
 
     {{-- Tu JavaScript al final --}}
+    @stack('scripts')
 </body>
 </html>
