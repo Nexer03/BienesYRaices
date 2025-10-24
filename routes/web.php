@@ -8,6 +8,9 @@ use App\Models\UserPreference;
 use App\Http\Controllers\AgentApplicationController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\UserPreferenceController;
+use App\Http\Controllers\AdminPropertyController; // Necesitarás crear este controlador
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -166,6 +169,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/visits/{visit}/confirm', [VisitController::class, 'confirm'])->name('visits.confirm');
         Route::put('/visits/{visit}/cancel', [VisitController::class, 'cancel'])->name('visits.cancel');
     });
+});
+
+Route::middleware(['auth', 'verified', 'admin']) // Necesitarás crear el middleware 'admin'
+     ->prefix('admin') // Todas las rutas empezarán con /admin/...
+     ->name('admin.') // Los nombres de ruta empezarán con admin.
+     ->group(function () {
+
+    // Rutas para gestionar TODAS las propiedades
+    Route::get('/properties', [AdminPropertyController::class, 'index'])->name('properties.index');
+    Route::delete('/properties/{property}', [AdminPropertyController::class, 'destroy'])->name('properties.destroy');
+
+    // Rutas para gestionar TODOS los usuarios (Resource Controller)
+    Route::resource('users', AdminUserController::class); // Esto crea index, create, store, show, edit, update, destroy
+
+    // Rutas para reportes
+    Route::get('/reports/sales', [AdminReportController::class, 'salesReport'])->name('reports.sales');
+    // ... (otras rutas de reportes, comisiones, exportar, etc.)
 });
 
 // Formulario para convertirse en agente (acceso público)

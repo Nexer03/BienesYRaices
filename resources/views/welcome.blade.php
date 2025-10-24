@@ -69,9 +69,11 @@
                     class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
                 @else
                 <a href="{{ route('agent.view') }}" class="hover:text-blue-600 transition">Modo vendedor</a>
-                <a href="{{ route('login') }}"
-                    class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Iniciar
-                    sesión</a>
+                {{-- REEMPLAZADO CON EL BOTÓN --}}
+     <button type="button" onclick="openLoginModal()"
+             class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
+         Iniciar sesión
+     </button>
                 @endauth
             </nav>
         </div>
@@ -226,7 +228,93 @@
         // console.log("LocalStorage flag not found or prompt doesn't exist initially.");
     }
 </script>
+        {{-- ===================== LOGIN MODAL ===================== --}}
+        {{-- Hidden by default using Tailwind classes --}}
+        <div id="loginModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 md:p-8 w-full max-w-md relative">
+                {{-- Close Button --}}
+                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
 
+                <div class="mb-6 text-center">
+                    <h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Iniciar Sesión</h3>
+                </div>
+
+                {{-- Login Form (Uses Breeze's route) --}}
+                <form method="POST" action="{{ route('login') }}">
+                    @csrf
+
+                    <div class="mb-4">
+                        <label for="email" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                        <input id="email" class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" />
+                        @error('email')
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
+                        <input id="password" class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm" type="password" name="password" required autocomplete="current-password" />
+                        @error('password')
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="block mb-4">
+                        <label for="remember_me" class="inline-flex items-center">
+                            <input id="remember_me" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-blue-600 shadow-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800" name="remember">
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Recuérdame</span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-end mb-4">
+                        @if (Route::has('password.request'))
+                            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('password.request') }}">
+                                ¿Olvidaste tu contraseña?
+                            </a>
+                        @endif
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-semibold">
+                        Iniciar Sesión
+                    </button>
+
+                    <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                        ¿No tienes cuenta?
+                        <a href="{{ route('register') }}" class="underline hover:text-blue-600 dark:hover:text-blue-400">
+                            Regístrate aquí
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {{-- =================== END LOGIN MODAL =================== --}}
+        {{-- Just before </body> in welcome.blade.php --}}
+        <script>
+            const loginModal = document.getElementById('loginModal');
+
+            function openLoginModal() {
+                if (loginModal) {
+                    loginModal.classList.remove('hidden'); // Muestra el modal
+                }
+            }
+
+            function closeLoginModal() {
+                if (loginModal) {
+                    loginModal.classList.add('hidden'); // Oculta el modal
+                }
+            }
+
+            // Opcional: Cerrar el modal si se hace clic fuera de él
+            window.addEventListener('click', function(event) {
+                if (event.target === loginModal) {
+                    closeLoginModal();
+                }
+            });
+        </script>
 </body>
 
 </html>
