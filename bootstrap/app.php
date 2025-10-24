@@ -10,9 +10,19 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        // --- AÑADE TU ALIAS AQUÍ ---
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\CheckAdminRole::class, // <-- Tu middleware
+            // Aquí puedes añadir otros alias si los necesitas
+        ]);
+
+        // Aquí también puedes configurar grupos, middleware global, etc.
+        // Ejemplo (puede que ya exista algo similar):
+        // $middleware->web(append: [
+        //     \App\Http\Middleware\ExampleMiddleware::class,
+        // ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
+    ->withExceptions(function (Exceptions $exceptions) {
+        // ...
     })->create();
