@@ -1,150 +1,229 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa de Propiedades</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  #map { height: 80vh; width: 100%; border-radius: 1rem; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Propiedades - SIN BECA NO HAY RENTA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Mantenemos #map al 80vh para que ocupe gran parte de la pantalla */
+        #map { height: 80vh; width: 100%; }
 
-  /* Marcadores estilo Airbnb */
-  .price-marker {
-    background-color: white;
-    color: #222;
-    padding: 6px 14px;
-    border-radius: 9999px;
-    font-weight: 600;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    border: 1px solid #ddd;
-    cursor: pointer;
-    transition: transform 0.2s, background-color 0.2s;
-  }
-  .price-marker:hover { transform: scale(1.1); background-color: #f8f8f8; }
+        /* Estilos para el marcador de precio (del old) */
+        .price-marker {
+            background-color: white;
+            color: #222;
+            padding: 6px 14px;
+            border-radius: 9999px; /* Tailwind: rounded-full */
+            font-weight: 600; /* Tailwind: font-semibold */
+            font-size: 14px; /* Tailwind: text-sm */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Tailwind: shadow-lg */
+            border: 1px solid #ddd; /* Tailwind: border border-gray-300 */
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .price-marker:hover { transform: scale(1.1); }
 
-  /* Ocultar POIs (hoteles, restaurantes, gasolineras, etc.) */
-  .gm-style .gm-style-iw,
-  .gm-style img[src*="spotlight-poi"],
-  .gm-style div[style*="background-image"] {
-    display: none !important;
-  }
+        /* Ocultar POIs (del old) */
+        .gm-style .gm-style-iw,
+        .gm-style img[src*="spotlight-poi"],
+        .gm-style div[style*="background-image"] {
+            display: none !important;
+        }
 
-  /* Modal */
-  .modal { display: flex; justify-content:center; align-items:center; position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.5); }
-  .modal.hidden { display: none; }
-  .modal-content { background:white; padding:1rem; border-radius:0.75rem; max-width:400px; width:90%; }
-  .carousel-img { width:100%; height:200px; object-fit:cover; border-radius:0.5rem; }
-</style>
+        /* Estilos del modal (del old, adaptados a Tailwind) */
+        .modal { display: flex; justify-content:center; align-items:center; position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.6); transition: opacity 0.25s ease; }
+        .modal.hidden { opacity: 0; pointer-events: none; }
+        .modal-content { background:white; padding:1.5rem; border-radius:0.75rem; max-width:450px; width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.25s ease; }
+        .modal:not(.hidden) .modal-content { transform: scale(1); } /* Animación al abrir */
+        .carousel-container { display: flex; overflow-x: auto; gap: 0.5rem; scroll-snap-type: x mandatory; }
+        .carousel-img { width:100%; height:200px; object-fit:cover; border-radius:0.5rem; scroll-snap-align: center; flex-shrink: 0; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-<!-- Header estilo Airbnb -->
-<header class="bg-white shadow-md p-6 flex flex-col md:flex-row justify-between items-center gap-4 rounded-b-lg">
-  <h1 class="text-3xl font-bold text-gray-900">Explora propiedades</h1>
-  <div class="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
-    <input type="search" placeholder="¿Dónde buscas?" class="border border-gray-300 rounded-full px-4 py-2 w-full md:w-64 focus:ring-2 focus:ring-red-500 focus:outline-none">
-    <input type="search" placeholder="Rango de precio" class="border border-gray-300 rounded-full px-4 py-2 w-full md:w-40 focus:ring-2 focus:ring-red-500 focus:outline-none">
-    <button class="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition">Buscar</button>
-    <a href="{{ route('home') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition">Volver al inicio</a>
-  </div>
-</header>
+    {{-- Header (del nuevo diseño) --}}
+    <header class="sticky top-0 bg-white shadow-sm z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+            {{-- Logo --}}
+            <div class="text-2xl font-bold text-blue-600 cursor-pointer">
+                <a href="{{ route('home') }}"><i class="fas fa-home mr-2"></i>Sin beca<span class="text-gray-700"> no hay renta </span></a>
+            </div>
 
-<!-- Mapa -->
-<main class="max-w-7xl mx-auto mt-6 rounded-2xl shadow-xl overflow-hidden">
-  <div id="map"></div>
-</main>
+            {{-- Filtros en el Medio (del nuevo diseño) --}}
+            <div class="flex items-center space-x-3 flex-1 max-w-2xl mx-8">
+                <div class="relative flex-1">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text"
+                           placeholder="¿Dónde buscas?"
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <input type="number"
+                       placeholder="Precio máx"
+                       class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
+                    Buscar
+                </button>
+            </div>
 
-<!-- Footer estilo Airbnb -->
-<footer class="bg-white mt-8 p-6 text-center text-gray-600 border-t shadow-inner">
-  <p class="text-sm">Preguntas frecuentes | Soporte | Contacto</p>
-</footer>
+            {{-- Navegación (del nuevo diseño, ajustada) --}}
+            <nav class="flex items-center space-x-6 text-gray-700 font-medium">
+                <a href="{{ route('home') }}" class="hover:text-blue-600 transition">Inicio</a>
+                {{-- Mantenemos el perfil si está autenticado --}}
+                @auth
+                    <a href="{{ url('/dashboard') }}"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
+                @else
+                    <button type="button" onclick="openLoginModal()" {{-- Asume que tienes modal login en welcome --}}
+                        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Iniciar sesión</button>
+                @endauth
+            </nav>
+        </div>
+    </header>
 
-<!-- Modal Carrusel -->
-<div id="modal" class="modal hidden">
-  <div id="modalContent" class="modal-content">
-    <button id="closeModal" class="mb-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">Cerrar</button>
-    <div id="carousel" class="flex overflow-x-scroll gap-2 scrollbar-hide mb-2"></div>
-    <div id="modalInfo" class="text-gray-800"></div>
-  </div>
-</div>
+    {{-- Contenido Principal --}}
+    <main class="flex-grow">
+        {{-- Mapa (ocupa todo el espacio disponible) --}}
+        <section class="w-full h-full"> {{-- Ajustado para ocupar espacio --}}
+            <div id="map"></div>
+        </section>
+    </main>
 
-<script>
-const properties = @json($properties);
-const modal = document.getElementById('modal');
-const carousel = document.getElementById('carousel');
-const modalInfo = document.getElementById('modalInfo');
-const closeModal = document.getElementById('closeModal');
+    {{-- Footer (del nuevo diseño) --}}
+    {{-- Se elimina el footer para dar más espacio al mapa, o puedes mantenerlo si prefieres --}}
+    {{-- <footer class="bg-gray-800 text-white py-8"> ... </footer> --}}
 
-// Cerrar modal
-closeModal.addEventListener('click', () => {
-    modal.classList.add('hidden');
-    carousel.innerHTML = '';
-    modalInfo.innerHTML = '';
-});
+    {{-- Modal Carrusel (del old, con estilos Tailwind mejorados) --}}
+    <div id="modal" class="modal hidden">
+        <div id="modalContent" class="modal-content">
+            {{-- Botón Cerrar (Mejorado) --}}
+            <button id="closeModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
 
-fetch('/maps-key')
-  .then(res => res.json())
-  .then(data => {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap`;
-    script.async = true;
-    document.head.appendChild(script);
-  });
+            {{-- Contenido del Modal --}}
+            <div id="modalInfo" class="text-gray-800 mb-4">
+                {{-- El título y descripción se llenarán con JS --}}
+            </div>
+            {{-- Carrusel --}}
+            <div id="carousel" class="carousel-container scrollbar-hide mb-2">
+                {{-- Las imágenes se llenarán con JS --}}
+            </div>
+        </div>
+    </div>
 
-function initMap() {
-    const defaultLocation = { lat: 20.749757, lng: -105.258849 };
-    const map = new google.maps.Map(document.getElementById("map"), {
-        center: defaultLocation,
-        zoom: 14,
-        styles: [
-          { featureType: "poi.business", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.park", stylers: [{ visibility: "off" }] },
-          { featureType: "poi.school", stylers: [{ visibility: "off" }] },
-          { featureType: "transit", stylers: [{ visibility: "off" }] },
-          { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
-        ]
-    });
+    {{-- Script (Combinado) --}}
+    <script>
+        // Datos de propiedades pasados desde el controlador
+        const properties = @json($properties);
 
-    properties.forEach(prop => {
-        if (prop.latitude && prop.longitude) {
-            const marker = new google.maps.Marker({
-                position: { lat: parseFloat(prop.latitude), lng: parseFloat(prop.longitude) },
-                map: map,
-                label: {
-                    text: `$${prop.price}`,
-                    className: 'price-marker'
-                },
-                title: prop.title
-            });
+        // Elementos del Modal
+        const modal = document.getElementById('modal');
+        const carousel = document.getElementById('carousel');
+        const modalInfo = document.getElementById('modalInfo');
+        const closeModalBtn = document.getElementById('closeModal');
 
-            // Modal al click
-            marker.addListener('click', () => {
-                carousel.innerHTML = '';
-                modalInfo.innerHTML = '';
-                const images = prop.images && prop.images.length ? prop.images : [
-                  '/placeholder1.jpg', '/placeholder2.jpg', '/placeholder3.jpg'
-                ];
-                images.forEach(img => {
-                    const imgEl = document.createElement('img');
-                    imgEl.src = img;
-                    imgEl.className = 'carousel-img';
-                    carousel.appendChild(imgEl);
-                });
-
-                modalInfo.innerHTML = `
-                  <strong class="block text-lg font-semibold">${prop.title}</strong>
-                  <p class="text-sm text-gray-600 mt-2">${prop.description}</p>
-                  <p class="text-sm text-gray-800 mt-3 font-medium">Precio: $${prop.price}</p>
-                `;
-
-                modal.classList.remove('hidden');
+        // Evento para cerrar modal
+        if(closeModalBtn) {
+            closeModalBtn.addEventListener('click', closePropertyModal);
+        }
+        // Cerrar al hacer clic fuera
+        if(modal) {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closePropertyModal();
+                }
             });
         }
-    });
-}
-</script>
+
+        function closePropertyModal() {
+            if(modal) modal.classList.add('hidden');
+            if(carousel) carousel.innerHTML = ''; // Limpiar carrusel
+            if(modalInfo) modalInfo.innerHTML = ''; // Limpiar info
+        }
+
+        // Carga de Google Maps API
+        fetch('/maps-key')
+        .then(res => res.json())
+        .then(data => {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap&libraries=places`; // Añadido places
+            script.async = true;
+            document.head.appendChild(script);
+        });
+
+        // Inicialización del Mapa
+        function initMap() {
+            const defaultLocation = { lat: 20.749757, lng: -105.258849 }; // Ubicación por defecto
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: defaultLocation,
+                zoom: 12, // Zoom un poco más alejado para ver más área
+                styles: [ // Estilos para ocultar POIs (del old)
+                    { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+                    { featureType: "poi.park", stylers: [{ visibility: "off" }] },
+                    { featureType: "poi.school", stylers: [{ visibility: "off" }] },
+                    { featureType: "transit", stylers: [{ visibility: "off" }] },
+                    { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
+                ],
+                mapTypeControl: false, // Oculta controles de tipo de mapa
+                streetViewControl: false // Oculta Street View
+            });
+
+            // Crear Marcadores
+            properties.forEach(prop => {
+                if (prop.latitude && prop.longitude) {
+                    const marker = new google.maps.Marker({
+                        position: { lat: parseFloat(prop.latitude), lng: parseFloat(prop.longitude) },
+                        map: map,
+                        label: { // Marcador de precio (del old)
+                            text: `$${Number(prop.price).toLocaleString('es-MX')}`, // Formato de moneda
+                            className: 'price-marker'
+                        },
+                        icon: ' ', // Icono vacío para que solo se vea el label
+                        title: prop.title
+                    });
+
+                    // Evento Click en Marcador (abre modal, del old)
+                    marker.addListener('click', () => {
+                        carousel.innerHTML = ''; // Limpiar
+                        modalInfo.innerHTML = ''; // Limpiar
+
+                        // Llenar info del modal
+                        modalInfo.innerHTML = `
+                            <h3 class="font-semibold text-lg truncate mb-1">${prop.title}</h3>
+                            <p class="text-sm text-gray-600 truncate mb-2">${prop.location ?? ''}</p>
+                            <p class="text-lg font-bold text-blue-600">$${Number(prop.price).toLocaleString('es-MX')}</p>
+                            <a href="/properties/${prop.id}" class="text-blue-500 hover:underline text-sm mt-2 inline-block">Ver detalles</a>
+                        `;
+
+                        // Llenar carrusel del modal
+                        const images = prop.images && prop.images.length ? prop.images : [];
+                        if (images.length > 0) {
+                            images.forEach(imgData => {
+                                const imgEl = document.createElement('img');
+                                // Construye la URL completa de la imagen usando asset() implícitamente
+                                imgEl.src = `{{ asset('storage') }}/${imgData.image_path}`;
+                                imgEl.alt = prop.title;
+                                imgEl.className = 'carousel-img';
+                                carousel.appendChild(imgEl);
+                            });
+                        } else {
+                            // Mostrar placeholder si no hay imágenes
+                             const imgEl = document.createElement('img');
+                             imgEl.src = 'https://via.placeholder.com/400x200?text=Sin+Imagen';
+                             imgEl.alt = 'Sin imagen';
+                             imgEl.className = 'carousel-img';
+                             carousel.appendChild(imgEl);
+                        }
+
+                        // Mostrar modal
+                        if(modal) modal.classList.remove('hidden');
+                    });
+                }
+            });
+        }
+    </script>
 
 </body>
 </html>

@@ -26,8 +26,9 @@ class PropertyController extends Controller
             $query->where('listing_type', $request->type);
         }
 
-        $properties = $query->with('images', 'amenities')->latest()->get();
+        $properties = $query->with('images', 'amenities')->latest()->paginate(10);
 
+        // Asegúrate de pasar la variable correcta (ya lo haces con compact)
         return view('properties.index', compact('properties'));
     }
 
