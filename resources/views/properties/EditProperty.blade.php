@@ -82,11 +82,13 @@
     <div class="mb-3">
         <label for="address-input" class="form-label">Dirección</label>
         <input type="text" class="form-control" id="address-input" name="location" value="{{ old('location', $property->location) }}" placeholder="Escribe la dirección" required>
+        <label for="city" class="form-label mt-2">Ciudad</label>
+        <input type="text" name="city" id="city" value="{{ old('city') }}" class="form-control" readonly>
     </div>
     <div id="map"></div>
     <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', $property->latitude) }}">
     <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', $property->longitude) }}">
-
+    
     <div class="mb-3">
         <label class="form-label">Imágenes Actuales</label>
         <div id="existing-images-container" class="row g-3">
@@ -201,13 +203,13 @@
       });
 
     function initMap() {
-    // Obtenemos la ubicación actual de la propiedad (esto ya lo tienes)
+    // Obtenemos la ubicación actual de la propiedad 
     const propertyLocation = {
         lat: {{ old('latitude', $property->latitude) }},
         lng: {{ old('longitude', $property->longitude) }}
     };
 
-    // Se crea el mapa centrado en la ubicación (esto ya lo tienes)
+    // Se crea el mapa centrado en la ubicación 
     const map = new google.maps.Map(document.getElementById("map"), { center: propertyLocation, zoom: 16 });
 
     // --- ¡LÍNEA CLAVE! Esta línea crea el marcador rojo en el mapa ---
@@ -226,13 +228,25 @@
     const autocomplete = new google.maps.places.Autocomplete(addressInput);
     autocomplete.bindTo("bounds", map);
 
+    const cityInput = document.getElementById('city');
     autocomplete.addListener("place_changed", function() {
         const place = autocomplete.getPlace();
         if (!place.geometry) return;
         map.setCenter(place.geometry.location);
-        marker.setPosition(place.geometry.location); // Mueve el marcador a la nueva búsqueda
+        marker.setPosition(place.geometry.location); 
         latInput.value = place.geometry.location.lat();
         lonInput.value = place.geometry.location.lng();
+         let city = "";
+            if(place.address_components){
+                for(const comp of place.address_components){
+                    if(comp.types.includes("locality") || comp.types.includes("administrative_area_level_2")){
+                        city = comp.long_name;
+                        break;
+                    }
+                }
+            }
+            cityInput.value = city;
+        
     });
 
     marker.addListener('dragend', function() {
@@ -241,7 +255,23 @@
         lonInput.value = pos.lng();
         geocoder.geocode({ location: pos })
             .then((response) => {
-                addressInput.value = response.results[0] ? response.results[0].formatted_address : "No se pudo encontrar la dirección";
+                if(response.results[0]){
+                    addressInput.value = response.results[0].formatted_address;
+
+                    // --- NUEVO: Rellenar ciudad ---
+                    let city = "";
+                    const components = response.results[0].address_components;
+                    for(const comp of components){
+                        if(comp.types.includes("locality") || comp.types.includes("administrative_area_level_2")){
+                            city = comp.long_name;
+                            break;
+                        }
+                    }
+                    cityInput.value = city;
+                } else {
+                    addressInput.value = "No se pudo encontrar la dirección";
+                    cityInput.value = "";
+                }
             })
             .catch((e) => console.log("Geocoder failed due to: " + e));
     });

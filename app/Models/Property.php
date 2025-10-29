@@ -11,11 +11,10 @@ class Property extends Model
     use HasFactory;
 
     protected $fillable = [
-    'user_id', 'title', 'description', 'location', 'price', 'type',
+    'user_id', 'title', 'description', 'location', 'price', 'type','city',
     'bedrooms', // <-- ADD
     'bathrooms', // <-- ADD
-    'status', 'latitude', 'longitude', 'listing_type'
-];
+    'status', 'latitude', 'longitude', 'listing_type'];
 
     public function user()
     {

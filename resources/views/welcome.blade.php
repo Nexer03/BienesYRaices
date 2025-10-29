@@ -102,10 +102,19 @@
                     </select>
                 </div>
 
-                {{-- Ubicación --}}
-                <div class="w-full md:flex-1">
-                    <input type="text" name="location" placeholder="¿Dónde buscas?" value="{{ request('location') }}"
+                {{-- Ubicación / Ciudad --}}
+                <div class="w-full md:w-40">
+                    <label for="city" class="sr-only">Ciudad</label>
+                    <select name="city" id="city" onchange="this.form.submit()"
                         class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="">Todas las ciudades</option>
+                        @foreach($properties->pluck('city')->unique() as $city)
+                            <option value="{{ $city }}" {{ request('city') === $city ? 'selected' : '' }}>
+                                {{ $city }}
+                            </option>
+                        @endforeach
+                        
+                    </select>
                 </div>
 
                 {{-- Fecha inicio --}}
@@ -172,6 +181,53 @@
                 </button>
             </div>
         </section>
+        <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
+
+        {{-- Carruseles por Ciudad --}}
+        @php
+            $filteredCity = request('city');
+            $propertiesByCity = $filteredCity
+                ? $properties->where('city', $filteredCity)->groupBy('city')
+                : $properties->groupBy('city');
+        @endphp
+
+
+        @foreach($propertiesByCity as $city => $cityProperties)
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Propiedades en {{ $city }}</h2>
+                <div class="relative group">
+                    <button
+                        class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
+                    </button>
+                    <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
+                        @foreach($cityProperties as $property)
+                            <a href="{{ route('properties.show', $property) }}"
+                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
+                                @if($property->images->isNotEmpty())
+                                    <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                        alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
+                                @else
+                                    <img src="https://via.placeholder.com/300x200?text=Sin+Imagen"
+                                        alt="Sin imagen disponible" class="w-full h-48 object-cover rounded-t-xl">
+                                @endif
+                                <div class="p-3">
+                                    <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                    <p class="text-sm text-gray-500 truncate mt-1">{{ $property->location ?? 'Ubicación no especificada' }}</p>
+                                    <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                    <button
+                        class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
+                    </button>
+                </div>
+            </section>
+        @endforeach
+
+
 
         {{-- Sección Recomendaciones (del welcomeold.blade.php) --}}
         @auth

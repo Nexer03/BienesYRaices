@@ -46,10 +46,12 @@ class PropertyController extends Controller
      */
     public function store(Request $request)
     {
+         
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
             'type'         => 'required|string',
+            'city'          =>'required|string|max:50',
             'price'        => 'required|numeric|min:0|max:99999999.99',
             'location'     => 'required|string|max:255',
             'latitude'     => 'required|numeric',
@@ -67,6 +69,7 @@ class PropertyController extends Controller
             'title'        => $validated['title'],
             'description'  => $validated['description'] ?? null,
             'type'         => $validated['type'],
+            'city'         => $validated['city'],
             'price'        => $validated['price'],
             'location'     => $validated['location'],
             'latitude'     => $validated['latitude'],
@@ -126,6 +129,7 @@ class PropertyController extends Controller
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
             'type'         => 'required|string',
+            'city'         => 'required|string|max:50',
             'price'        => 'required|numeric|min:0|max:99999999.99',
             'location'     => 'required|string|max:255',
             'latitude'     => 'required|numeric',

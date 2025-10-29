@@ -105,3 +105,5 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 
 & "D:\mysql\mysql-8.0.43-winx64\bin\mysql.exe" -h 127.0.0.1 -P 3306 -u root -p laravel
+
+dd($request->all());
