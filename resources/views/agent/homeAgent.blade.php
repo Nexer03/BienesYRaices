@@ -17,7 +17,7 @@
             </div>
             <nav class="flex items-center space-x-6 text-gray-700 font-medium">
                 <!-- SOLO DEJAMOS ESTOS DOS ENLACES -->
-                <a href="{{ route('home') }}" class="hover:text-blue-600 transition">Modo Comprador</a>
+                <a href="{{ route('home') }}" class="hover:text-blue-600 transition">Modo Visitante</a>
                 <a href="{{ url('/dashboard') }}"
                     class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
             </nav>

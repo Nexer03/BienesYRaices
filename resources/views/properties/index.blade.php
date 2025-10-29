@@ -26,7 +26,7 @@
                 <nav class="flex items-center space-x-6 text-gray-700 font-medium">
                     {{-- Ajusta estos enlaces según tus rutas --}}
                     <a href="{{ route('agent.home') ?? '#' }}" class="hover:text-blue-600 transition">Panel de Agente</a>
-                    <a href="{{ route('home') }}" class="hover:text-blue-600 transition">Modo Comprador</a>
+                    <a href="{{ route('home') }}" class="hover:text-blue-600 transition">Modo Visitante</a>
                     <a href="{{ url('/dashboard') }}"
                         class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
                 </nav>
@@ -205,7 +205,7 @@
                         <li><a href="{{ route('visits.my') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Mis Visitas</a></li>
                         <li><a href="{{ route('properties.map') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Mapa</a></li>
                         <li><a href="{{ route('agent.home') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Panel de Agente</a></li>
-                        <li><a href="{{ route('agent.view') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Modo Vendedor</a></li>
+                        <li><a href="{{ route('agent.view') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Modo Visitante</a></li>
                     </ul>
                 </div>
                 <div>

@@ -66,9 +66,10 @@
     </div>
 
     <div class="mb-3">
-        <label for="price" class="form-label">Precio</label>
+        <label for="price" class="form-label" id="price-label">Precio por día (MXN)</label>
         <input type="number" class="form-control" id="price" name="price" step="0.01" required max="99999999.99">
     </div>
+
 
     <div class="mb-3">
         <label for="address-input" class="form-label">Dirección</label>
@@ -215,28 +216,41 @@
         });
     }
 
-    // --- LÓGICA DEL FORMULARIO (AMENIDADES Y PREVENCIÓN DE ENTER) ---
     document.addEventListener('DOMContentLoaded', function() {
-        const listingTypeRadios = document.querySelectorAll('input[name="listing_type"]');
-        const amenityCategories = document.querySelectorAll('.amenity-category');
+    const listingTypeRadios = document.querySelectorAll('input[name="listing_type"]');
+    const amenityCategories = document.querySelectorAll('.amenity-category');
+    const priceLabel = document.getElementById('price-label'); // <- agregamos aquí
 
-        function toggleAmenities() {
-            const selectedType = document.querySelector('input[name="listing_type"]:checked').value;
-            amenityCategories.forEach(category => {
-                const categoryType = category.dataset.type;
-                category.style.display = (categoryType === selectedType) ? 'block' : 'none';
-            });
-        }
-        listingTypeRadios.forEach(radio => radio.addEventListener('change', toggleAmenities));
-        toggleAmenities();
-
-        const addressInput = document.getElementById("address-input");
-        addressInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' || event.keyCode === 13) {
-                event.preventDefault();
-            }
+    // --- Toggle amenidades según tipo ---
+    function toggleAmenities() {
+        const selectedType = document.querySelector('input[name="listing_type"]:checked').value;
+        amenityCategories.forEach(category => {
+            const categoryType = category.dataset.type;
+            category.style.display = (categoryType === selectedType) ? 'block' : 'none';
         });
+    }
+    listingTypeRadios.forEach(radio => radio.addEventListener('change', toggleAmenities));
+    toggleAmenities();
+
+    // --- Prevenir enter en el input de dirección ---
+    const addressInput = document.getElementById("address-input");
+    addressInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            event.preventDefault();
+        }
     });
+
+    // --- Cambiar label del precio ---
+    function updatePriceLabel() {
+        const selectedType = document.querySelector('input[name="listing_type"]:checked').value;
+        priceLabel.textContent = (selectedType === 'rent') 
+            ? 'Precio por día (MXN)' 
+            : 'Precio de venta (MXN)';
+    }
+    listingTypeRadios.forEach(radio => radio.addEventListener('change', updatePriceLabel));
+    updatePriceLabel(); // inicializa correctamente al cargar la página
+});
+
 </script>
 
 </body>

@@ -5,12 +5,16 @@ use App\Http\Controllers\PropertyController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Property;
 use App\Models\UserPreference;
+use App\Models\PropertyReservation;
 use App\Http\Controllers\AgentApplicationController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\AdminPropertyController; // Necesitarás crear este controlador
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminReportController;
+use App\Http\Controllers\PropertyReservationController;
+use App\Http\Controllers\PayPalController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -20,18 +24,23 @@ use App\Http\Controllers\AdminReportController;
 
 // Página principal
 Route::get('/', function () {
-    // --- 1. Obtener Propiedades Recientes ---
-    $properties = Property::with('images')->latest()->take(6)->get();
+    $typeFilter = request('type', 'rent'); // Default: rent
 
-    // --- 2. Obtener Propiedades Recomendadas (si el usuario está logueado y tiene preferencias) ---
-    $recommendedProperties = collect(); // Colección vacía por defecto
     $userPreferences = null;
+    $recommendedProperties = collect(); // Colección vacía por defecto
 
+    // --- 1. Propiedades recientes ---
+    $propertiesQuery = Property::with('images')->latest();
+    if ($typeFilter && in_array($typeFilter, ['sale', 'rent'])) {
+        $propertiesQuery->where('listing_type', $typeFilter);
+    }
+    $properties = $propertiesQuery->take(6)->get();
+
+    // --- 2. Propiedades recomendadas (si el usuario está logueado y tiene preferencias) ---
     if (Auth::check()) {
-        $userPreferences = Auth::user()->preferences; // Carga las preferencias (o null si no existen)
+        $userPreferences = Auth::user()->preferences;
 
         if ($userPreferences) {
-            // Inicia la consulta para recomendaciones (solo disponibles)
             $query = Property::with('images')->where('status', 'available');
 
             // Aplicar filtro de radio (si existe)
@@ -40,7 +49,6 @@ Route::get('/', function () {
                 $lng = $userPreferences->pref_longitude;
                 $radius = $userPreferences->pref_radius / 1000; // Convertir a KM
 
-                // Añade la fórmula Haversine y filtra por distancia
                 $query->selectRaw("*, ( 6371 * acos( cos( radians(?) ) *
                                    cos( radians( latitude ) )
                                    * cos( radians( longitude ) - radians(?)
@@ -50,12 +58,12 @@ Route::get('/', function () {
                       ->having("distance", "<", $radius)
                       ->orderBy("distance", 'asc');
             }
-            // Si no hay radio, aplicar filtro de ubicación textual (si existe)
+            // Filtro de ubicación textual
             elseif ($userPreferences->preferred_location) {
-                 $query->where('location', 'like', '%' . $userPreferences->preferred_location . '%');
+                $query->where('location', 'like', '%' . $userPreferences->preferred_location . '%');
             }
 
-            // Aplicar otros filtros de preferencias
+            // Otros filtros de preferencias
             if ($userPreferences->min_price) {
                 $query->where('price', '>=', $userPreferences->min_price);
             }
@@ -72,35 +80,41 @@ Route::get('/', function () {
                 $query->where('bathrooms', '>=', $userPreferences->min_bathrooms);
             }
 
-            // Aplicar filtro de amenidades (si existen)
+            // Filtro de amenidades
             if ($userPreferences->preferred_amenities) {
                 $amenityIds = explode(',', $userPreferences->preferred_amenities);
                 foreach ($amenityIds as $amenityId) {
                     if(trim($amenityId)){
-                         $query->whereHas('amenities', function ($q) use ($amenityId) {
+                        $query->whereHas('amenities', function ($q) use ($amenityId) {
                             $q->where('amenities.id', trim($amenityId));
-                         });
+                        });
                     }
                 }
             }
 
-            // Si no se ordenó por distancia, ordenar por más reciente
-            if (!($userPreferences->pref_latitude && $userPreferences->pref_longitude && $userPreferences->pref_radius)) {
-                 $query->latest();
+            // Filtro de tipo
+            if ($typeFilter && in_array($typeFilter, ['sale', 'rent'])) {
+                $query->where('listing_type', $typeFilter);
             }
 
-            // Obtener hasta 6 propiedades recomendadas
+            // Ordenar por fecha si no se ordenó por distancia
+            if (!($userPreferences->pref_latitude && $userPreferences->pref_longitude && $userPreferences->pref_radius)) {
+                $query->latest();
+            }
+
             $recommendedProperties = $query->take(6)->get();
         }
     }
-    //dd($recommendedProperties); // Detiene y muestra qué propiedades encontró la consulta
-    // --- 3. Pasar Datos a la Vista ---
+
+    // --- 3. Pasar datos a la vista ---
     return view('welcome', [
-        'properties' => $properties, // Propiedades recientes
-        'recommendedProperties' => $recommendedProperties, // Propiedades recomendadas
-        'userPreferences' => $userPreferences // Preferencias (para el prompt)
+        'properties' => $properties,
+        'recommendedProperties' => $recommendedProperties,
+        'userPreferences' => $userPreferences,
+        'typeFilter' => $typeFilter, // Para mostrar el valor seleccionado en el dropdown
     ]);
 })->name('home');
+
 
 // Detalle de una propiedad específica (pública para compartir enlaces)
 Route::get('/properties/{property}', [PropertyController::class, 'show'])
@@ -201,5 +215,10 @@ Route::get('/agent-register', function () {
 Route::post('/agent-register', [AgentApplicationController::class, 'store'])
     ->middleware('auth')
     ->name('agent.register.store');
+
+// routes/web.php
+Route::post('/reservations', [App\Http\Controllers\PropertyReservationController::class, 'store']);;
+
+
 
 require __DIR__.'/auth.php';

@@ -73,9 +73,10 @@
 
     {{-- Precio --}}
     <div class="mb-3">
-        <label for="price" class="form-label">Precio</label>
+    <label for="price" class="form-label" id="price-label">Precio</label>
         <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $property->price) }}" step="0.01" required max="99999999.99">
     </div>
+
 
     {{-- Ubicación y Mapa --}}
     <div class="mb-3">
@@ -311,6 +312,18 @@
                 }
             });
         }
+            const priceLabel = document.getElementById('price-label');
+
+    function updatePriceLabel() {
+        const selectedType = document.querySelector('input[name="listing_type"]:checked').value;
+        priceLabel.textContent = (selectedType === 'rent') 
+            ? 'Precio por día (MXN)' 
+            : 'Precio de venta (MXN)';
+    }
+
+    listingTypeRadios.forEach(radio => radio.addEventListener('change', updatePriceLabel));
+    updatePriceLabel(); // inicializar al cargar la página
+
     });
 </script>
 

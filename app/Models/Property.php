@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\PropertyReservation;
 
 class Property extends Model
 {
@@ -40,4 +41,11 @@ class Property extends Model
     {
         return $this->belongsToMany(User::class, 'favorites');
     }
+  
+    
+    public function reservations()
+    {
+        return $this->hasMany(PropertyReservation::class);
+    }
+
 }
