@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Visit;
 use App\Models\Property;
+use App\Models\PropertyReservation;
+
 
 class VisitController extends Controller
 {
@@ -86,19 +88,30 @@ class VisitController extends Controller
         ]);
     }
 
-        // Cliente ve sus visitas
-        public function myVisits()
+     public function myVisits(Request $request)
         {
             $query = Visit::with(['property', 'agent'])
                 ->where('client_id', auth()->id());
 
-            // Filtrar por estado si se especifica
-            if (request('status')) {
-                $query->where('status', request('status'));
+            if ($request->status) {
+                $query->where('status', $request->status);
             }
 
             $visits = $query->orderBy('visit_date', 'desc')->get();
 
-            return view('visits.myVisits', compact('visits'));
-    }
+            $reservations = \App\Models\PropertyReservation::with('property')
+                ->where('user_id', auth()->id())
+                ->orderBy('start_date', 'desc')
+                ->get()
+                ->map(function($res) {
+                    $res->nights = \Carbon\Carbon::parse($res->start_date)
+                        ->diffInDays(\Carbon\Carbon::parse($res->end_date));
+                    return $res;
+                });
+
+            return view('visits.myVisits', compact('visits', 'reservations'))
+                ->with('activeTab', 'visits');
+        }
+
+
 }

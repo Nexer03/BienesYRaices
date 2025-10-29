@@ -65,7 +65,7 @@
                 Sin beca<span class="text-gray-700"> no hay renta </span>
             </div>
             <nav class="flex items-center space-x-6 text-gray-700 font-medium">
-                <a href="{{ route('visits.my') }}" class="hover:text-blue-600 transition">Mis Visitas</a>
+                <a href="{{ route('visits.my') }}" class="hover:text-blue-600 transition">Mi agenda</a>
                 <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
                 @auth
                 @if(auth()->user()->role === 'agent')

@@ -3,47 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Visitas</title>
+    <title>Mis Visitas y Reservas</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
 </head>
 <body class="bg-gray-50">
-    
-    <main class="max-w-4xl mx-auto mt-10 px-6">
-        <h1 class="text-3xl font-bold mb-6">Todas Mis Visitas</h1>
-        
-        {{-- Filtros por estado --}}
+
+<main class="max-w-4xl mx-auto mt-10 px-6" x-data="{ tab: '{{ $activeTab }}' }">
+
+    <h1 class="text-3xl font-bold mb-6">Mis Visitas y Reservas</h1>
+
+    <!-- Tabs -->
+    <div class="flex mb-6 space-x-4">
+        <button @click="tab = 'visits'" 
+                :class="tab === 'visits' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
+                class="px-4 py-2 rounded-lg transition-all duration-500 ease-in-out">
+            Mis Visitas
+        </button>
+
+        <button @click="tab = 'reservations'" 
+                :class="tab === 'reservations' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
+                class="px-4 py-2 rounded-lg transition-all duration-500 ease-in-out">
+            Mis Reservas
+        </button>
+    </div>
+
+    <!-- VISITAS -->
+    <div x-show="tab === 'visits'" x-transition.duration.500ms x-cloak>
+        <!-- Filtros -->
         <div class="mb-6 flex space-x-4">
-            <a href="{{ request()->fullUrlWithQuery(['status' => '']) }}" 
-               class="px-4 py-2 rounded-lg {{ !request('status') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                Todas
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}" 
-               class="px-4 py-2 rounded-lg {{ request('status') == 'pending' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                Pendientes
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'confirmed']) }}" 
-               class="px-4 py-2 rounded-lg {{ request('status') == 'confirmed' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                Confirmadas
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'completed']) }}" 
-               class="px-4 py-2 rounded-lg {{ request('status') == 'completed' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                Completadas
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['status' => 'cancelled']) }}" 
-               class="px-4 py-2 rounded-lg {{ request('status') == 'cancelled' ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                Canceladas
-            </a>
+            @php
+                $statuses = [
+                    '' => 'Todas', 
+                    'pending' => 'Pendientes', 
+                    'confirmed' => 'Confirmadas', 
+                    'completed' => 'Completadas', 
+                    'cancelled' => 'Canceladas'
+                ];
+            @endphp
+            @foreach($statuses as $key => $label)
+                <a href="{{ request()->fullUrlWithQuery(['status' => $key]) }}"
+                   class="px-4 py-2 rounded-lg transition-all duration-500 ease-in-out
+                   {{ request('status') === $key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                   {{ $label }}
+                </a>
+            @endforeach
         </div>
-        
+
+        <!-- Listado de visitas -->
         @if($visits->count() > 0)
             <div class="space-y-4">
                 @foreach($visits as $visit)
-                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 transition-all duration-500
                     @if($visit->status == 'pending') border-yellow-500
                     @elseif($visit->status == 'confirmed') border-green-500
                     @elseif($visit->status == 'completed') border-blue-500
                     @elseif($visit->status == 'cancelled') border-red-500
-                    @endif">
+                    @endif" x-transition.duration.500ms>
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
                             <div class="flex justify-between items-start mb-2">
@@ -95,6 +111,34 @@
                 <a href="/" class="text-blue-500 hover:text-blue-600 mt-4 inline-block">Explorar propiedades</a>
             </div>
         @endif
-    </main>
+    </div>
+
+    <!-- RESERVAS -->
+    <div x-show="tab === 'reservations'" x-transition.duration.500ms x-cloak>
+        @if($reservations->count() > 0)
+            <div class="space-y-4">
+                @foreach($reservations as $res)
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500 transition-all duration-500">
+                    <h3 class="text-xl font-semibold text-blue-700">{{ $res->property->title }}</h3>
+                    <p class="text-gray-600 mb-2">{{ $res->property->location }}</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-700">
+                        <div><strong>Entrada:</strong> {{ \Carbon\Carbon::parse($res->start_date)->format('d/m/Y') }}</div>
+                        <div><strong>Salida:</strong> {{ \Carbon\Carbon::parse($res->end_date)->format('d/m/Y') }}</div>
+                        <div><strong>Noches:</strong> {{ $res->nights }}</div>
+                        <div><strong>Total:</strong> ${{ number_format($res->total_price, 2) }} MXN</div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        @else
+            <div class="bg-white p-8 rounded-lg shadow-md text-center">
+                <p class="text-gray-500 text-lg">No tienes reservas.</p>
+                <a href="/" class="text-blue-500 hover:text-blue-600 mt-4 inline-block">Explorar propiedades</a>
+            </div>
+        @endif
+    </div>
+
+</main>
+
 </body>
 </html>
