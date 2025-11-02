@@ -13,10 +13,13 @@ php artisan tinker
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-$user = User::where('email', 'admin@gmail.com')->first();
-$user->password = Hash::make('admin');
-$user->role = 'admin';
-$user->save();
+User::create([
+    'name' => 'admin',
+    'email' => 'admin@gmail.com',
+    'password' => Hash::make('admin'),
+    'role' => 'admin',
+]);
+
 
 ## Instalar el proyecto por primera vez
 ## Notas

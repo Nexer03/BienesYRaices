@@ -46,16 +46,16 @@
                     </a>
 
                     {{-- Tarjeta: Comisiones (Ejemplo HU-09) --}}
-                    {{-- <a href="#" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition">
+                    <a href="#" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition">
                         <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Control de Comisiones</h4>
                         <p class="text-gray-600 dark:text-gray-400">Calcular y revisar las comisiones de los agentes.</p>
-                    </a> --}}
+                    </a>
 
                      {{-- Tarjeta: Exportar (Ejemplo HU-15) --}}
-                    {{-- <a href="#" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition">
+                    <a href="#" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition">
                         <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Exportar Reportes</h4>
                         <p class="text-gray-600 dark:text-gray-400">Descargar datos de propiedades en Excel.</p>
-                    </a> --}}
+                    </a>
 
                 </div>
             </div>

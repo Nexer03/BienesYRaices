@@ -19,6 +19,11 @@ public function index(Request $request)
     $userPreferences = null;
     $recommendedProperties = collect();
 
+    $rentMinRange = 0;
+    $rentMaxRange = 10000; // Rango para Renta (0 - 10k)
+    $saleMinRange = 500000; // Rango para Venta (500k - 10M)
+    $saleMaxRange = 10000000;
+
     // --- 1. Filtros de búsqueda ---
     $query = Property::with('images')->whereNotNull('city');
 
@@ -120,13 +125,17 @@ public function index(Request $request)
         'typeFilter' => $typeFilter,
         'propertiesByCity' => $propertiesByCity,
         'cities' => $cities,
+        'rentMinRange' => $rentMinRange,   // <-- AÑADIDO
+        'rentMaxRange' => $rentMaxRange, // <-- AÑADIDO
+        'saleMinRange' => $saleMinRange,   // <-- AÑADIDO
+        'saleMaxRange' => $saleMaxRange, // <-- AÑADIDO
     ]);
 }
 
 
     public function myProperties(Request $request)
     {
-       
+
         $query = Property::where('user_id', Auth::id())->with(['images', 'amenities']);
 
         if ($request->has('type') && in_array($request->type, ['rent', 'sale'])) {
@@ -153,7 +162,7 @@ public function index(Request $request)
      */
     public function store(Request $request)
     {
-         
+
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
@@ -312,5 +321,5 @@ public function index(Request $request)
         $properties = Property::with('images', 'amenities')->get();
         return view('properties.properties', compact('properties'));
     }
-    
+
 }

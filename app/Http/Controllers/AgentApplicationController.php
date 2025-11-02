@@ -19,7 +19,7 @@ class AgentApplicationController extends Controller
             'curp' => 'required|regex:/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}$/',
         ]);
 
-      
+
         $validated['rfc'] = strtoupper($validated['rfc']);
         $validated['curp'] = strtoupper($validated['curp']);
 
