@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // --- AÑADE TU ALIAS AQUÍ ---
         $middleware->alias([
             'admin' => \App\Http\Middleware\CheckAdminRole::class, // <-- Tu middleware
-            // Aquí puedes añadir otros alias si los necesitas
+            'agent' => \App\Http\Middleware\CheckAgentRole::class,
         ]);
 
         // Aquí también puedes configurar grupos, middleware global, etc.

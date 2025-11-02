@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- Añadido Font Awesome para los iconos del nuevo diseño --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
     <style>
     /* Pequeño helper para ocultar la barra de scroll en el carrusel */
     .scrollbar-hide::-webkit-scrollbar {
@@ -89,11 +90,11 @@
 
         <section class="bg-white shadow-sm w-full py-6">
         <div class="max-w-6xl mx-auto px-6">
-            <form method="GET" action="{{ route('home') }}" class="flex flex-col md:flex-row items-center gap-4">
+            <form id="property-filter-form" method="GET" action="{{ route('home') }}" class="flex flex-col md:flex-row items-center gap-4">
 
                 {{-- Tipo de propiedad --}}
                 <div class="w-full md:w-auto">
-                    <select name="type" id="type" onchange="this.form.submit()"
+                    <select name="type" id="type_filter_select"
                         class="w-full md:w-40 border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
                         <option value="rent" {{ request('type') === 'rent' ? 'selected' : '' }}>Renta</option>
                         <option value="sale" {{ request('type') === 'sale' ? 'selected' : '' }}>Venta</option>
@@ -113,17 +114,47 @@
                     </select>
                 </div>
 
-                {{-- Precio mínimo --}}
-                <div class="w-full md:w-40">
-                    <input type="number"  min="0"  name="min_price"  value="{{ request('min_price') }}" placeholder="Precio mínimo"
-                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-                </div>
+                {{-- ###################################################### --}}
+            {{-- ##      INICIO DEL FILTRO DE PRECIO DESPLEGABLE     ## --}}
+            {{-- ###################################################### --}}
+            <div class="relative w-full md:w-64">
+                {{-- Botón que muestra el rango y abre el dropdown --}}
+                <button type="button" id="price-filter-button"
+                    class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                    <span>Precio</span>
+                </button>
 
-                {{-- Precio máximo --}}
-                <div class="w-full md:w-40">
-                    <input type="number"  min="0" name="max_price" value="{{ request('max_price') }}" placeholder="Precio máximo" 
-                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                {{-- El panel desplegable (oculto por defecto) --}}
+                <div id="price-dropdown" class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
+                    <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
+
+                    {{-- El slider va aquí --}}
+                    <div id="price-slider" class="mb-4"></div>
+
+                    {{-- Muestra de valores --}}
+                    <div class="flex justify-between items-center text-sm text-gray-700">
+                        <div class="flex items-center gap-1 border rounded-md p-2">
+                            $ <span id="slider-min-value"></span>
+                        </div>
+                        <div class="text-gray-400">-</div>
+                        <div class="flex items-center gap-1 border rounded-md p-2">
+                            $ <span id="slider-max-value"></span>
+                        </div>
+                    </div>
+
+                    {{-- Inputs ocultos para el formulario --}}
+                    <input type="hidden" name="min_price" id="slider-min-input">
+                    <input type="hidden" name="max_price" id="slider-max-input">
+
+                    {{-- Botón para aplicar --}}
+                    <div class="mt-4 text-right">
+                        <button type="button" id="apply-price-button" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Aplicar</button>
+                    </div>
                 </div>
+            </div>
+            {{-- ###################################################### --}}
+            {{-- ##       FIN DEL FILTRO DE PRECIO DESPLEGABLE       ## --}}
+            {{-- ###################################################### --}}
 
                 {{-- Botón buscar --}}
                 <div class="w-full md:w-auto">
@@ -251,7 +282,7 @@
                 </button>
             </div>
         </section>
-        
+
     </main>
 
     {{-- Footer (del nuevo welcome.blade.php) --}}
@@ -383,9 +414,8 @@
     {{-- =================== END LOGIN MODAL =================== --}}
 
     {{-- SCRIPTS --}}
-
-    {{-- Script para el prompt de preferencias (del welcomeold) --}}
-    <script>
+<script>
+    // --- LÓGICA DEL PROMPT DE PREFERENCIAS (GLOBAL) ---
     const promptElement = document.getElementById('preferences-prompt');
     const dontShowCheckbox = document.getElementById('dont-show-again');
 
@@ -397,32 +427,138 @@
             promptElement.style.display = 'none';
         }
     }
+    // Oculta el prompt si la bandera ya está guardada en localStorage
     if (promptElement && localStorage.getItem('hidePreferencePrompt') === 'true') {
         promptElement.style.display = 'none';
     }
-    </script>
 
-    {{-- Script para el modal de login (del welcomeold) --}}
-    <script>
+    // --- LÓGICA DEL MODAL DE LOGIN (GLOBAL) ---
     const loginModal = document.getElementById('loginModal');
 
     function openLoginModal() {
-        if (loginModal) {
-            loginModal.classList.remove('hidden');
-        }
+        if (loginModal) loginModal.classList.remove('hidden');
     }
-
     function closeLoginModal() {
-        if (loginModal) {
-            loginModal.classList.add('hidden');
-        }
+        if (loginModal) loginModal.classList.add('hidden');
     }
+    // Cierra el modal de login si se hace clic fuera de él
     window.addEventListener('click', function(event) {
-        if (event.target === loginModal) {
-            closeLoginModal();
-        }
+        if (event.target === loginModal) closeLoginModal();
     });
-    </script>
+
+    // --- LÓGICA DE LA PÁGINA (CARRUSEL, SLIDER, FILTROS) ---
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- LÓGICA DEL CARRUSEL ---
+        document.querySelectorAll('.relative.group').forEach(carousel => {
+            const container = carousel.querySelector('.carousel-container');
+            const prevBtn = carousel.querySelector('.carousel-prev');
+            const nextBtn = carousel.querySelector('.carousel-next');
+            const scrollAmount = 300;
+
+            if (container && prevBtn && nextBtn) {
+                prevBtn.addEventListener('click', () => container.scrollBy({ left: -scrollAmount, behavior: 'smooth' }));
+                nextBtn.addEventListener('click', () => container.scrollBy({ left: scrollAmount, behavior: 'smooth' }));
+            }
+        });
+
+        // --- LÓGICA DEL SLIDER DE PRECIO Y FILTROS ---
+        const priceSlider = document.getElementById('price-slider');
+        const minInput = document.getElementById('slider-min-input');
+        const maxInput = document.getElementById('slider-max-input');
+        const typeFilterSelect = document.getElementById('type_filter_select');
+        const filterForm = document.getElementById('property-filter-form'); // Asume que tu form tiene este ID
+
+        // --- ¡NUEVA LÓGICA DE RESETEO! ---
+        if (typeFilterSelect && filterForm) {
+            typeFilterSelect.addEventListener('change', function() {
+                // Al cambiar el tipo (renta/venta), limpia los valores de precio
+                if (minInput) minInput.value = '';
+                if (maxInput) maxInput.value = '';
+
+                // Y luego envía el formulario
+                filterForm.submit();
+            });
+        }
+        // --- FIN DE LA NUEVA LÓGICA ---
+
+        // Si el slider no existe en esta página, detenemos el resto del script del slider
+        if (!priceSlider) {
+            return;
+        }
+
+        const minDisplay = document.getElementById('slider-min-value');
+        const maxDisplay = document.getElementById('slider-max-value');
+        const priceButton = document.getElementById('price-filter-button');
+        const priceDropdown = document.getElementById('price-dropdown');
+        const applyPriceButton = document.getElementById('apply-price-button');
+
+        // Configuración de rangos (viene de PHP/Controlador)
+        const currentType = '{{ $typeFilter }}';
+        const rentMin = {{ $rentMinRange ?? 0 }};
+        const rentMax = {{ $rentMaxRange ?? 10000 }};
+        const saleMin = {{ $saleMinRange ?? 500000 }};
+        const saleMax = {{ $saleMaxRange ?? 10000000 }};
+
+        let minRange, maxRange, step;
+        if (currentType === 'rent') {
+            minRange = rentMin; maxRange = rentMax; step = 100;
+        } else { // 'sale'
+            minRange = saleMin; maxRange = saleMax; step = 50000;
+        }
+
+        // Obtener valores de la URL o usar los defaults DINÁMICOS
+        const currentMinFromRequest = {{ request('min_price', 'null') }};
+        const currentMaxFromRequest = {{ request('max_price', 'null') }};
+
+        const currentMin = currentMinFromRequest !== null ? currentMinFromRequest : minRange;
+        const currentMax = currentMaxFromRequest !== null ? currentMaxFromRequest : maxRange;
+
+        const formatter = new Intl.NumberFormat('es-MX', { style: 'decimal', maximumFractionDigits: 0 });
+
+        function updateButtonText(minVal, maxVal) {
+            if (minVal > minRange || maxVal < maxRange) {
+                priceButton.innerHTML = `<span>$${formatter.format(minVal)} - $${formatter.format(maxVal)}</span>`;
+            } else {
+                priceButton.innerHTML = `<span>Precio</span>`;
+            }
+        }
+
+        // Inicializar noUiSlider
+        noUiSlider.create(priceSlider, {
+            start: [currentMin, currentMax],
+            connect: true,
+            step: step,
+            range: { 'min': minRange, 'max': maxRange }
+        });
+
+        // Evento 'update' del slider
+        priceSlider.noUiSlider.on('update', function(values) {
+            const minValue = parseFloat(values[0]);
+            const maxValue = parseFloat(values[1]);
+
+            minDisplay.textContent = formatter.format(minValue);
+            maxDisplay.textContent = formatter.format(maxValue);
+
+            minInput.value = minValue;
+            maxInput.value = maxValue;
+
+            updateButtonText(minValue, maxValue);
+        });
+
+        // Lógica del dropdown de precio
+        priceButton.addEventListener('click', (e) => { e.stopPropagation(); priceDropdown.classList.toggle('hidden'); });
+        applyPriceButton.addEventListener('click', () => priceDropdown.classList.add('hidden'));
+        window.addEventListener('click', (e) => {
+            if (!priceDropdown.classList.contains('hidden') && !priceDropdown.contains(e.target) && e.target !== priceButton) {
+                priceDropdown.classList.add('hidden');
+            }
+        });
+
+        // Actualizar texto del botón al cargar
+        updateButtonText(currentMin, currentMax);
+    });
+</script>
 
     {{-- Script para los carruseles (del nuevo welcome.blade.php) --}}
     <script>
@@ -435,7 +571,7 @@
             const nextBtn = carousel.querySelector('.carousel-next');
             const scrollAmount = 300; // Ajusta según necesites
 
-            if (container && prevBtn && nextBtn) { 
+            if (container && prevBtn && nextBtn) {
                 prevBtn.addEventListener('click', () => {
                     container.scrollBy({
                         left: -scrollAmount,
@@ -452,7 +588,7 @@
         });
     });
     </script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 </body>
 
 </html>

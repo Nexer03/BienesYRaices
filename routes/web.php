@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminPropertyController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\PropertyReservationController;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,16 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/preferences', [UserPreferenceController::class, 'update'])->name('preferences.update');
 
     // Propiedades del usuario logueado
-    Route::prefix('properties')->group(function () {
-        Route::get('/', [PropertyController::class, 'index'])->name('properties.index'); // listado general
-        Route::get('/my', [PropertyController::class, 'myProperties'])->name('properties.my'); // listado del usuario/ agente
-        Route::get('/create', [PropertyController::class, 'create'])->name('properties.create');
-        Route::post('/', [PropertyController::class, 'store'])->name('properties.store');
-        Route::get('/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
-        Route::put('/{property}', [PropertyController::class, 'update'])->name('properties.update');
-        Route::delete('/property-images/{image}', [PropertyController::class, 'destroyImage'])->name('properties.images.destroy');
-        Route::delete('/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
-    });
+
 
     // Visitas
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
@@ -104,7 +96,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/visits/{visit}/cancel', [VisitController::class, 'cancel'])->name('visits.cancel');
     });
 });
-
+/*
+|--------------------------------------------------------------------------
+| Rutas de Agente
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'agent'])->group(function () {
+    Route::prefix('properties')->group(function () {
+        Route::get('/', [PropertyController::class, 'index'])->name('properties.index'); // listado general
+        Route::get('/my', [PropertyController::class, 'myProperties'])->name('properties.my'); // listado del usuario/ agente
+        Route::get('/create', [PropertyController::class, 'create'])->name('properties.create');
+        Route::post('/', [PropertyController::class, 'store'])->name('properties.store');
+        Route::get('/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
+        Route::put('/{property}', [PropertyController::class, 'update'])->name('properties.update');
+        Route::delete('/property-images/{image}', [PropertyController::class, 'destroyImage'])->name('properties.images.destroy');
+        Route::delete('/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
+    });
+});
 /*
 |--------------------------------------------------------------------------
 | Rutas de Administrador
