@@ -11,26 +11,133 @@ use Illuminate\Support\Facades\Storage; // <-- Y este para borrar archivos
 
 class PropertyController extends Controller
 {
-    /**
-     * Muestra la lista de propiedades del usuario autenticado.
-     */
-    public function index(Request $request)
+
+
+public function index(Request $request)
+{
+    $typeFilter = $request->get('type', 'rent');
+    $userPreferences = null;
+    $recommendedProperties = collect();
+
+    // --- 1. Filtros de búsqueda ---
+    $query = Property::with('images')->whereNotNull('city');
+
+    if ($request->filled('city')) {
+        $query->where('city', $request->city);
+    }
+
+    if ($request->filled('min_price')) {
+        $query->where('price', '>=', $request->min_price);
+    }
+
+    if ($request->filled('max_price')) {
+        $query->where('price', '<=', $request->max_price);
+    }
+
+    if (in_array($typeFilter, ['sale', 'rent'])) {
+        $query->where('listing_type', $typeFilter);
+    }
+
+    // --- 2. Propiedades recientes (sin filtro) ---
+    $properties = Property::with('images')
+        ->latest()
+        ->when(in_array($typeFilter, ['sale', 'rent']), function ($q) use ($typeFilter) {
+            $q->where('listing_type', $typeFilter);
+        })
+        ->take(6)
+        ->get();
+
+    // --- 3. Agrupar propiedades por ciudad ---
+    $filteredProperties = $query->latest()->get();
+    $propertiesByCity = $filteredProperties->groupBy('city');
+
+    // --- 4. Lista de ciudades únicas ---
+    $cities = Property::select('city')
+        ->distinct()
+        ->whereNotNull('city')
+        ->pluck('city')
+        ->filter()
+        ->values();
+
+    // --- 5. Propiedades recomendadas según preferencias ---
+    if (Auth::check()) {
+        $userPreferences = Auth::user()->preferences;
+
+        if ($userPreferences) {
+            $prefQuery = Property::with('images')->where('status', 'available');
+
+            if ($userPreferences->pref_latitude && $userPreferences->pref_longitude && $userPreferences->pref_radius) {
+                $lat = $userPreferences->pref_latitude;
+                $lng = $userPreferences->pref_longitude;
+                $radius = $userPreferences->pref_radius / 1000; // km
+
+                $prefQuery->selectRaw("*, ( 6371 * acos( cos( radians(?) ) *
+                                   cos( radians( latitude ) )
+                                   * cos( radians( longitude ) - radians(?)
+                                   ) + sin( radians(?) ) *
+                                   sin( radians( latitude ) ) )
+                                 ) AS distance", [$lat, $lng, $lat])
+                          ->having("distance", "<", $radius)
+                          ->orderBy("distance", 'asc');
+            } elseif ($userPreferences->preferred_location) {
+                $prefQuery->where('city', 'like', '%' . $userPreferences->preferred_location . '%');
+            }
+
+            if ($userPreferences->min_price) $prefQuery->where('price', '>=', $userPreferences->min_price);
+            if ($userPreferences->max_price) $prefQuery->where('price', '<=', $userPreferences->max_price);
+            if ($userPreferences->preferred_listing_type) $prefQuery->where('listing_type', $userPreferences->preferred_listing_type);
+            if ($userPreferences->min_bedrooms) $prefQuery->where('bedrooms', '>=', $userPreferences->min_bedrooms);
+            if ($userPreferences->min_bathrooms) $prefQuery->where('bathrooms', '>=', $userPreferences->min_bathrooms);
+
+            if ($userPreferences->preferred_amenities) {
+                $amenityIds = explode(',', $userPreferences->preferred_amenities);
+                foreach ($amenityIds as $amenityId) {
+                    if (trim($amenityId)) {
+                        $prefQuery->whereHas('amenities', function ($q) use ($amenityId) {
+                            $q->where('amenities.id', trim($amenityId));
+                        });
+                    }
+                }
+            }
+
+            if (in_array($typeFilter, ['sale', 'rent'])) {
+                $prefQuery->where('listing_type', $typeFilter);
+            }
+
+            if (!($userPreferences->pref_latitude && $userPreferences->pref_longitude && $userPreferences->pref_radius)) {
+                $prefQuery->latest();
+            }
+
+            $recommendedProperties = $prefQuery->take(6)->get();
+        }
+    }
+
+    // --- 6. Enviar datos a la vista ---
+    return view('welcome', [
+        'properties' => $properties,
+        'recommendedProperties' => $recommendedProperties,
+        'userPreferences' => $userPreferences,
+        'typeFilter' => $typeFilter,
+        'propertiesByCity' => $propertiesByCity,
+        'cities' => $cities,
+    ]);
+}
+
+
+    public function myProperties(Request $request)
     {
-        $userId = Auth::id();
+       
+        $query = Property::where('user_id', Auth::id())->with(['images', 'amenities']);
 
-        $query = Property::where('user_id', $userId);
-
-        // --- LÓGICA DE FILTRADO AÑADIDA ---
-        // Si se envía un filtro 'type' y es 'sale' o 'rent', lo aplicamos
-        if ($request->filled('type') && in_array($request->type, ['sale', 'rent'])) {
+        if ($request->has('type') && in_array($request->type, ['rent', 'sale'])) {
             $query->where('listing_type', $request->type);
         }
 
-        $properties = $query->with('images', 'amenities')->latest()->paginate(10);
+        $properties = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        // Asegúrate de pasar la variable correcta (ya lo haces con compact)
         return view('properties.index', compact('properties'));
     }
+
 
     /**
      * Muestra el formulario para crear una nueva propiedad.
@@ -91,7 +198,9 @@ class PropertyController extends Controller
             $property->amenities()->attach($validated['amenities']);
         }
 
-        return redirect()->route('properties.index')->with('success', '¡Propiedad creada con éxito!');
+        return redirect()
+            ->route('properties.my')
+            ->with('success', 'Propiedad creada exitosamente.');
     }
 
     /**
@@ -154,7 +263,9 @@ class PropertyController extends Controller
 
         $property->amenities()->sync($validated['amenities'] ?? []);
 
-        return redirect()->route('properties.index')->with('success', 'Propiedad actualizada correctamente.');
+         return redirect()
+        ->route('properties.my')
+        ->with('success', 'Propiedad actualizada correctamente.');
     }
 
     /**
@@ -173,7 +284,9 @@ class PropertyController extends Controller
         $property->amenities()->detach();
         $property->delete();
 
-        return redirect()->route('properties.index')->with('success', 'Propiedad eliminada exitosamente.');
+        return redirect()
+            ->route('properties.my')
+            ->with('success', 'Propiedad eliminada correctamente.');
     }
 
     /**
@@ -199,4 +312,5 @@ class PropertyController extends Controller
         $properties = Property::with('images', 'amenities')->get();
         return view('properties.properties', compact('properties'));
     }
+    
 }

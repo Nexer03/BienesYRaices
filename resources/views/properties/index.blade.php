@@ -31,6 +31,7 @@
                         class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
                 </nav>
             </div>
+
         </div>
     </header>
 
@@ -39,20 +40,21 @@
         {{-- Barra de acciones (Filtros y Añadir) --}}
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
            {{-- ... (Contenido de filtros y botón añadir sin cambios) ... --}}
-            <div class="flex flex-wrap gap-3">
-                <a href="{{ route('properties.index') }}"
-                   class="px-5 py-2 rounded-full border {{ !request('type') ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' }} transition-colors font-medium text-sm sm:text-base">
-                    Todas
-                </a>
-                <a href="{{ route('properties.index', ['type' => 'rent']) }}"
-                   class="px-5 py-2 rounded-full border {{ request('type') == 'rent' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' }} transition-colors font-medium text-sm sm:text-base">
-                    Solo Renta
-                </a>
-                <a href="{{ route('properties.index', ['type' => 'sale']) }}"
-                   class="px-5 py-2 rounded-full border {{ request('type') == 'sale' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' }} transition-colors font-medium text-sm sm:text-base">
-                    Solo Venta
-                </a>
-            </div>
+           <div class="flex flex-wrap gap-3">
+            <a href="{{ route('properties.my') }}"
+            class="px-5 py-2 rounded-full border {{ !request('type') ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' }} transition-colors font-medium text-sm sm:text-base">
+                Todas
+            </a>
+            <a href="{{ route('properties.my', ['type' => 'rent']) }}"
+            class="px-5 py-2 rounded-full border {{ request('type') == 'rent' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' }} transition-colors font-medium text-sm sm:text-base">
+                Solo Renta
+            </a>
+            <a href="{{ route('properties.my', ['type' => 'sale']) }}"
+            class="px-5 py-2 rounded-full border {{ request('type') == 'sale' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50' }} transition-colors font-medium text-sm sm:text-base">
+                Solo Venta
+            </a>
+        </div>
+
             <a href="{{ route('properties.create') }}"
                class="inline-flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-5 py-2 transition-colors duration-200 w-full sm:w-auto justify-center">
                 <i class="fas fa-plus"></i>

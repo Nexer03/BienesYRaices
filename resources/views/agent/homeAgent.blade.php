@@ -54,7 +54,7 @@
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Mis Propiedades</h3>
                 <p class="text-gray-600 mb-4">Gestiona y visualiza todas tus propiedades listadas</p>
-                <a href="{{ route('properties.index') }}" 
+                <a href="{{ route('properties.my') }}" 
                    class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
                     Ver propiedades →
                 </a>

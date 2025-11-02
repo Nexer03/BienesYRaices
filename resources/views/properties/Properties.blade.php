@@ -54,20 +54,21 @@
             </div>
 
             {{-- Filtros en el Medio (del nuevo diseño) --}}
-            <div class="flex items-center space-x-3 flex-1 max-w-2xl mx-8">
-                <div class="relative flex-1">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text"
-                           placeholder="¿Dónde buscas?"
-                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-                <input type="number"
-                       placeholder="Precio máx"
-                       class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
-                    Buscar
+           <div class="flex items-center space-x-3 flex-1 max-w-2xl mx-8">
+                <input type="number" id="minPrice" placeholder="Precio min" min="0" class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="number" id="maxPrice" placeholder="Precio máx"  min="0" class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                
+                <select id="listingType" class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="">Todos</option>
+                    <option value="sale">Venta</option>
+                    <option value="rent">Renta</option>
+                </select>
+
+                <button id="filterBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
+                    Filtrar
                 </button>
             </div>
+
 
             {{-- Navegación (del nuevo diseño, ajustada) --}}
             <nav class="flex items-center space-x-6 text-gray-700 font-medium">
@@ -113,7 +114,7 @@
         </div>
     </div>
 
-    {{-- Script (Combinado) --}}
+    {{-- Script (Combinado con filtrado de marcadores) --}}
     <script>
         // Datos de propiedades pasados desde el controlador
         const properties = @json($properties);
@@ -123,6 +124,10 @@
         const carousel = document.getElementById('carousel');
         const modalInfo = document.getElementById('modalInfo');
         const closeModalBtn = document.getElementById('closeModal');
+
+        // Variables del mapa y marcadores
+        let map;
+        let markers = [];
 
         // Evento para cerrar modal
         if(closeModalBtn) {
@@ -148,82 +153,107 @@
         .then(res => res.json())
         .then(data => {
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap&libraries=places`; // Añadido places
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap&libraries=places`;
             script.async = true;
             document.head.appendChild(script);
         });
 
         // Inicialización del Mapa
         function initMap() {
-            const defaultLocation = { lat: 20.749757, lng: -105.258849 }; // Ubicación por defecto
-            const map = new google.maps.Map(document.getElementById("map"), {
+            const defaultLocation = { lat: 20.749757, lng: -105.258849 };
+            map = new google.maps.Map(document.getElementById("map"), {
                 center: defaultLocation,
-                zoom: 12, // Zoom un poco más alejado para ver más área
-                styles: [ // Estilos para ocultar POIs (del old)
+                zoom: 12,
+                styles: [
                     { featureType: "poi.business", stylers: [{ visibility: "off" }] },
                     { featureType: "poi.park", stylers: [{ visibility: "off" }] },
                     { featureType: "poi.school", stylers: [{ visibility: "off" }] },
                     { featureType: "transit", stylers: [{ visibility: "off" }] },
                     { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
                 ],
-                mapTypeControl: false, // Oculta controles de tipo de mapa
-                streetViewControl: false // Oculta Street View
+                mapTypeControl: false,
+                streetViewControl: false
             });
 
-            // Crear Marcadores
+            // Crear todos los marcadores y guardarlos en array
             properties.forEach(prop => {
                 if (prop.latitude && prop.longitude) {
                     const marker = new google.maps.Marker({
                         position: { lat: parseFloat(prop.latitude), lng: parseFloat(prop.longitude) },
                         map: map,
-                        label: { // Marcador de precio (del old)
-                            text: `$${Number(prop.price).toLocaleString('es-MX')}`, // Formato de moneda
+                        label: {
+                            text: `$${Number(prop.price).toLocaleString('es-MX')}`,
                             className: 'price-marker'
                         },
-                        icon: ' ', // Icono vacío para que solo se vea el label
-                        title: prop.title
+                        icon: ' ',
+                        title: prop.title,
+                        listingType: prop.listing_type, // "sale" o "rent"
+                        price: prop.price
                     });
 
-                    // Evento Click en Marcador (abre modal, del old)
-                    marker.addListener('click', () => {
-                        carousel.innerHTML = ''; // Limpiar
-                        modalInfo.innerHTML = ''; // Limpiar
+                    marker.addListener('click', () => openPropertyModal(prop));
 
-                        // Llenar info del modal
-                        modalInfo.innerHTML = `
-                            <h3 class="font-semibold text-lg truncate mb-1">${prop.title}</h3>
-                            <p class="text-sm text-gray-600 truncate mb-2">${prop.location ?? ''}</p>
-                            <p class="text-lg font-bold text-blue-600">$${Number(prop.price).toLocaleString('es-MX')}</p>
-                            <a href="/properties/${prop.id}" class="text-blue-500 hover:underline text-sm mt-2 inline-block">Ver detalles</a>
-                        `;
-
-                        // Llenar carrusel del modal
-                        const images = prop.images && prop.images.length ? prop.images : [];
-                        if (images.length > 0) {
-                            images.forEach(imgData => {
-                                const imgEl = document.createElement('img');
-                                // Construye la URL completa de la imagen usando asset() implícitamente
-                                imgEl.src = `{{ asset('storage') }}/${imgData.image_path}`;
-                                imgEl.alt = prop.title;
-                                imgEl.className = 'carousel-img';
-                                carousel.appendChild(imgEl);
-                            });
-                        } else {
-                            // Mostrar placeholder si no hay imágenes
-                             const imgEl = document.createElement('img');
-                             imgEl.src = 'https://via.placeholder.com/400x200?text=Sin+Imagen';
-                             imgEl.alt = 'Sin imagen';
-                             imgEl.className = 'carousel-img';
-                             carousel.appendChild(imgEl);
-                        }
-
-                        // Mostrar modal
-                        if(modal) modal.classList.remove('hidden');
-                    });
+                    markers.push(marker);
                 }
             });
+
+            // Botón de filtrado
+            const filterBtn = document.getElementById('filterBtn');
+            if(filterBtn) filterBtn.addEventListener('click', filterMarkers);
+        }
+
+        // Función para filtrar marcadores según precio y tipo
+        function filterMarkers() {
+    let minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+    let maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
+
+    // Evitar precios negativos
+    minPrice = Math.max(0, minPrice);
+    maxPrice = Math.max(0, maxPrice);
+
+    const listingType = document.getElementById('listingType').value;
+
+    markers.forEach(marker => {
+        const matchPrice = marker.price >= minPrice && marker.price <= maxPrice;
+        const matchType = listingType === '' || marker.listingType === listingType;
+        marker.setMap(matchPrice && matchType ? map : null);
+    });
+}
+
+
+        // Función para abrir modal con info y carrusel de imágenes
+        function openPropertyModal(prop) {
+            carousel.innerHTML = '';
+            modalInfo.innerHTML = '';
+
+            modalInfo.innerHTML = `
+                <h3 class="font-semibold text-lg truncate mb-1">${prop.title}</h3>
+                <p class="text-sm text-gray-600 truncate mb-2">${prop.location ?? ''}</p>
+                <p class="text-lg font-bold text-blue-600">$${Number(prop.price).toLocaleString('es-MX')}</p>
+                <a href="/properties/${prop.id}" class="text-blue-500 hover:underline text-sm mt-2 inline-block">Ver detalles</a>
+            `;
+
+            const images = prop.images && prop.images.length ? prop.images : [];
+            if(images.length > 0) {
+                images.forEach(imgData => {
+                    const imgEl = document.createElement('img');
+                    imgEl.src = `{{ asset('storage') }}/${imgData.image_path}`;
+                    imgEl.alt = prop.title;
+                    imgEl.className = 'carousel-img';
+                    carousel.appendChild(imgEl);
+                });
+            } else {
+                const imgEl = document.createElement('img');
+                imgEl.src = 'https://via.placeholder.com/400x200?text=Sin+Imagen';
+                imgEl.alt = 'Sin imagen';
+                imgEl.className = 'carousel-img';
+                carousel.appendChild(imgEl);
+            }
+
+            modal.classList.remove('hidden');
         }
     </script>
+
 
 </body>
 </html>

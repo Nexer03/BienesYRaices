@@ -87,46 +87,42 @@
         </div>
     </header>
 
-    {{-- Buscador (nuevo welcome.blade.php) --}}
-    <section class="bg-white shadow-sm w-full py-6">
+        <section class="bg-white shadow-sm w-full py-6">
         <div class="max-w-6xl mx-auto px-6">
             <form method="GET" action="{{ route('home') }}" class="flex flex-col md:flex-row items-center gap-4">
 
                 {{-- Tipo de propiedad --}}
                 <div class="w-full md:w-auto">
-                    <label for="type" class="sr-only">Tipo de propiedad</label>
                     <select name="type" id="type" onchange="this.form.submit()"
-                        class="w-full md:w-40 border-gray-300 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        <option value="rent" {{ request('type', 'rent') === 'rent' ? 'selected' : '' }}>Renta</option>
+                        class="w-full md:w-40 border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                        <option value="rent" {{ request('type') === 'rent' ? 'selected' : '' }}>Renta</option>
                         <option value="sale" {{ request('type') === 'sale' ? 'selected' : '' }}>Venta</option>
                     </select>
                 </div>
 
-                {{-- Ubicación / Ciudad --}}
+                {{-- Ciudad --}}
                 <div class="w-full md:w-40">
-                    <label for="city" class="sr-only">Ciudad</label>
                     <select name="city" id="city" onchange="this.form.submit()"
-                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
                         <option value="">Todas las ciudades</option>
-                        @foreach($properties->pluck('city')->unique() as $city)
+                        @foreach($cities as $city)
                             <option value="{{ $city }}" {{ request('city') === $city ? 'selected' : '' }}>
                                 {{ $city }}
                             </option>
                         @endforeach
-                        
                     </select>
                 </div>
 
-                {{-- Fecha inicio --}}
+                {{-- Precio mínimo --}}
                 <div class="w-full md:w-40">
-                    <input type="date" name="start_date" value="{{ request('start_date') }}"
-                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="number"  min="0"  name="min_price"  value="{{ request('min_price') }}" placeholder="Precio mínimo"
+                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
                 </div>
 
-                {{-- Fecha fin --}}
+                {{-- Precio máximo --}}
                 <div class="w-full md:w-40">
-                    <input type="date" name="end_date" value="{{ request('end_date') }}"
-                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="number"  min="0" name="max_price" value="{{ request('max_price') }}" placeholder="Precio máximo" 
+                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
                 </div>
 
                 {{-- Botón buscar --}}
@@ -142,9 +138,83 @@
 
 
 
+
+
     {{-- Contenido Principal --}}
     <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
-
+    {{-- Sección Recomendaciones (del welcomeold.blade.php) --}}
+            @auth
+            @if ($recommendedProperties->isNotEmpty())
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Recomendado para Tí segun tus preferencias.</h2>
+                {{-- Puedes usar el mismo estilo de carrusel aquí si quieres --}}
+                <div class="relative group">
+                    <button
+                        class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
+                    </button>
+                    <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
+                        @foreach ($recommendedProperties as $property)
+                        <a href="{{ route('properties.show', $property) }}"
+                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
+                            @if ($property->images->isNotEmpty())
+                            <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
+                            @else
+                            <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
+                                class="w-full h-48 object-cover rounded-t-xl">
+                            @endif
+                            <div class="p-3">
+                                <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                <p class="text-sm text-gray-500 truncate mt-1">
+                                    {{ $property->location ?? 'Ubicación no especificada' }}</p>
+                                <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
+                            </div>
+                        </a>
+                        @endforeach
+                    </div>
+                    <button
+                        class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
+                    </button>
+                </div>
+            </section>
+            @endif
+            @endauth
+         @foreach($propertiesByCity as $city => $cityProperties)
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Propiedades en {{ $city }}</h2>
+                <div class="relative group">
+                    <button
+                        class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
+                    </button>
+                    <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
+                        @foreach($cityProperties as $property)
+                            <a href="{{ route('properties.show', $property) }}"
+                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
+                                @if($property->images->isNotEmpty())
+                                    <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                        alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
+                                @else
+                                    <img src="https://via.placeholder.com/300x200?text=Sin+Imagen"
+                                        alt="Sin imagen disponible" class="w-full h-48 object-cover rounded-t-xl">
+                                @endif
+                                <div class="p-3">
+                                    <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                    <p class="text-sm text-gray-500 truncate mt-1">{{ $property->location ?? 'Ubicación no especificada' }}</p>
+                                    <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                    <button
+                        class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
+                    </button>
+                </div>
+            </section>
+        @endforeach
         {{-- Carrusel Propiedades Recientes (del nuevo welcome.blade.php) --}}
         <section>
             <h2 class="text-2xl font-semibold mb-4">Propiedades Recientes</h2>
@@ -181,94 +251,7 @@
                 </button>
             </div>
         </section>
-        <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
-
-        {{-- Carruseles por Ciudad --}}
-        @php
-            $filteredCity = request('city');
-            $propertiesByCity = $filteredCity
-                ? $properties->where('city', $filteredCity)->groupBy('city')
-                : $properties->groupBy('city');
-        @endphp
-
-
-        @foreach($propertiesByCity as $city => $cityProperties)
-            <section>
-                <h2 class="text-2xl font-semibold mb-4">Propiedades en {{ $city }}</h2>
-                <div class="relative group">
-                    <button
-                        class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
-                        <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
-                    </button>
-                    <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-                        @foreach($cityProperties as $property)
-                            <a href="{{ route('properties.show', $property) }}"
-                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
-                                @if($property->images->isNotEmpty())
-                                    <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                                        alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
-                                @else
-                                    <img src="https://via.placeholder.com/300x200?text=Sin+Imagen"
-                                        alt="Sin imagen disponible" class="w-full h-48 object-cover rounded-t-xl">
-                                @endif
-                                <div class="p-3">
-                                    <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                                    <p class="text-sm text-gray-500 truncate mt-1">{{ $property->location ?? 'Ubicación no especificada' }}</p>
-                                    <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                    <button
-                        class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
-                        <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
-                    </button>
-                </div>
-            </section>
-        @endforeach
-
-
-
-        {{-- Sección Recomendaciones (del welcomeold.blade.php) --}}
-        @auth
-        @if ($recommendedProperties->isNotEmpty())
-        <section>
-            <h2 class="text-2xl font-semibold mb-4">Recomendado para Ti</h2>
-            {{-- Puedes usar el mismo estilo de carrusel aquí si quieres --}}
-            <div class="relative group">
-                <button
-                    class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
-                    <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
-                </button>
-                <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-                    @foreach ($recommendedProperties as $property)
-                    <a href="{{ route('properties.show', $property) }}"
-                        class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
-                        @if ($property->images->isNotEmpty())
-                        <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                            alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
-                        @else
-                        <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
-                            class="w-full h-48 object-cover rounded-t-xl">
-                        @endif
-                        <div class="p-3">
-                            <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                            <p class="text-sm text-gray-500 truncate mt-1">
-                                {{ $property->location ?? 'Ubicación no especificada' }}</p>
-                            <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
-                        </div>
-                    </a>
-                    @endforeach
-                </div>
-                <button
-                    class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
-                    <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
-                </button>
-            </div>
-        </section>
-        @endif
-        @endauth
-
+        
     </main>
 
     {{-- Footer (del nuevo welcome.blade.php) --}}
@@ -452,7 +435,7 @@
             const nextBtn = carousel.querySelector('.carousel-next');
             const scrollAmount = 300; // Ajusta según necesites
 
-            if (container && prevBtn && nextBtn) { // Asegura que los elementos existan
+            if (container && prevBtn && nextBtn) { 
                 prevBtn.addEventListener('click', () => {
                     container.scrollBy({
                         left: -scrollAmount,
