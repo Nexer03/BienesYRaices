@@ -19,7 +19,7 @@ public function index(Request $request)
     $userPreferences = null;
     $recommendedProperties = collect();
 
-    $rentMinRange = 0;
+    $rentMinRange = 100;
     $rentMaxRange = 10000; // Rango para Renta (0 - 10k)
     $saleMinRange = 500000; // Rango para Venta (500k - 10M)
     $saleMaxRange = 10000000;

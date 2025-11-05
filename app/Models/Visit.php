@@ -3,37 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Visit extends Model
 {
     protected $fillable = [
-        'client_id',
-        'agent_id', 
-        'property_id',
-        'visit_date',
-        'status',
-        'notes'
+        'client_id', 'agent_id', 'property_id', 'visit_date', 'status', 'notes',
     ];
-    
+
     protected $casts = [
         'visit_date' => 'datetime',
     ];
-    // Relación con el cliente (usuario que agenda la visita)
-    public function client()
+
+    public function property(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'client_id');
+        return $this->belongsTo(Property::class);
     }
 
-    // Relación con el agente (dueño de la propiedad)
-    public function agent()
+    public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'agent_id');
     }
 
-    // Relación con la propiedad
-    public function property()
+    public function client(): BelongsTo
     {
-        return $this->belongsTo(Property::class);
+        return $this->belongsTo(User::class, 'client_id');
     }
 }

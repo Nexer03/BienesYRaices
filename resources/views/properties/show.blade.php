@@ -114,22 +114,26 @@
             <div class="bg-white p-6 rounded-lg shadow-md border sticky top-28">
                 <p class="text-2xl font-bold">${{ number_format($property->price, 2) }}</p>
                 @if($property->listing_type == 'rent')
-                <p class="text-gray-500">Precio de renta</p>
+                  <p class="text-gray-500">Precio de renta</p>
                 @elseif($property->listing_type == 'sale')
-                <p class="text-gray-500">Precio de venta</p>
+                  <p class="text-gray-500">Precio de venta</p>
                 @endif
 
-                <button onclick="openVisitCalendar()"
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 transition font-semibold">
-                    Agendar una visita
-                </button>
-
-                @if($property->listing_type == 'rent')
-                <button id="reserveButton"
-                        class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 transition font-semibold">
-                    Reservar
-                </button>
+                {{-- ================= Acciones por tipo de listado ================= --}}
+                @if($property->listing_type == 'sale')
+                    {{-- SOLO VENTA: mostrar botón "Contactar con el agente" --}}
+                    <button type="button"
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg mt-4 hover:bg-blue-700 transition font-semibold">
+                        Contactar con el agente
+                    </button>
+                @elseif($property->listing_type == 'rent')
+                    {{-- SOLO RENTA: mostrar "Reservar" y ocultar "Agendar visita" --}}
+                    <button id="reserveButton"
+                            class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 transition font-semibold">
+                        Reservar
+                    </button>
                 @endif
+                {{-- ================================================================ --}}
             </div>
         </div>
     </div>
@@ -140,7 +144,7 @@
     </div>
 </main>
 
-{{-- Modal de visita --}}
+{{-- Modal de visita (se mantiene por si luego lo activamos, pero la UI ya no lo muestra en renta/venta) --}}
 <div id="visitModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background: rgba(0,0,0,0.5);z-index:1000;">
     <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;min-width:300px;">
         <h3 class="text-lg font-semibold mb-4">Selecciona fecha y hora para tu visita</h3>
@@ -148,8 +152,7 @@
         <div class="flex gap-2">
             <button onclick="scheduleVisit()"
                     class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Agendar Visita</button>
-            <button onclick="closeModal()"
-                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancelar</button>
+            <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancelar</button>
         </div>
     </div>
 </div>
@@ -179,69 +182,54 @@
 </div>
 
 <footer class="bg-gray-800 text-white py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div class="md:col-span-2">
-                    <div class="flex items-center text-white font-bold text-xl mb-4">
-                        <i class="fas fa-home mr-2"></i>
-                        <span>SIN BECA NO HAY RENTA</span>
-                    </div>
-                    <p class="text-gray-300 mb-4">
-                        Tu plataforma confiable para la gestión inmobiliaria. Conectamos propiedades
-                        con sus futuros dueños de manera eficiente y profesional.
-                    </p>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-linkedin-in"></i></a>
-                    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="md:col-span-2">
+                <div class="flex items-center text-white font-bold text-xl mb-4">
+                    <i class="fas fa-home mr-2"></i>
+                    <span>SIN BECA NO HAY RENTA</span>
                 </div>
-                <div>
-                    <h3 class="font-semibold text-lg mb-4">Navegación</h3>
-                    <ul class="space-y-2">
-                        <li><a href="{{ route('visits.my') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Mis Visitas</a>
-                        </li>
-                        <li><a href="{{ route('properties.map') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Mapa</a></li>
-                        <li><a href="{{ route('agent.home') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Panel de
-                                Agente</a></li>
-                        <li><a href="{{ route('agent.view') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Modo Vendedor</a>
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-lg mb-4">Contacto</h3>
-                    <ul class="space-y-2 text-gray-300">
-                        <li class="flex items-center"><i class="fas fa-envelope mr-2"></i> soporte@sinbeca.com</li>
-                        <li class="flex items-center"><i class="fas fa-phone mr-2"></i> +1 (555) 123-4567</li>
-                        <li class="flex items-center"><i class="fas fa-map-marker-alt mr-2"></i> Ciudad, País</li>
-                    </ul>
+                <p class="text-gray-300 mb-4">
+                    Tu plataforma confiable para la gestión inmobiliaria. Conectamos propiedades
+                    con sus futuros dueños de manera eficiente y profesional.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors duración-200"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors duración-200"><i class="fab fa-linkedin-in"></i></a>
                 </div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-6">
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <p class="text-gray-300 text-sm">&copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos
-                        reservados.</p>
-                    <div class="flex space-x-6 mt-4 md:mt-0">
-                        <a href="#"
-                            class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Privacidad</a>
-                        <a href="#"
-                            class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Términos</a>
-                        <a href="#"
-                            class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Cookies</a>
-                    </div>
+            <div>
+                <h3 class="font-semibold text-lg mb-4">Navegación</h3>
+                <ul class="space-y-2">
+                    <li><a href="{{ route('visits.my') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Mis Visitas</a></li>
+                    <li><a href="{{ route('properties.map') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Mapa</a></li>
+                    <li><a href="{{ route('agent.home') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Panel de Agente</a></li>
+                    <li><a href="{{ route('agent.view') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Modo Vendedor</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="font-semibold text-lg mb-4">Contacto</h3>
+                <ul class="space-y-2 text-gray-300">
+                    <li class="flex items-center"><i class="fas fa-envelope mr-2"></i> soporte@sinbeca.com</li>
+                    <li class="flex items-center"><i class="fas fa-phone mr-2"></i> +1 (555) 123-4567</li>
+                    <li class="flex items-center"><i class="fas fa-map-marker-alt mr-2"></i> Ciudad, País</li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-gray-700 mt-8 pt-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-300 text-sm">&copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Privacidad</a>
+                    <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Términos</a>
+                    <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Cookies</a>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
+</footer>
 
 <script>
     const propertyLocation = { lat: {{ $property->latitude }}, lng: {{ $property->longitude }} };
@@ -264,7 +252,7 @@
         new google.maps.Marker({ map: map, position: propertyLocation, title: "{{ $property->title }}" });
     }
 
-    // Modales de visita
+    // Modales de visita (no visibles en UI actual, quedan por si los activamos luego)
     function openVisitCalendar() {
         const now = new Date();
         const defaultDate = new Date();

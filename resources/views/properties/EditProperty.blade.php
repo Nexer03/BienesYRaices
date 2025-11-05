@@ -74,7 +74,7 @@
     {{-- Precio --}}
     <div class="mb-3">
     <label for="price" class="form-label" id="price-label">Precio</label>
-        <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $property->price) }}" step="0.01" required max="99999999.99">
+        <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $property->price) }}" step="100.00" required max="99999999.99">
     </div>
 
 
@@ -83,12 +83,12 @@
         <label for="address-input" class="form-label">Dirección</label>
         <input type="text" class="form-control" id="address-input" name="location" value="{{ old('location', $property->location) }}" placeholder="Escribe la dirección" required>
         <label for="city" class="form-label mt-2">Ciudad</label>
-        <input type="text" name="city" id="city" value="{{ old('city') }}" class="form-control" readonly>
+        <input type="text" name="city" id="city" value="{{ old('city', $property->city) }}" class="form-control" readonly>
     </div>
     <div id="map"></div>
     <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', $property->latitude) }}">
     <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', $property->longitude) }}">
-    
+
     <div class="mb-3">
         <label class="form-label">Imágenes Actuales</label>
         <div id="existing-images-container" class="row g-3">
@@ -145,8 +145,51 @@
         @endforeach
     </div>
 
-    <button type="submit" class="btn btn-primary">Actualizar Propiedad</button>
+    <div class="d-flex gap-2 mb-3">
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+
+        {{-- Opción A: enlace que regresa a la página previa --}}
+        <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">Cancelar</a>
+
+        {{-- Opción B (alternativa): botón que usa el historial del navegador) --}}
+        {{-- <button type="button" class="btn btn-outline-secondary" onclick="history.back()">Cancelar</button> --}}
+    </div>
 </form>
+{{-- ¡NO TOCAR ES PARA QUE NO SE RECARGUE LA PAGINA AL PRESIONAR ENTER EN PRECIO O DIRECCION! --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('property-create-form') || document.querySelector('form[action*="properties"][method="POST"]');
+
+  // 1) Bloquear Enter SOLO en Dirección y Precio
+  const addressInput = document.getElementById('address-input');
+  const priceInput   = document.querySelector('#price') || document.querySelector('input[name="price"]');
+
+  if (addressInput) {
+    addressInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') e.preventDefault(); // no enviar el form al elegir sugerencia
+    });
+  }
+
+  if (priceInput) {
+    priceInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') e.preventDefault(); // evita enviar al presionar Enter en precio
+    });
+  }
+
+  // 2) Por seguridad: antes de enviar, verifica que city/lat/lng estén llenos.
+  //    Si Dirección tiene texto pero faltan coords, intenta leer el último "place" del Autocomplete (si existe).
+  form && form.addEventListener('submit', function (e) {
+    const lat = document.getElementById('latitude');
+    const lon = document.getElementById('longitude');
+    const cityHidden = document.getElementById('city-hidden');
+
+    // Si ya están, seguimos normal
+    if (lat && lat.value && lon && lon.value && cityHidden && cityHidden.value) return;
+
+
+  });
+});
+</script>
 
 {{-- =================== SCRIPT UNIFICADO Y COMPLETO =================== --}}
 <script>
@@ -203,13 +246,13 @@
       });
 
     function initMap() {
-    // Obtenemos la ubicación actual de la propiedad 
+    // Obtenemos la ubicación actual de la propiedad
     const propertyLocation = {
         lat: {{ old('latitude', $property->latitude) }},
         lng: {{ old('longitude', $property->longitude) }}
     };
 
-    // Se crea el mapa centrado en la ubicación 
+    // Se crea el mapa centrado en la ubicación
     const map = new google.maps.Map(document.getElementById("map"), { center: propertyLocation, zoom: 16 });
 
     // --- ¡LÍNEA CLAVE! Esta línea crea el marcador rojo en el mapa ---
@@ -233,7 +276,7 @@
         const place = autocomplete.getPlace();
         if (!place.geometry) return;
         map.setCenter(place.geometry.location);
-        marker.setPosition(place.geometry.location); 
+        marker.setPosition(place.geometry.location);
         latInput.value = place.geometry.location.lat();
         lonInput.value = place.geometry.location.lng();
          let city = "";
@@ -246,7 +289,7 @@
                 }
             }
             cityInput.value = city;
-        
+
     });
 
     marker.addListener('dragend', function() {
@@ -346,8 +389,8 @@
 
     function updatePriceLabel() {
         const selectedType = document.querySelector('input[name="listing_type"]:checked').value;
-        priceLabel.textContent = (selectedType === 'rent') 
-            ? 'Precio por día (MXN)' 
+        priceLabel.textContent = (selectedType === 'rent')
+            ? 'Precio por día (MXN)'
             : 'Precio de venta (MXN)';
     }
 

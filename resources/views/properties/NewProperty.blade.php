@@ -16,12 +16,32 @@
     <div class="alert alert-success">{{ session('success') }}</div>
 @endif
 
-<form action="{{ route('properties.store') }}" method="POST" enctype="multipart/form-data">
+@if ($errors->any())
+  <div class="alert alert-danger">
+    <ul class="mb-0">
+      @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+      @endforeach
+    </ul>
+  </div>
+@endif
+
+<form id="property-create-form"
+      action="{{ route('properties.store') }}"
+      method="POST" enctype="multipart/form-data">
     @csrf
 
-    <div class="mb-3">
-        <label for="title" class="form-label">Título</label>
-        <input type="text" class="form-control" id="title" name="title" required>
+
+    <div class="form-group mb-3">
+        <label for="title">Título de la propiedad</label>
+        <input
+            type="text"
+            class="form-control"
+            id="title"
+            name="title"
+            value="{{ old('title') }}"
+            required
+        >
     </div>
 
     <div class="mb-3">
@@ -67,12 +87,22 @@
 
     <div class="mb-3">
         <label for="price" class="form-label" id="price-label">Precio por día (MXN)</label>
-        <input type="number" class="form-control" id="price" name="price" step="0.01" required max="99999999.99">
+        <input type="number" class="form-control" id="price" name="price" step="100.00" required max="99999999.99">
     </div>
 
-    <div class="mb-3">
-        <label for="address-input" class="form-label">Dirección</label>
-        <input type="text" class="form-control" id="address-input" name="location" placeholder="Escribe la dirección" required>
+    <div class="form-group mb-3">
+        <label for="address">Dirección</label>
+        <input
+            type="text"
+            class="form-control"
+            id="address-input"
+            name="location"                      {{-- ← nombre correcto para el backend --}}
+            placeholder="Calle, número, ciudad"
+            value="{{ old('location') }}"        {{-- ← mantiene el valor si hay error --}}
+            autocomplete="off"
+            required
+        >
+
     </div>
 
    <div class="mb-3">
@@ -124,8 +154,18 @@
         @endforeach
     </div>
 
-    <button type="submit" class="btn btn-primary">Guardar Propiedad</button>
+
+    <div class="d-flex gap-2 mb-3">
+        <button type="submit" class="btn btn-primary">Guardar Propiedad</button>
+
+        {{-- Opción A: enlace que regresa a la página previa --}}
+        <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">Cancelar</a>
+
+        {{-- Opción B (alternativa): botón que usa el historial del navegador) --}}
+        {{-- <button type="button" class="btn btn-outline-secondary" onclick="history.back()">Cancelar</button> --}}
+    </div>
 </form>
+
 
 <script>
     // --- Previsualización de imágenes ---
@@ -204,8 +244,8 @@
             const city = components.find(c => c.types.includes("locality"))?.long_name
                        || components.find(c => c.types.includes("administrative_area_level_2"))?.long_name
                        || "";
-            cityInput.value = city;        // para mostrar al usuario
-document.getElementById('city-hidden').value = city; // para enviar en el formulario
+            cityInput.value = city;
+            document.getElementById('city-hidden').value = city;
         });
 
         marker.addListener('dragend', function() {
@@ -220,10 +260,21 @@ document.getElementById('city-hidden').value = city; // para enviar en el formul
                     const city = components.find(c => c.types.includes("locality"))?.long_name
                                || components.find(c => c.types.includes("administrative_area_level_2"))?.long_name
                                || "";
-                    cityInput.value = city;        // para mostrar al usuario
-document.getElementById('city-hidden').value = city; // para enviar en el formulario
+                    cityInput.value = city;
+                    document.getElementById('city-hidden').value = city;
                 })
                 .catch(e => console.log("Geocoder failed: " + e));
+        });
+
+        // --- Evitar Enter si no hay dropdown abierto ---
+        addressInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const container = document.querySelector('.pac-container');
+                const dropdownAbierto = container && container.offsetParent !== null && container.querySelector('.pac-item');
+                if (!dropdownAbierto) {
+                    e.preventDefault(); // solo bloquea Enter si no hay sugerencias visibles
+                }
+            }
         });
     }
 
@@ -250,12 +301,49 @@ document.getElementById('city-hidden').value = city; // para enviar en el formul
 
         listingTypeRadios.forEach(r => r.addEventListener('change', updatePriceLabel));
         updatePriceLabel();
-
-        addressInput.addEventListener('keydown', function(e) {
-            if(e.key === 'Enter') e.preventDefault();
-        });
     });
 </script>
+
+{{-- ¡NO TOCAR ES PARA QUE NO SE RECARGUE LA PAGINA AL PRESIONAR ENTER EN PRECIO O DIRECCION! --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('property-create-form') || document.querySelector('form[action*="properties"][method="POST"]');
+
+  // 1) Bloquear Enter SOLO en Dirección y Precio
+  const addressInput = document.getElementById('address-input');
+  const priceInput   = document.querySelector('#price') || document.querySelector('input[name="price"]');
+
+  if (addressInput) {
+    addressInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') e.preventDefault(); // no enviar el form al elegir sugerencia
+    });
+  }
+
+  if (priceInput) {
+    priceInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') e.preventDefault(); // evita enviar al presionar Enter en precio
+    });
+  }
+
+  // 2) Por seguridad: antes de enviar, verifica que city/lat/lng estén llenos.
+  //    Si Dirección tiene texto pero faltan coords, intenta leer el último "place" del Autocomplete (si existe).
+  form && form.addEventListener('submit', function (e) {
+    const lat = document.getElementById('latitude');
+    const lon = document.getElementById('longitude');
+    const cityHidden = document.getElementById('city-hidden');
+
+    // Si ya están, seguimos normal
+    if (lat && lat.value && lon && lon.value && cityHidden && cityHidden.value) return;
+
+    // Si falta algo, evita submit y muestra un mensaje simple
+    e.preventDefault();
+    alert('Por favor selecciona una dirección de las sugerencias para completar ciudad y coordenadas.');
+    addressInput && addressInput.focus();
+  });
+});
+</script>
+
+
 
 </body>
 </html>
