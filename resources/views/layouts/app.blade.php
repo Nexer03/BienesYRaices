@@ -1,86 +1,91 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<!doctype html>
+<html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+  <title>@yield('title', 'SIN BECA NO HAY RENTA')</title>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+  {{-- Bootstrap 5 --}}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-    {{-- Tailwind CSS via Vite --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    {{-- You might need additional CSS/JS here (like Lightbox, etc.) --}}
+  <style>
+    body { background:#f7f8fa; }
+    .navbar-brand { font-weight:700; }
+    .container-narrow { max-width: 1120px; }
+  </style>
 </head>
-<body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">
-    <div class="min-h-screen">
+<body>
+@php /** @var \App\Models\User|null $user */ $user = auth()->user(); @endphp
 
-        {{-- NUEVA BARRA DE NAVEGACIÓN --}}
-        <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex-shrink-0">
-                        <a href="{{ route('home') }}" class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            Sin beca<span class="text-gray-700 dark:text-gray-300"> no hay renta </span>
-                        </a>
-                    </div>
+<nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
+  <div class="container container-narrow">
+    <a class="navbar-brand text-primary" href="{{ route('home') }}">
+      <i class="bi bi-house-door-fill me-1"></i> Sin beca <span class="text-dark">no hay renta</span>
+    </a>
 
-                    <nav class="hidden sm:flex sm:items-center sm:space-x-6">
-                        <a href="{{ route('properties.index') }}" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">Mis Propiedades</a>
-                        <a href="{{ route('properties.map') }}" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">Mapa</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-                        @if(auth()->user()->role === 'agent')
-                            <a href="{{ route('agent.home') }}" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">Panel Agente</a>
-                        @else
-                            <a href="{{ route('agent.view') }}" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">Modo Vendedor</a>
-                        @endif
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="{{ route('properties.index') }}">Propiedades</a></li>
+        @if(Route::has('agent.visits.index'))
+          <li class="nav-item"><a class="nav-link" href="{{ route('agent.visits.index') }}">Visitas</a></li>
+        @endif
+      </ul>
 
-                        {{-- Dropdown de Usuario --}}
-                        <div class="relative">
-                            <button class="flex items-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition duration-150 ease-in-out" onclick="document.getElementById('user-dropdown').classList.toggle('hidden')">
-                                <div>{{ Auth::user()->name }}</div>
-                                <div class="ml-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                            </button>
-                            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 hidden">
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Perfil</a>
-                                <a href="{{ route('preferences.edit') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">Preferencias</a>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                        Cerrar Sesión
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </nav>
-
-                    {{-- Puedes añadir aquí el menú hamburguesa para móviles si lo necesitas --}}
-
-                </div>
-            </div>
-        </header>
-
-        @isset($header)
-            <header class="bg-white dark:bg-gray-800 shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    {{ $header }}
-                </div>
-            </header>
-        @endisset
-
-        <main class="py-12">
-            {{ $slot }}
-        </main>
+      <ul class="navbar-nav ms-auto">
+        @auth
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle me-1"></i> {{ $user?->name ?? 'Mi cuenta' }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-gear me-2"></i>Perfil</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="POST" action="{{ route('logout') }}">
+                  @csrf
+                  <button class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Salir</button>
+                </form>
+              </li>
+            </ul>
+          </li>
+        @else
+          <li class="nav-item"><a class="btn btn-primary" href="{{ route('login') }}">Iniciar sesión</a></li>
+        @endauth
+      </ul>
     </div>
+  </div>
+</nav>
 
-    {{-- Tu JavaScript al final --}}
-    @stack('scripts')
+<main class="container container-narrow py-4">
+  {{-- Flash messages --}}
+  @if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ session('success') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+  @endif
+  @if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ session('error') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+  @endif
+
+  @yield('content')
+</main>
+
+<footer class="py-4 border-top bg-white">
+  <div class="container container-narrow text-center text-muted small">
+    © {{ date('Y') }} Sin beca no hay renta
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

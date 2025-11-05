@@ -38,7 +38,7 @@
 
         <!-- Botón Crear Nueva Propiedad -->
         <div class="text-center mb-12">
-            <a href="{{ route('properties.create') }}" 
+            <a href="{{ route('properties.create') }}"
                class="inline-flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg px-6 py-3 transition-colors duration-200 shadow-md hover:shadow-lg">
                 <i class="fas fa-plus"></i>
                 <span>Crear Nueva Propiedad</span>
@@ -54,7 +54,7 @@
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Mis Propiedades</h3>
                 <p class="text-gray-600 mb-4">Gestiona y visualiza todas tus propiedades listadas</p>
-                <a href="{{ route('properties.my') }}" 
+                <a href="{{ route('properties.my') }}"
                    class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
                     Ver propiedades →
                 </a>
@@ -67,7 +67,7 @@
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Agendas</h3>
                 <p class="text-gray-600 mb-4">Administra tus citas y visitas programadas</p>
-                <a href="{{ route('agent.visits') }}" 
+                <a href="{{ route('agent.visits.index') }}"
                    class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
                     Ver agenda →
                 </a>
@@ -80,7 +80,7 @@
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Mensajería</h3>
                 <p class="text-gray-600 mb-4">Comunícate con clientes y prospectos</p>
-                <a href="#" 
+                <a href="#"
                    class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
                     Abrir mensajería →
                 </a>
@@ -99,7 +99,7 @@
                         <span>SIN BECA NO HAY RENTA</span>
                     </div>
                     <p class="text-gray-300 mb-4">
-                        Tu plataforma confiable para la gestión inmobiliaria. Conectamos propiedades 
+                        Tu plataforma confiable para la gestión inmobiliaria. Conectamos propiedades
                         con sus futuros dueños de manera eficiente y profesional.
                     </p>
                     <div class="flex space-x-4">
@@ -128,7 +128,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('agent.visits') }}" class="text-gray-300 hover:text-white transition-colors duration-200">
+                            <a href="{{ route('agent.visits.index') }}" class="text-gray-300 hover:text-white transition-colors duration-200">
                                 Agendas
                             </a>
                         </li>

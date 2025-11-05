@@ -46,4 +46,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+
+    public function agentVisits()
+    {
+        return $this->hasMany(Visit::class, 'agent_id');
+    }
+
+    public function clientVisits()
+    {
+        return $this->hasMany(Visit::class, 'client_id');
+    }
+
 }

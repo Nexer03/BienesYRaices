@@ -24,9 +24,6 @@
 
 <body class="bg-gray-50 text-gray-800">
 
-    {{-- ========================================================== --}}
-    {{-- ==        PROMPT DE PREFERENCIAS (DEL welcomeold)       == --}}
-    {{-- ========================================================== --}}
     @auth
     @if (is_null($userPreferences))
     <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-4"

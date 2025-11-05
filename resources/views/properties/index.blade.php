@@ -18,6 +18,7 @@
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-8">
                     <div class="text-2xl font-bold text-blue-600 cursor-pointer">
+                        <a href="{{ url('/') }}">
                         <i class="fas fa-home mr-2"></i>
                         Sin beca<span class="text-gray-700"> no hay renta </span>
                     </div>

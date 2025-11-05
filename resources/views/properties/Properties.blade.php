@@ -14,12 +14,12 @@
         .price-marker {
             background-color: white;
             color: #222;
-            padding: 6px 14px;
-            border-radius: 9999px; /* Tailwind: rounded-full */
-            font-weight: 600; /* Tailwind: font-semibold */
-            font-size: 14px; /* Tailwind: text-sm */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Tailwind: shadow-lg */
-            border: 1px solid #ddd; /* Tailwind: border border-gray-300 */
+            border: 1px solid #ccc;
+            border-radius: 16px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             cursor: pointer;
             transition: transform 0.2s;
         }
@@ -33,52 +33,93 @@
         }
 
         /* Estilos del modal (del old, adaptados a Tailwind) */
-        .modal { display: flex; justify-content:center; align-items:center; position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.6); transition: opacity 0.25s ease; }
+        .modal { display: flex; justify-content:center; align-items:center; position:fixed; inset:0; background:rgba(0,0,0,0.6); transition: opacity 0.25s ease; }
         .modal.hidden { opacity: 0; pointer-events: none; }
-        .modal-content { background:white; padding:1.5rem; border-radius:0.75rem; max-width:450px; width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.25s ease; }
+        .modal-content { background:white; padding:1.5rem; border-radius:0.75rem; max-width:800px; width:100%; transform: scale(0.95); transition: transform 0.25s ease; }
         .modal:not(.hidden) .modal-content { transform: scale(1); } /* Animación al abrir */
-        .carousel-container { display: flex; overflow-x: auto; gap: 0.5rem; scroll-snap-type: x mandatory; }
-        .carousel-img { width:100%; height:200px; object-fit:cover; border-radius:0.5rem; scroll-snap-align: center; flex-shrink: 0; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-container { display:flex; gap:0.75rem; overflow-x:auto; scroll-behavior:smooth; }
+        .carousel-item { min-width:160px; height:110px; object-fit:cover; border-radius:0.5rem; }
     </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    {{-- Header (del nuevo diseño) --}}
-    <header class="sticky top-0 bg-white shadow-sm z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-            {{-- Logo --}}
-            <div class="text-2xl font-bold text-blue-600 cursor-pointer">
-                <a href="{{ route('home') }}"><i class="fas fa-home mr-2"></i>Sin beca<span class="text-gray-700"> no hay renta </span></a>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    {{-- Encabezado --}}
+    <header class="bg-white shadow">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            {{-- Logo (ajustado) --}}
+            <div class="flex items-center space-x-3">
+                <a href="{{ url('/') }}" class="text-xl font-bold text-blue-600 flex items-center">
+                    <i class="fas fa-home mr-2"></i>Sin beca <span class="text-gray-700"> no hay renta </span></a>
             </div>
 
             {{-- Filtros en el Medio (del nuevo diseño) --}}
            <div class="flex items-center space-x-3 flex-1 max-w-2xl mx-8">
-                <input type="number" id="minPrice" placeholder="Precio min" min="0" class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <input type="number" id="maxPrice" placeholder="Precio máx"  min="0" class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-                
+
+                <!-- PRICE FILTER (copied behavior from Home) -->
+                <!-- Hidden numeric inputs kept for compatibility with existing filterMarkers() -->
+                <input type="number" id="minPrice" class="hidden" />
+                <input type="number" id="maxPrice" class="hidden" />
+
+                <!-- Price dropdown trigger -->
+                <div class="relative w-full max-w-md">
+                    <button type="button" id="price-filter-button"
+                        class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                        <span>Precio</span>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div id="price-dropdown"
+                        class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
+                        <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
+
+                        <!-- Slider -->
+                        <div id="price-slider" class="mb-4"></div>
+
+                        <!-- Values -->
+                        <div class="flex justify-between items-center text-sm text-gray-700">
+                            <div class="flex items-center gap-1 border rounded-md p-2">
+                                $ <span id="slider-min-value"></span>
+                            </div>
+                            <div class="text-gray-400">-</div>
+                            <div class="flex items-center gap-1 border rounded-md p-2">
+                                $ <span id="slider-max-value"></span>
+                            </div>
+                        </div>
+
+                        <!-- Hidden values for this page (also mirror to #minPrice/#maxPrice) -->
+                        <input type="hidden" id="slider-min-input">
+                        <input type="hidden" id="slider-max-input">
+
+                        <div class="mt-4 text-right">
+                            <button type="button" id="apply-price-button"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                                Aplicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Listing type -->
                 <select id="listingType" class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    <option value="">Todos</option>
-                    <option value="sale">Venta</option>
                     <option value="rent">Renta</option>
+                    <option value="sale">Venta</option>
+
                 </select>
 
+                <!-- Filter button (existing) -->
                 <button id="filterBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
                     Filtrar
                 </button>
             </div>
 
-
             {{-- Navegación (del nuevo diseño, ajustada) --}}
-            <nav class="flex items-center space-x-6 text-gray-700 font-medium">
-                <a href="{{ route('home') }}" class="hover:text-blue-600 transition">Inicio</a>
-                {{-- Mantenemos el perfil si está autenticado --}}
+            <nav class="flex items-center space-x-6 text-sm text-gray-600">
                 @auth
                     <a href="{{ url('/dashboard') }}"
                         class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
                 @else
-                    <button type="button" onclick="openLoginModal()" {{-- Asume que tienes modal login en welcome --}}
+                    <button type="button" onclick="openLoginModal()"
                         class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Iniciar sesión</button>
                 @endauth
             </nav>
@@ -88,28 +129,22 @@
     {{-- Contenido Principal --}}
     <main class="flex-grow">
         {{-- Mapa (ocupa todo el espacio disponible) --}}
-        <section class="w-full h-full"> {{-- Ajustado para ocupar espacio --}}
+        <section class="w-full h-full">
             <div id="map"></div>
         </section>
     </main>
 
-    {{-- Footer (del nuevo diseño) --}}
-    {{-- Se elimina el footer para dar más espacio al mapa, o puedes mantenerlo si prefieres --}}
-    {{-- <footer class="bg-gray-800 text-white py-8"> ... </footer> --}}
-
-    {{-- Modal Carrusel (del old, con estilos Tailwind mejorados) --}}
-    <div id="modal" class="modal hidden">
-        <div id="modalContent" class="modal-content">
-            {{-- Botón Cerrar (Mejorado) --}}
-            <button id="closeModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
-
-            {{-- Contenido del Modal --}}
-            <div id="modalInfo" class="text-gray-800 mb-4">
-                {{-- El título y descripción se llenarán con JS --}}
-            </div>
-            {{-- Carrusel --}}
-            <div id="carousel" class="carousel-container scrollbar-hide mb-2">
-                {{-- Las imágenes se llenarán con JS --}}
+    {{-- Modal de Propiedad --}}
+    <div id="propertyModal" class="modal hidden">
+        <div class="modal-content">
+            <button onclick="closePropertyModal()" class="absolute right-3 top-3 text-gray-500 hover:text-gray-800">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <div id="propertyCarousel" class="carousel-container"></div>
+                </div>
+                <div id="modalInfo" class="space-y-2"></div>
             </div>
         </div>
     </div>
@@ -120,10 +155,10 @@
         const properties = @json($properties);
 
         // Elementos del Modal
-        const modal = document.getElementById('modal');
-        const carousel = document.getElementById('carousel');
+        const modal = document.getElementById('propertyModal');
+        const carousel = document.getElementById('propertyCarousel');
         const modalInfo = document.getElementById('modalInfo');
-        const closeModalBtn = document.getElementById('closeModal');
+        const closeModalBtn = document.querySelector('#propertyModal button');
 
         // Variables del mapa y marcadores
         let map;
@@ -200,6 +235,7 @@
             // Botón de filtrado
             const filterBtn = document.getElementById('filterBtn');
             if(filterBtn) filterBtn.addEventListener('click', filterMarkers);
+            filterMarkers();
         }
 
         // Función para filtrar marcadores según precio y tipo
@@ -239,14 +275,14 @@
                     const imgEl = document.createElement('img');
                     imgEl.src = `{{ asset('storage') }}/${imgData.image_path}`;
                     imgEl.alt = prop.title;
-                    imgEl.className = 'carousel-img';
+                    imgEl.className = 'carousel-item';
                     carousel.appendChild(imgEl);
                 });
             } else {
                 const imgEl = document.createElement('img');
                 imgEl.src = 'https://via.placeholder.com/400x200?text=Sin+Imagen';
                 imgEl.alt = 'Sin imagen';
-                imgEl.className = 'carousel-img';
+                imgEl.className = 'carousel-item';
                 carousel.appendChild(imgEl);
             }
 
@@ -254,6 +290,132 @@
         }
     </script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const priceSlider = document.getElementById('price-slider');
+        const minInput = document.getElementById('slider-min-input');
+        const maxInput = document.getElementById('slider-max-input');
+        const minPriceCompat = document.getElementById('minPrice'); // kept for filterMarkers()
+        const maxPriceCompat = document.getElementById('maxPrice');
+        const typeSelect = document.getElementById('listingType');
+        const priceButton = document.getElementById('price-filter-button');
+        const priceDropdown = document.getElementById('price-dropdown');
+        const applyPriceButton = document.getElementById('apply-price-button');
+        const minDisplay = document.getElementById('slider-min-value');
+        const maxDisplay = document.getElementById('slider-max-value');
 
+        // Ranges (match Home defaults)
+        const RANGES = {
+            rent: { min: 100, max: 10000, step: 100 },
+            sale: { min: 500000, max: 10000000, step: 50000 }
+        };
+
+        function getType() {
+            return (typeSelect && typeSelect.value) ? typeSelect.value : '';
+        }
+
+        function getRangeByType() {
+            const t = getType();
+            if (t === 'sale') return RANGES.sale;
+            // default rent when "Todos" or "rent"
+            return RANGES.rent;
+        }
+
+        const formatter = new Intl.NumberFormat('es-MX', { style: 'decimal', maximumFractionDigits: 0 });
+
+        function updateButtonText(minVal, maxVal, cfg) {
+            const cfgMin = cfg.min, cfgMax = cfg.max;
+            if (minVal > cfgMin || maxVal < cfgMax) {
+                priceButton.innerHTML = `<span>$${formatter.format(minVal)} - $${formatter.format(maxVal)}</span>`;
+            } else {
+                priceButton.innerHTML = `<span>Precio</span>`;
+            }
+        }
+
+        function initSlider() {
+            if (!priceSlider) return;
+            const cfg = getRangeByType();
+
+            // Read initial from compat inputs or defaults
+            let initMin = parseInt(minPriceCompat.value || cfg.min, 10);
+            let initMax = parseInt(maxPriceCompat.value || cfg.max, 10);
+            initMin = Math.max(cfg.min, Math.min(initMin, cfg.max));
+            initMax = Math.max(cfg.min, Math.min(initMax, cfg.max));
+            if (initMin > initMax) initMin = initMax;
+
+            if (priceSlider.noUiSlider) {
+                priceSlider.noUiSlider.updateOptions({
+                    start: [initMin, initMax],
+                    step: cfg.step,
+                    range: { min: cfg.min, max: cfg.max }
+                }, true);
+            } else {
+                noUiSlider.create(priceSlider, {
+                    start: [initMin, initMax],
+                    connect: true,
+                    step: cfg.step,
+                    range: { min: cfg.min, max: cfg.max }
+                });
+            }
+
+            // Initial sync
+            minInput.value = initMin;
+            maxInput.value = initMax;
+            minPriceCompat.value = initMin;
+            maxPriceCompat.value = initMax;
+            minDisplay.textContent = formatter.format(initMin);
+            maxDisplay.textContent = formatter.format(initMax);
+            updateButtonText(initMin, initMax, cfg);
+
+            // Slider events
+            priceSlider.noUiSlider.off && priceSlider.noUiSlider.off('update'); // ensure single binding if supported
+            priceSlider.noUiSlider.on('update', function(values) {
+                const vMin = Math.round(values[0]);
+                const vMax = Math.round(values[1]);
+                minDisplay.textContent = formatter.format(vMin);
+                maxDisplay.textContent = formatter.format(vMax);
+                minInput.value = vMin;
+                maxInput.value = vMax;
+                minPriceCompat.value = vMin;
+                maxPriceCompat.value = vMax;
+                updateButtonText(vMin, vMax, cfg);
+            });
+        }
+
+        // Dropdown behavior
+        if (priceButton && priceDropdown) {
+            priceButton.addEventListener('click', (e) => { e.stopPropagation(); priceDropdown.classList.toggle('hidden'); });
+            applyPriceButton && applyPriceButton.addEventListener('click', () => {
+                priceDropdown.classList.add('hidden');
+                if (typeof filterMarkers === 'function') filterMarkers();
+            });
+            window.addEventListener('click', (e) => {
+                if (!priceDropdown.classList.contains('hidden') && !priceDropdown.contains(e.target) && e.target !== priceButton) {
+                    priceDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        // Reconfigure slider when listing type changes
+        if (typeSelect) {
+            typeSelect.addEventListener('change', () => {
+                const cfg = getRangeByType();
+
+                // 1) sincroniza inputs que usa filterMarkers()
+                minPriceCompat.value = cfg.min;
+                maxPriceCompat.value = cfg.max;
+
+                // 2) reconfigura el slider a los nuevos límites
+                initSlider();
+
+                // 3) aplica el filtro inmediatamente
+                if (typeof filterMarkers === 'function') filterMarkers();
+            });
+        }
+
+        initSlider();
+    });
+    </script>
 </body>
 </html>

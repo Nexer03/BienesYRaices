@@ -79,7 +79,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // Visitas
-    Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
     Route::get('/my-visits', [VisitController::class, 'myVisits'])->name('visits.my');
 
     // Panel de agentes y rutas específicas
@@ -91,9 +90,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('agent.view')->with('error', 'No tienes acceso al panel de agentes');
         })->name('agent.home');
 
-        Route::get('/agent/visits', [VisitController::class, 'agentVisits'])->name('agent.visits');
-        Route::put('/visits/{visit}/confirm', [VisitController::class, 'confirm'])->name('visits.confirm');
-        Route::put('/visits/{visit}/cancel', [VisitController::class, 'cancel'])->name('visits.cancel');
     });
 });
 /*
@@ -111,6 +107,25 @@ Route::middleware(['auth', 'agent'])->group(function () {
         Route::put('/{property}', [PropertyController::class, 'update'])->name('properties.update');
         Route::delete('/property-images/{image}', [PropertyController::class, 'destroyImage'])->name('properties.images.destroy');
         Route::delete('/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
+        Route::get('agent/visits/feed', [\App\Http\Controllers\VisitController::class, 'feed'])
+    ->name('agent.visits.feed');
+
+    });
+
+    // ---- Visits del agente (nuevo) ----
+    Route::prefix('agent')->name('agent.')->group(function () {
+        // CRUD de visitas para el agente
+        Route::get('visits', [VisitController::class, 'index'])->name('visits.index');
+        Route::get('visits/create', [VisitController::class, 'create'])->name('visits.create');
+        Route::post('visits', [VisitController::class, 'store'])->name('visits.store');
+        Route::get('visits/{visit}/edit', [VisitController::class, 'edit'])->name('visits.edit');
+        Route::put('visits/{visit}', [VisitController::class, 'update'])->name('visits.update');
+        Route::delete('visits/{visit}', [VisitController::class, 'destroy'])->name('visits.destroy');
+        // Rutas del calendario (feed JSON)
+        Route::get('agent/visits/feed', [VisitController::class, 'feed'])->name('agent.visits.feed');
+
+        // Cambio rápido de estado (opcional)
+        Route::patch('visits/{visit}/status', [VisitController::class, 'updateStatus'])->name('visits.status');
     });
 });
 /*
