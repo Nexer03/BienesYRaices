@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -12,6 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected $policies = [
         \App\Models\Visit::class => \App\Policies\VisitPolicy::class,
+        \App\Models\Property::class => \App\Policies\PropertyPolicy::class,
     ];
 
     public function register(): void
@@ -24,7 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::before(function ($user, $ability) {
+            return $user->role === 'admin' ? true : null;
+        });
+
         Schema::defaultStringLength(191);
     }
 }

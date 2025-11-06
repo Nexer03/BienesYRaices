@@ -12,6 +12,9 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\PropertyReservationController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\FavoriteController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +69,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
+    Route::post('/properties/{property}/reviews', [ReviewController::class, 'store'])
+        ->name('reviews.store');
+
     // Perfil del usuario
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -75,7 +81,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/preferences/edit', [UserPreferenceController::class, 'edit'])->name('preferences.edit');
     Route::put('/preferences', [UserPreferenceController::class, 'update'])->name('preferences.update');
 
-    // Propiedades del usuario logueado
+    // Favoritos del usuario logeado
+    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/favorites/{property}', [FavoriteController::class, 'store'])->name('favorites.store');
+    Route::delete('/favorites/{property}', [FavoriteController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('favorites.destroy');
+
+
+
+    // AJAX toggle opcional (devuelve JSON)
+    Route::post('/favorites/{property}/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 
 
     // Visitas
@@ -127,6 +143,9 @@ Route::middleware(['auth', 'agent'])->group(function () {
         // Cambio rápido de estado (opcional)
         Route::patch('visits/{visit}/status', [VisitController::class, 'updateStatus'])->name('visits.status');
     });
+    Route::get('/agent/analytics', [\App\Http\Controllers\AgentAnalyticsController::class, 'index'])
+    ->name('agent.analytics');
+
 });
 /*
 |--------------------------------------------------------------------------

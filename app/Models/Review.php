@@ -7,17 +7,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Review extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'property_id','reservation_id','author_id','agent_id',
+        'cleanliness','accuracy','communication','location','value','checkin',
+        'overall','comment','is_public','published_at',
+    ];
 
-    protected $fillable = ['property_id','user_id','rating','comment'];
+    // Relaciones
+    public function property(){ return $this->belongsTo(Property::class); }
+    public function reservation(){ return $this->belongsTo(PropertyReservation::class, 'reservation_id'); }
+    public function author(){ return $this->belongsTo(User::class, 'author_id'); }
+    public function agent(){ return $this->belongsTo(User::class, 'agent_id'); }
 
-    public function property()
-    {
-        return $this->belongsTo(Property::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // Scopes
+    public function scopePublic($q){ return $q->where('is_public', true); }
 }

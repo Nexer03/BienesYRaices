@@ -33,13 +33,17 @@ class Property extends Model
 
     public function reviews()
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(\App\Models\Review::class)->where('is_public', true)->latest();
     }
 
-    public function favoritedBy()
+
+
+    public function favoredBy()
     {
-        return $this->belongsToMany(User::class, 'favorites');
+        return $this->belongsToMany(\App\Models\User::class, 'favorites')
+                    ->withTimestamps();
     }
+
 
 
     public function reservations()
