@@ -108,32 +108,169 @@
             @empty
             <p class="text-gray-500">No se especificaron amenidades.</p>
             @endforelse
+
+            {{-- Reseñas --}}
+            @if($property->listing_type === 'rent')
+        <h2 class="text-2xl font-semibold border-b pb-2 mt-8 mb-4">Reseñas</h2>
+
+        {{-- Flash messages (sin alert() JS) --}}
+        @if(session('success'))
+            <div class="mb-3 p-3 rounded bg-green-50 text-green-700 border border-green-200">
+            {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-3 p-3 rounded bg-red-50 text-red-700 border border-red-200">
+            {{ session('error') }}
+            </div>
+        @endif
+        @if ($errors->any())
+            <div class="mb-3 p-3 rounded bg-yellow-50 text-yellow-800 border border-yellow-200">
+            <ul class="list-disc ml-5">
+                @foreach ($errors->all() as $err)
+                <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+            </div>
+        @endif
+
+        @php
+            $count = $property->reviews->count();
+            $avg   = $count ? round($property->reviews->avg('overall'), 2) : null;
+        @endphp
+
+        <div class="mb-4">
+            @if($count)
+            <div class="text-lg font-semibold">
+                ⭐ {{ $avg }} / 5 · {{ $count }} reseña{{ $count>1?'s':'' }}
+            </div>
+            @else
+            <div class="text-gray-500">Aún no hay reseñas.</div>
+            @endif
+        </div>
+
+        {{-- Lista de reseñas (últimas 5) --}}
+        <div class="space-y-4">
+            @foreach($property->reviews->take(5) as $rev)
+            <div class="p-4 bg-white rounded-lg shadow border">
+                <div class="flex items-center justify-between">
+                <div class="font-semibold">{{ $rev->author->name ?? 'Usuario' }}</div>
+                <div>⭐ {{ number_format($rev->overall,1) }}</div>
+                </div>
+                @if($rev->comment)
+                <p class="text-gray-700 mt-2">{{ $rev->comment }}</p>
+                @endif
+                <div class="text-xs text-gray-500 mt-1">
+                {{ \Carbon\Carbon::parse($rev->published_at ?? $rev->created_at)->diffForHumans() }}
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        {{-- Formulario para escribir reseña (solo si el usuario tiene una reserva pasada sin reseña) --}}
+        @auth
+            @php
+            $eligibleReservation = \App\Models\PropertyReservation::where('property_id', $property->id)
+                ->where('user_id', auth()->id())
+                ->where('end_date', '<', now())
+                ->whereNotIn('id', \App\Models\Review::select('reservation_id'))
+                ->latest()->first();
+            @endphp
+
+            @if($eligibleReservation)
+            <h3 class="text-xl font-semibold mt-6 mb-2">Escribe tu reseña</h3>
+            <form method="POST" action="{{ route('reviews.store', $property) }}" class="space-y-3">
+                @csrf
+                <input type="hidden" name="reservation_id" value="{{ $eligibleReservation->id }}">
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                @foreach (['cleanliness'=>'Limpieza','accuracy'=>'Precisión','communication'=>'Comunicación','location'=>'Ubicación','value'=>'Valor','checkin'=>'Check-in'] as $key=>$label)
+                    <label class="block">
+                    <span class="text-gray-700">{{ $label }}</span>
+                    <select name="{{ $key }}" class="mt-1 block w-full border rounded p-2" required>
+                        @for($i=5;$i>=1;$i--)
+                        <option value="{{ $i }}">{{ $i }}</option>
+                        @endfor
+                    </select>
+                    </label>
+                @endforeach
+                </div>
+
+                <label class="block">
+                <span class="text-gray-700">Comentario (opcional)</span>
+                <textarea name="comment" class="mt-1 block w-full border rounded p-2" rows="3"></textarea>
+                </label>
+
+                <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Enviar reseña
+                </button>
+            </form>
+            @endif
+        @endauth
+        @endif
+
         </div>
 
         <div class="md:col-span-1">
             <div class="bg-white p-6 rounded-lg shadow-md border sticky top-28">
                 <p class="text-2xl font-bold">${{ number_format($property->price, 2) }}</p>
                 @if($property->listing_type == 'rent')
-                  <p class="text-gray-500">Precio de renta</p>
+                <p class="text-gray-500">Precio de renta</p>
                 @elseif($property->listing_type == 'sale')
-                  <p class="text-gray-500">Precio de venta</p>
+                <p class="text-gray-500">Precio de venta</p>
                 @endif
 
-                {{-- ================= Acciones por tipo de listado ================= --}}
+                {{-- === ACCIONES SEGÚN TIPO === --}}
                 @if($property->listing_type == 'sale')
-                    {{-- SOLO VENTA: mostrar botón "Contactar con el agente" --}}
-                    <button type="button"
-                            class="w-full bg-blue-600 text-white py-3 rounded-lg mt-4 hover:bg-blue-700 transition font-semibold">
-                        Contactar con el agente
-                    </button>
+                {{-- SOLO VENTA: Contactar con el agente (placeholder) --}}
+
+                {{-- Mensajería pendiente: botón placeholder sin acción --}}
+                <button
+                    type="button"
+                    class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 transition font-semibold cursor-not-allowed"
+                    title="La mensajería se habilitará próximamente">
+                    Contactar con el agente
+                </button>
                 @elseif($property->listing_type == 'rent')
-                    {{-- SOLO RENTA: mostrar "Reservar" y ocultar "Agendar visita" --}}
-                    <button id="reserveButton"
-                            class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 transition font-semibold">
-                        Reservar
-                    </button>
+                {{-- SOLO RENTA: Reservar --}}
+                <button
+                    id="reserveButton"
+                    class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 transition font-semibold">
+                    Reservar
+                </button>
                 @endif
-                {{-- ================================================================ --}}
+
+                {{-- === FAVORITOS (aplica a venta y renta) === --}}
+                {{-- === FAVORITOS: visible para cualquier usuario logueado === --}}
+                @auth
+                @php
+                    // Mejor con exists() para no depender de que la relación esté pre-cargada
+                    $isFav = auth()->user()
+                    ->favoriteProperties()
+                    ->where('properties.id', $property->id)
+                    ->exists();
+                @endphp
+
+                <div class="mt-4">
+                    <form method="POST"
+                        action="{{ $isFav ? route('favorites.destroy',$property) : route('favorites.store',$property) }}"
+                        id="fav-fallback-form" class="hidden">
+                    @csrf
+                    @if($isFav) @method('DELETE') @endif
+                    </form>
+
+                    <button
+                    id="fav-btn"
+                    class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg hover:bg-blue-50 transition font-semibold"
+                    data-toggle-url="{{ route('favorites.toggle',$property) }}"
+                    data-state="{{ $isFav ? 'on' : 'off' }}"
+                    onclick="if(!window.toggleFavorite){ document.getElementById('fav-fallback-form').submit(); }"
+                    >
+                    <span id="fav-icon">{{ $isFav ? '★' : '☆' }}</span>
+                    <span id="fav-text">{{ $isFav ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</span>
+                    </button>
+                </div>
+                @endauth
             </div>
         </div>
     </div>
@@ -344,6 +481,36 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+
+<script>
+window.toggleFavorite = async function() {
+  const btn  = document.getElementById('fav-btn');
+  if (!btn) return;
+  const url  = btn.dataset.toggleUrl;
+  const icon = document.getElementById('fav-icon');
+  const text = document.getElementById('fav-text');
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept':'application/json' }
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const on = data.favorited === true;
+      btn.dataset.state = on ? 'on' : 'off';
+      icon.textContent = on ? '★' : '☆';
+      text.textContent = on ? 'Quitar de favoritos' : 'Agregar a favoritos';
+    }
+  } catch(e) { /* sin alertas */ }
+};
+
+document.getElementById('fav-btn')?.addEventListener('click', function(ev){
+  ev.preventDefault();
+  if (window.fetch) toggleFavorite();
+  else document.getElementById('fav-fallback-form').submit();
+});
+</script>
 
 </body>
 </html>

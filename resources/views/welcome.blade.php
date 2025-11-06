@@ -64,6 +64,9 @@
             </div>
             <nav class="flex items-center space-x-6 text-gray-700 font-medium">
                 <a href="{{ route('visits.my') }}" class="hover:text-blue-600 transition">Mi agenda</a>
+                @auth
+                <a href="{{ route('favorites.index') }}" class="...">Favoritos</a>
+                @endauth
                 <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
                 @auth
                 @if(auth()->user()->role === 'agent')

@@ -27,10 +27,12 @@ class User extends Authenticatable
     return $this->hasOne(UserPreference::class);
 }
 
-    public function favorites()
+    public function favoriteProperties()
     {
-        return $this->belongsToMany(Property::class, 'favorites');
+        return $this->belongsToMany(\App\Models\Property::class, 'favorites')->withTimestamps();
     }
+
+
 
     public function visitsAsClient()
     {

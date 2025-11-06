@@ -9,10 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; // <-- Y este para borrar archivos
 use Illuminate\Support\Arr;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
 class PropertyController extends Controller
 {
+    use AuthorizesRequests;
 
 
 public function index(Request $request)
@@ -219,7 +221,7 @@ public function index(Request $request)
      */
     public function show(Property $property)
     {
-        $property->load('images', 'amenities.category', 'reviews.user', 'user');
+        $property->load('images', 'amenities.category', 'reviews.author', 'user');
         return view('properties.show', compact('property'));
     }
 
@@ -228,10 +230,7 @@ public function index(Request $request)
      */
     public function edit(Property $property)
     {
-        if ($property->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para editar esta propiedad.');
-        }
-
+        $this->authorize('update', $property);
         $amenityCategories = AmenityCategory::with('amenities')->get();
         return view('properties.EditProperty', compact('property', 'amenityCategories'));
     }
@@ -241,9 +240,7 @@ public function index(Request $request)
      */
     public function update(Request $request, Property $property)
 {
-    if ($property->user_id !== Auth::id()) {
-        abort(403, 'No tienes permiso para modificar esta propiedad.');
-    }
+    $this->authorize('update', $property);
 
     $validated = $request->validate([
         'title'        => 'required|string|max:255',
@@ -289,9 +286,7 @@ public function index(Request $request)
      */
     public function destroy(Property $property)
     {
-        if ($property->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para eliminar esta propiedad.');
-        }
+        $this->authorize('delete', $property);
 
         foreach ($property->images as $image) {
             Storage::disk('public')->delete($image->image_path);
