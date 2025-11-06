@@ -8,6 +8,8 @@ use App\Models\PropertyImage; // <-- Asegúrate de importar este modelo
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; // <-- Y este para borrar archivos
+use Illuminate\Support\Arr;
+
 
 class PropertyController extends Controller
 {
@@ -170,8 +172,8 @@ public function index(Request $request)
             'city'          =>'required|string|max:50',
             'price'        => 'required|numeric|min:0|max:99999999.99',
             'location'     => 'required|string|max:255',
-            'latitude'     => 'required|numeric',
-            'longitude'    => 'required|numeric',
+            'latitude' => ['required','numeric','between:-90,90'],
+            'longitude' => ['required','numeric','between:-180,180'],
             'listing_type' => 'required|in:sale,rent',
             'bedrooms'     => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
             'bathrooms'    => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
@@ -238,44 +240,49 @@ public function index(Request $request)
      * Actualiza una propiedad en la base de datos.
      */
     public function update(Request $request, Property $property)
-    {
-        if ($property->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para modificar esta propiedad.');
+{
+    if ($property->user_id !== Auth::id()) {
+        abort(403, 'No tienes permiso para modificar esta propiedad.');
+    }
+
+    $validated = $request->validate([
+        'title'        => 'required|string|max:255',
+        'description'  => 'nullable|string',
+        'type'         => 'required|string',                 // <- si NO existe en BD, elimínalo en store/update
+        'city'         => 'required|string|max:50',
+        'price'        => 'required|numeric|min:0|max:99999999.99',
+        'location'     => 'required|string|max:255',
+        'latitude'     => ['required','numeric','between:-90,90'],     // <- más robusto
+        'longitude'    => ['required','numeric','between:-180,180'],   // <- más robusto
+        'listing_type' => 'required|in:sale,rent',
+        'bedrooms'     => 'nullable|integer|min:1|max:20',
+        'bathrooms'    => 'nullable|integer|min:1|max:20',
+
+        // Unificar tamaño (ej. 5 MB)
+        'images.*'     => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'amenities'    => 'nullable|array',
+    ]);
+
+    // Evitar enviar arrays no fillable a update()
+    $data = Arr::except($validated, ['images', 'amenities']);
+
+    $property->update($data);
+
+    // Añadir nuevas imágenes (si llegaron)
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $file) {
+            $path = $file->store('properties', 'public');
+            $property->images()->create(['image_path' => $path]);
         }
+    }
 
-        $validated = $request->validate([
-            'title'        => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'type'         => 'required|string',
-            'city'         => 'required|string|max:50',
-            'price'        => 'required|numeric|min:0|max:99999999.99',
-            'location'     => 'required|string|max:255',
-            'latitude'     => 'required|numeric',
-            'longitude'    => 'required|numeric',
-            'listing_type' => 'required|in:sale,rent',
-            'bedrooms'     => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
-            'bathrooms'    => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
-            'images.*'     => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'amenities'    => 'nullable|array',
-        ]);
+    // Sincronizar amenidades (si enviaste el campo)
+    $property->amenities()->sync($validated['amenities'] ?? []);
 
-        $property->update($validated);
-
-        // --- LÓGICA DE IMÁGENES MODIFICADA ---
-        // Si el usuario sube nuevas imágenes, simplemente las añadimos a la galería existente.
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
-                $path = $file->store('properties', 'public');
-                $property->images()->create(['image_path' => $path]);
-            }
-        }
-
-        $property->amenities()->sync($validated['amenities'] ?? []);
-
-         return redirect()
+    return redirect()
         ->route('properties.my')
         ->with('success', 'Propiedad actualizada correctamente.');
-    }
+}
 
     /**
      * Elimina una propiedad y sus recursos.

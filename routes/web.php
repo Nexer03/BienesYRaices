@@ -124,6 +124,9 @@ Route::middleware(['auth', 'agent'])->group(function () {
         // Cambio rápido de estado (opcional)
         Route::patch('visits/{visit}/status', [VisitController::class, 'updateStatus'])->name('visits.status');
     });
+    Route::get('/agent/analytics', [\App\Http\Controllers\AgentAnalyticsController::class, 'index'])
+    ->name('agent.analytics');
+
 });
 /*
 |--------------------------------------------------------------------------

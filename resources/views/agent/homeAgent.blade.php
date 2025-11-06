@@ -46,7 +46,7 @@
         </div>
 
         <!-- Grid de acciones -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
             <!-- Mis Propiedades -->
             <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
                 <div class="text-blue-500 text-3xl mb-4">
@@ -85,6 +85,20 @@
                     Abrir mensajería →
                 </a>
             </div>
+            <!-- Estadísticas -->
+            <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
+            <div class="text-blue-500 text-3xl mb-4 relative inline-block">
+                <i class="fas fa-chart-line"></i>
+                <span class="absolute -top-2 -right-3 text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Nuevo</span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Estadísticas</h3>
+            <p class="text-gray-600 mb-4">Resumen de propiedades y visitas en el tiempo</p>
+            <a href="{{ route('agent.analytics') }}"
+                class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
+                Ver estadísticas →
+            </a>
+            </div>
+
         </div>
     </main>
 
@@ -127,6 +141,12 @@
                                 Mis Propiedades
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('agent.analytics') }}" class="text-gray-300 hover:text-white transition-colors duration-200">
+                                Estadísticas
+                            </a>
+                        </li>
+
                         <li>
                             <a href="{{ route('agent.visits.index') }}" class="text-gray-300 hover:text-white transition-colors duration-200">
                                 Agendas
