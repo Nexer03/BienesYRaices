@@ -40,6 +40,48 @@ class VisitController extends Controller
         return view('agent.visits.index', compact('visits', 'properties', 'clients'));
     }
 
+    public function feed(Request $request)
+{
+    $agentId = $request->user()->id;
+
+    $visits = Visit::with(['property', 'client'])
+        ->where('agent_id', $agentId)
+        ->orderBy('visit_date', 'asc')
+        ->get();
+
+    $events = $visits->map(function ($v) {
+        $start = \Carbon\Carbon::parse($v->visit_date);
+        $end   = (clone $start)->addMinutes(60);
+
+        $colors = [
+            'pending'   => ['#ffc107', '#fff3cd'], // amarillos
+            'confirmed' => ['#0d6efd', '#cfe2ff'], // azules
+            'completed' => ['#198754', '#d1e7dd'], // verdes
+            'cancelled' => ['#dc3545', '#f8d7da'], // rojos
+        ];
+        [$border, $bg] = $colors[$v->status] ?? ['#6c757d', '#e2e3e5'];
+
+        return [
+            'id'    => $v->id,
+            'title' => $v->property?->title ?? 'Visita',
+            'start' => $start->toIso8601String(),
+            'end'   => $end->toIso8601String(),
+            'url'   => route('agent.visits.edit', $v),
+            'backgroundColor' => $bg,
+            'borderColor'     => $border,
+            'textColor'       => '#000',
+            'extendedProps'   => [
+                'status'  => $v->status,
+                'client'  => $v->client?->name,
+            ],
+        ];
+    });
+
+    return response()->json($events);
+}
+
+
+
     /**
      * GET /agent/visits/create
      * Formulario de creación.

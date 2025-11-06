@@ -107,6 +107,9 @@ Route::middleware(['auth', 'agent'])->group(function () {
         Route::put('/{property}', [PropertyController::class, 'update'])->name('properties.update');
         Route::delete('/property-images/{image}', [PropertyController::class, 'destroyImage'])->name('properties.images.destroy');
         Route::delete('/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
+        Route::get('agent/visits/feed', [\App\Http\Controllers\VisitController::class, 'feed'])
+    ->name('agent.visits.feed');
+
     });
 
     // ---- Visits del agente (nuevo) ----
