@@ -25,7 +25,7 @@ class VisitController extends Controller
             $query->where('status', $request->status);
         }
 
-        $visits = $query->orderBy('visit_date', 'desc')->get();
+        $visits = $query->orderBy('visit_date', 'desc')->paginate(10)->withQueryString();
 
         $reservations = PropertyReservation::with('property')
             ->where('user_id', $clientId)
@@ -175,30 +175,6 @@ class VisitController extends Controller
         return redirect()->route('agent.visits.index')->with('success', 'Visita creada correctamente.');
     }
 
-    public function myVisits(Request $request)
-        {
-            $query = Visit::with(['property', 'agent'])
-                ->where('client_id', auth()->id());
-
-            if ($request->status) {
-                $query->where('status', $request->status);
-            }
-
-            $visits = $query->orderBy('visit_date', 'desc')->get();
-
-            $reservations = \App\Models\PropertyReservation::with('property')
-                ->where('user_id', auth()->id())
-                ->orderBy('start_date', 'desc')
-                ->get()
-                ->map(function($res) {
-                    $res->nights = \Carbon\Carbon::parse($res->start_date)
-                        ->diffInDays(\Carbon\Carbon::parse($res->end_date));
-                    return $res;
-                });
-
-            return view('visits.myVisits', compact('visits', 'reservations'))
-                ->with('activeTab', 'visits');
-        }
 
     /**
      * GET /agent/visits/{visit}/edit

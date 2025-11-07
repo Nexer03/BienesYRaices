@@ -24,7 +24,53 @@ class Property extends Model
 
     protected $casts = [
         'rented_until' => 'datetime', // <-- para trabajar como Carbon
+        'price' => 'float',
+        'total_price' => 'float',
+        'start_date'  => 'date',
+        'end_date'    => 'date',
+
     ];
+
+     /** Scopes */
+    public function scopeAvailable($q)
+    {
+        return $q->where('status', 'available');
+    }
+    public function scopeRented($q)
+    {
+        return $q->where('status', 'rented');
+    }
+    public function scopeSold($q)
+    {
+        return $q->where('status', 'sold');
+    }
+
+    // Si tienes 'unavailable' en DB:
+    public function scopeUnavailable($q)
+    {
+        return $q->where('status', 'unavailable');
+    }
+
+    /** Helpers de estado */
+    public function isAvailable(): bool
+    {
+        return $this->status === 'available';
+    }
+    public function isRented(): bool
+    {
+        return $this->status === 'rented';
+    }
+    public function isSold(): bool
+    {
+        return $this->status === 'sold';
+    }
+    public function isUnavailable(): bool
+    {
+        // A) si existe 'unavailable' en DB:
+        return $this->status === 'unavailable';
+        // B) si NO existe, “simula” con pending:
+        // return $this->status === 'pending';
+    }
 
     /* ===================== Relaciones ===================== */
 

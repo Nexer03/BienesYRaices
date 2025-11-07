@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class PropertyReservationController extends Controller
 {
-   
+
 public function store(Request $request)
     {
         if (!auth()->check()) {
@@ -34,6 +34,12 @@ public function store(Request $request)
             ], 422);
         }
 
+        $property = Property::findOrFail($request->property_id);
+        abort_unless($property->status === 'available', 422, 'La propiedad no está disponible.');
+        abort_if(\App\Models\PropertyReservation::overlaps($property->id, $request->start_date, $request->end_date),
+                422, 'Las fechas seleccionadas se traslapan con otra reserva.');
+
+
         // Calcular precio
         $start = Carbon::parse($request->start_date);
         $end = Carbon::parse($request->end_date);
@@ -51,7 +57,7 @@ public function store(Request $request)
     ]);
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'reservation_id' => $reservation->id,
             'total_price' => $totalPrice,
             'nights' => $nights,

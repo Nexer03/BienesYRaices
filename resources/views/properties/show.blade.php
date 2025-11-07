@@ -310,13 +310,33 @@
         </div>
 
         <div class="flex flex-col gap-3">
-            <button onclick="submitReservation()"
-                    class="bg-green-500 text-white px-4 py-3 rounded hover:bg-green-600">Confirmar Reserva</button>
+            <button
+                type="button"
+                id="confirmReservationBtn"
+                class="bg-green-500 text-white px-4 py-3 rounded hover:bg-green-600">
+                Confirmar Reserva
+            </button>
+
             <button onclick="closeReservationModal()"
                     class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancelar</button>
         </div>
     </div>
 </div>
+
+{{-- Formulario oculto que manda al checkout tipo Airbnb --}}
+<form id="reservationPreviewForm"
+      action="{{ route('reservations.preview') }}"
+      method="POST"
+      class="hidden">
+  @csrf
+  <input type="hidden" name="property_id" value="{{ $property->id }}">
+  <input type="hidden" name="start_date"  id="checkout_start_date">
+  <input type="hidden" name="end_date"    id="checkout_end_date">
+  {{-- Si luego quieres mandar huéspedes:
+  <input type="hidden" name="guests" id="checkout_guests" value="1">
+  --}}
+</form>
+
 
 <footer class="bg-gray-800 text-white py-8 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -369,115 +389,116 @@
 </footer>
 
 <script>
-    const propertyLocation = { lat: {{ $property->latitude }}, lng: {{ $property->longitude }} };
-    const propertyId = {{ $property->id }};
-    const propertyPrice = {{ $property->price }};
-    let reservationData = null;
+  const propertyLocation = { lat: {{ $property->latitude }}, lng: {{ $property->longitude }} };
+  const propertyId = {{ $property->id }};
+  const propertyPrice = {{ $property->price }}; // precio por noche
+  let reservationData = null;
 
-    // Mapas
-    fetch('/maps-key')
-        .then(res => res.json())
-        .then(data => {
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap`;
-            script.async = true;
-            document.head.appendChild(script);
-        });
-
-    function initMap() {
-        const map = new google.maps.Map(document.getElementById("map"), { center: propertyLocation, zoom: 16 });
-        new google.maps.Marker({ map: map, position: propertyLocation, title: "{{ $property->title }}" });
-    }
-
-    // Modales de visita (no visibles en UI actual, quedan por si los activamos luego)
-    function openVisitCalendar() {
-        const now = new Date();
-        const defaultDate = new Date();
-        defaultDate.setDate(now.getDate() + 2);
-        defaultDate.setHours(10,0,0,0);
-        const dateTimeInput = document.getElementById('visitDateTime');
-        dateTimeInput.min = now.toISOString().slice(0,16);
-        dateTimeInput.value = defaultDate.toISOString().slice(0,16);
-        document.getElementById('visitModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('visitModal').style.display = 'none';
-    }
-
-    function scheduleVisit() {
-        const visitDate = document.getElementById('visitDateTime').value;
-        if (!visitDate) { alert('Por favor selecciona una fecha y hora'); return; }
-
-        fetch('/visits', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            body: JSON.stringify({ property_id: propertyId, agent_id: {{ $property->user_id }}, visit_date: visitDate })
-        }).then(res => res.json())
-          .then(data => {
-            if (data.success) { alert('Visita agendada'); closeModal(); }
-            else { alert('Error: ' + data.message); }
-          }).catch(err => { console.error(err); alert('Error al agendar la visita'); });
-    }
-
-    // Modales de reserva
-    function openReservation() {
-        document.getElementById('reservationModal').style.display = 'block';
-        document.getElementById('checkInDate').value = '';
-        document.getElementById('checkOutDate').value = '';
-        document.getElementById('priceSummary').classList.add('hidden');
-        reservationData = null;
-    }
-
-    function closeReservationModal() {
-        document.getElementById('reservationModal').style.display = 'none';
-    }
-
-    function calculatePrice() {
-        const checkIn = document.getElementById('checkInDate').value;
-        const checkOut = document.getElementById('checkOutDate').value;
-        if(checkIn && checkOut){
-            const nights = Math.ceil((new Date(checkOut)-new Date(checkIn))/(1000*60*60*24));
-            const totalPrice = (propertyPrice*nights).toFixed(2);
-            document.getElementById('nightsCount').textContent = 'Noches: '+nights;
-            document.getElementById('totalPrice').textContent = 'Total: $'+totalPrice+' MXN';
-            document.getElementById('priceSummary').classList.remove('hidden');
-            reservationData = { property_id: propertyId, start_date: checkIn, end_date: checkOut, nights, total_price: totalPrice };
-        }
-    }
-
-    function submitReservation() {
-        if(!reservationData){ alert('Selecciona fechas primero'); return; }
-
-        fetch('/reservations', {
-            method:'POST',
-            headers:{ 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}' },
-            body: JSON.stringify(reservationData)
-        }).then(res=>res.json())
-          .then(data=>{
-            if(data.success){
-                alert('Reserva creada con éxito. ID: '+data.reservation_id);
-                closeReservationModal();
-            } else alert('Error al crear reserva: '+data.message);
-          }).catch(err=>{ console.error(err); alert('Error al crear reserva'); });
-    }
-
-    document.getElementById('checkInDate').addEventListener('change', function(){
-        const minCheckOut = new Date(this.value);
-        minCheckOut.setDate(minCheckOut.getDate()+1);
-        document.getElementById('checkOutDate').min = minCheckOut.toISOString().split('T')[0];
-        if(document.getElementById('checkOutDate').value <= this.value)
-            document.getElementById('checkOutDate').value='';
-        calculatePrice();
+  // Cargar Maps
+  fetch('/maps-key')
+    .then(res => res.json())
+    .then(data => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap`;
+      script.async = true;
+      document.head.appendChild(script);
     });
-    document.getElementById('checkOutDate').addEventListener('change', calculatePrice);
 
-    document.getElementById('reserveButton')?.addEventListener('click', openReservation);
-    window.onclick = function(event){
-        if(event.target===document.getElementById('visitModal')) closeModal();
-        if(event.target===document.getElementById('reservationModal')) closeReservationModal();
+  function initMap() {
+    const map = new google.maps.Map(document.getElementById("map"), { center: propertyLocation, zoom: 16 });
+    new google.maps.Marker({ map: map, position: propertyLocation, title: "{{ $property->title }}" });
+  }
+
+  // ====== VISITAS (oculto en UI) ======
+  function openVisitCalendar() {
+    const now = new Date();
+    const defaultDate = new Date();
+    defaultDate.setDate(now.getDate() + 2);
+    defaultDate.setHours(10,0,0,0);
+    const dateTimeInput = document.getElementById('visitDateTime');
+    dateTimeInput.min = now.toISOString().slice(0,16);
+    dateTimeInput.value = defaultDate.toISOString().slice(0,16);
+    document.getElementById('visitModal').style.display = 'block';
+  }
+  function closeModal() { document.getElementById('visitModal').style.display = 'none'; }
+
+  function scheduleVisit() {
+    const visitDate = document.getElementById('visitDateTime').value;
+    if (!visitDate) { alert('Por favor selecciona una fecha y hora'); return; }
+
+    fetch('/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+      body: JSON.stringify({ property_id: propertyId, agent_id: {{ $property->user_id }}, visit_date: visitDate })
+    }).then(res => res.json())
+      .then(data => {
+        if (data.success) { alert('Visita agendada'); closeModal(); }
+        else { alert('Error: ' + data.message); }
+      }).catch(err => { console.error(err); alert('Error al agendar la visita'); });
+  }
+
+  // ====== RESERVA ======
+  function openReservation() {
+    document.getElementById('reservationModal').style.display = 'block';
+    document.getElementById('checkInDate').value = '';
+    document.getElementById('checkOutDate').value = '';
+    document.getElementById('priceSummary').classList.add('hidden');
+    reservationData = null;
+  }
+  function closeReservationModal() { document.getElementById('reservationModal').style.display = 'none'; }
+
+  function calculatePrice() {
+    const checkIn  = document.getElementById('checkInDate').value;
+    const checkOut = document.getElementById('checkOutDate').value;
+    if (checkIn && checkOut) {
+      const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000*60*60*24));
+      const total  = (propertyPrice * nights).toFixed(2);
+      document.getElementById('nightsCount').textContent = 'Noches: ' + nights;
+      document.getElementById('totalPrice').textContent  = 'Total: $' + total + ' MXN';
+      document.getElementById('priceSummary').classList.remove('hidden');
+      reservationData = { property_id: propertyId, start_date: checkIn, end_date: checkOut, nights, total_price: total };
     }
+  }
+
+  // ⚠️ Exponemos la función al scope global y la usamos desde el botón
+  window.goToCheckout = function () {
+    const checkIn  = document.getElementById('checkInDate').value;
+    const checkOut = document.getElementById('checkOutDate').value;
+
+    if (!checkIn || !checkOut) {
+      alert('Selecciona fechas de entrada y salida');
+      return;
+    }
+
+    document.getElementById('checkout_start_date').value = checkIn;
+    document.getElementById('checkout_end_date').value   = checkOut;
+    document.getElementById('reservationPreviewForm').submit();
+  };
+
+  // ====== LISTENERS ======
+  document.getElementById('checkInDate').addEventListener('change', function(){
+    const minCheckOut = new Date(this.value);
+    minCheckOut.setDate(minCheckOut.getDate() + 1);
+    document.getElementById('checkOutDate').min = minCheckOut.toISOString().split('T')[0];
+    if (document.getElementById('checkOutDate').value <= this.value) {
+      document.getElementById('checkOutDate').value = '';
+    }
+    calculatePrice();
+  });
+  document.getElementById('checkOutDate').addEventListener('change', calculatePrice);
+
+  // Abre modal de reserva
+  document.getElementById('reserveButton')?.addEventListener('click', openReservation);
+  // Click en Confirmar → ir al checkout
+  document.getElementById('confirmReservationBtn')?.addEventListener('click', () => window.goToCheckout());
+
+  // Cerrar modales al hacer click fuera
+  window.addEventListener('click', function (event) {
+    if (event.target === document.getElementById('visitModal'))      closeModal();
+    if (event.target === document.getElementById('reservationModal')) closeReservationModal();
+  });
 </script>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>

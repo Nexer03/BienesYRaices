@@ -14,6 +14,9 @@ use App\Http\Controllers\PropertyReservationController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\PayPalController;
+
 
 
 /*
@@ -57,11 +60,46 @@ Route::post('/agent-register', [AgentApplicationController::class, 'store'])
 // Procesar reservas
 Route::post('/reservations', [PropertyReservationController::class, 'store']);
 
+
+
 /*
 |--------------------------------------------------------------------------
 | Rutas Protegidas (requieren autenticación)
 |--------------------------------------------------------------------------
 */
+// routes/web.php
+Route::middleware(['auth'])->group(function () {
+    Route::patch('/reservations/{reservation}/confirm-payment', [\App\Http\Controllers\PropertyReservationController::class, 'confirmPayment'])
+        ->name('reservations.confirmPayment');
+});
+
+Route::middleware(['auth'])->group(function () {
+
+    // Crear reserva “pendiente de pago” a partir de fechas seleccionadas
+    Route::post('/reservations/preview', [ReservationController::class, 'preview'])
+        ->name('reservations.preview');
+
+    // Pantalla de checkout estilo Airbnb
+    Route::get('/reservations/{reservation}/checkout', [ReservationController::class, 'checkout'])
+        ->name('reservations.checkout');
+
+    // PayPal
+    Route::post('/paypal/create', [\App\Http\Controllers\PayPalController::class,'createOrder'])->name('paypal.createOrder');
+    Route::post('/paypal/capture', [\App\Http\Controllers\PayPalController::class,'captureOrder'])->name('paypal.captureOrder');
+
+    // NUEVAS: para cuando PayPal redirige por GET con ?token=
+    Route::get('/paypal/capture', [PayPalController::class, 'captureReturn'])->name('paypal.captureReturn');
+    Route::get('/paypal/cancel',  [PayPalController::class, 'cancelReturn'])->name('paypal.cancelReturn');
+
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/paypal/create-order', [\App\Http\Controllers\PayPalController::class, 'createOrder'])
+        ->name('paypal.createOrder');
+    Route::post('/paypal/capture-order', [\App\Http\Controllers\PayPalController::class, 'captureOrder'])
+        ->name('paypal.captureOrder');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
@@ -123,7 +161,10 @@ Route::middleware(['auth', 'agent'])->group(function () {
         Route::put('/{property}', [PropertyController::class, 'update'])->name('properties.update');
         Route::delete('/property-images/{image}', [PropertyController::class, 'destroyImage'])->name('properties.images.destroy');
         Route::delete('/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
+        Route::patch('/{property}/status', [PropertyController::class, 'toggleStatus'])
+        ->name('properties.toggleStatus');
         Route::get('agent/visits/feed', [\App\Http\Controllers\VisitController::class, 'feed'])
+
     ->name('agent.visits.feed');
 
     });

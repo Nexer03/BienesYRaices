@@ -301,7 +301,7 @@ public function index(Request $request)
     }
 
     /**
-     * (NUEVO) Elimina una imagen específica de una propiedad.
+     * Elimina una imagen específica de una propiedad.
      */
     public function destroyImage(PropertyImage $image)
     {
@@ -314,6 +314,29 @@ public function index(Request $request)
 
         return response()->json(['success' => true, 'message' => 'Imagen eliminada']);
     }
+    /**
+     * Cambiar estado de disponibilidad de la propiedad.
+     */
+    public function toggleStatus(Request $request, Property $property)
+    {
+        $this->authorize('update', $property);
+
+        // A) Si tienes 'unavailable' en DB:
+        $next = $property->isAvailable() ? 'unavailable' : 'available';
+
+        // B) Si NO tienes 'unavailable', usa 'pending' como no disponible:
+        // $next = $property->isAvailable() ? 'pending' : 'available';
+
+        // Si está sold o rented, no permitir cambiar manualmente
+        if ($property->isSold() || $property->isRented()) {
+            return back()->with('error', 'No se puede cambiar estado manual cuando la propiedad está vendida o rentada.');
+        }
+
+        $property->update(['status' => $next]);
+
+        return back()->with('success', "Estado actualizado a {$next}.");
+    }
+
 
     /**
      * Muestra las propiedades en el mapa.
