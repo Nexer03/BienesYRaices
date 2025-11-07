@@ -8,9 +8,39 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use App\Models\PropertyReservation;
+
+
 
 class VisitController extends Controller
 {
+        public function myVisits(Request $request)
+    {
+        $clientId = $request->user()->id;
+
+        $query = Visit::with(['property', 'agent'])
+            ->where('client_id', $clientId);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $visits = $query->orderBy('visit_date', 'desc')->get();
+
+        $reservations = PropertyReservation::with('property')
+            ->where('user_id', $clientId)
+            ->orderBy('start_date', 'desc')
+            ->get()
+            ->map(function ($res) {
+                $res->nights = Carbon::parse($res->start_date)
+                    ->diffInDays(Carbon::parse($res->end_date));
+                return $res;
+            });
+
+        return view('visits.myVisits', compact('visits', 'reservations'))
+            ->with('activeTab', 'visits');
+    }
+
     /**
      * GET /agent/visits
      * Listado de visitas del agente autenticado.
