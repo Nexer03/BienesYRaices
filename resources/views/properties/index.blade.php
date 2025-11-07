@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {{-- Necesario para AJAX si usas layout --}}
-    {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
@@ -100,6 +100,18 @@
                                 <i class="fas fa-edit"></i>
                                 <span>Editar</span>
                             </a>
+                            {{-- BOTÓN TOGGLE STATUS (solo si no está sold/rented) --}}
+                            @if(!in_array($property->status, ['sold','rented']))
+                            @php $isAvail = $property->status === 'available'; @endphp
+                            <button type="button"
+                                    class="inline-flex items-center gap-2 {{ $isAvail ? 'bg-orange-100 hover:bg-orange-200 text-orange-700' : 'bg-green-100 hover:bg-green-200 text-green-700' }} px-3 py-2 rounded-lg transition-colors whitespace-nowrap font-medium text-sm w-full md:w-auto justify-center prop-toggle-btn"
+                                    data-url="{{ route('properties.toggleStatus', $property) }}"
+                                    data-next="{{ $isAvail ? 'no disponible' : 'disponible' }}"
+                                    data-title="{{ $property->title }}">
+                                <i class="fas {{ $isAvail ? 'fa-ban' : 'fa-check' }}"></i>
+                                <span>{{ $isAvail ? 'Marcar no disponible' : 'Marcar disponible' }}</span>
+                            </button>
+                            @endif
                             {{-- BOTÓN ELIMINAR (llama a JS para modal) --}}
                             <button type="button"
                                     onclick="openDeletePropertyModal(this)"
@@ -286,6 +298,70 @@
             }
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    document.querySelectorAll('.prop-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+        const el   = e.currentTarget;
+        const url  = el.dataset.url;
+        const next = el.dataset.next;   // 'no disponible' | 'disponible'
+        const name = el.dataset.title || 'la propiedad';
+
+        const res = await Swal.fire({
+            title: 'Cambiar estado',
+            html: `¿Seguro que quieres marcar <b>${name}</b> como <b>${next}</b>?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cambiar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true,
+            buttonsStyling: false,
+            customClass: {
+            confirmButton: 'btn btn-primary me-2',
+            cancelButton: 'btn btn-secondary'
+            }
+        });
+        if (!res.isConfirmed) return;
+
+        try {
+            const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams({ _method: 'PATCH' })
+            });
+
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+            await Swal.fire({
+            icon: 'success',
+            title: 'Actualizado',
+            text: 'El estado se cambió correctamente.',
+            timer: 1200,
+            showConfirmButton: false
+            });
+
+            // refresca para actualizar badges y botones
+            window.location.reload();
+
+        } catch (err) {
+            Swal.fire({
+            icon: 'error',
+            title: 'Ups',
+            text: 'No se pudo cambiar el estado. Intenta de nuevo.'
+            });
+        }
+        });
+    });
+    });
+    </script>
+
 
 </body>
 </html>

@@ -25,7 +25,7 @@ class VisitController extends Controller
             $query->where('status', $request->status);
         }
 
-        $visits = $query->orderBy('visit_date', 'desc')->get();
+        $visits = $query->orderBy('visit_date', 'desc')->paginate(10)->withQueryString();
 
         $reservations = PropertyReservation::with('property')
             ->where('user_id', $clientId)
@@ -174,6 +174,7 @@ class VisitController extends Controller
 
         return redirect()->route('agent.visits.index')->with('success', 'Visita creada correctamente.');
     }
+
 
     /**
      * GET /agent/visits/{visit}/edit

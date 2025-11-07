@@ -6,6 +6,16 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    'paypal' => [
+        'mode'      => env('PAYPAL_MODE', 'sandbox'),
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret'    => env('PAYPAL_SECRET'),
+        'currency'  => env('PAYPAL_CURRENCY', 'MXN'),
+    ],
+
+
+
+
     'resend' => [
         'key' => env('RESEND_KEY'),
     ],
