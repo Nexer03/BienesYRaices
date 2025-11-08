@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\AmenityCategory;
-use Illuminate\Support\Facades\DB;
 
 class AmenitySeeder extends Seeder
 {
@@ -13,12 +12,6 @@ class AmenitySeeder extends Seeder
      */
     public function run(): void
     {
-        // Desactivamos la revisión de llaves foráneas para vaciar las tablas
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        AmenityCategory::truncate();
-        DB::table('amenities')->truncate(); // Usamos DB Facade por si el modelo Amenity tiene observers
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
         $amenities = [
             'Baño' => ['Secadora de pelo', 'Productos de limpieza', 'Shampoo', 'Acondicionador', 'Jabón corporal', 'Agua caliente', 'Gel de baño'],
             'Habitación y lavandería' => ['Lavadora', 'Secadora', 'Ganchos de ropa', 'Ropa de cama', 'Almohadas y mantas adicionales', 'Plancha', 'Espacio para guardar ropa'],
@@ -33,12 +26,12 @@ class AmenitySeeder extends Seeder
         ];
 
         foreach ($amenities as $categoryName => $amenityList) {
-            // Creamos la categoría
-            $category = AmenityCategory::create(['name' => $categoryName]);
+            // Busca la categoría o la crea si no existe
+            $category = AmenityCategory::firstOrCreate(['name' => $categoryName]);
 
-            // Creamos las amenidades asociadas a esa categoría
+            // Para cada amenidad en la lista, la busca o la crea si no existe
             foreach ($amenityList as $amenityName) {
-                $category->amenities()->create(['name' => $amenityName]);
+                $category->amenities()->firstOrCreate(['name' => $amenityName]);
             }
         }
     }

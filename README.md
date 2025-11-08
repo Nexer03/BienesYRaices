@@ -7,6 +7,20 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Crear usuario admin
+php artisan tinker
+## todo el comando de abajo junto
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
+User::create([
+    'name' => 'admin',
+    'email' => 'admin@gmail.com',
+    'password' => Hash::make('admin'),
+    'role' => 'admin',
+]);
+
+
 ## Instalar el proyecto por primera vez
 ## Notas
 Si no se muestran las imagenes usa este comando: php artisan storage:link
@@ -94,3 +108,5 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 
 & "D:\mysql\mysql-8.0.43-winx64\bin\mysql.exe" -h 127.0.0.1 -P 3306 -u root -p laravel
+
+dd($request->all());

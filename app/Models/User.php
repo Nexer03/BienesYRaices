@@ -21,11 +21,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(Property::class);
     }
+    public function preferences()
+{
+    // Define la relación uno a uno con UserPreference
+    return $this->hasOne(UserPreference::class);
+}
 
-    public function favorites()
+    public function favoriteProperties()
     {
-        return $this->belongsToMany(Property::class, 'favorites');
+        return $this->belongsToMany(\App\Models\Property::class, 'favorites')->withTimestamps();
     }
+
+
 
     public function visitsAsClient()
     {
@@ -41,4 +48,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+
+    public function agentVisits()
+    {
+        return $this->hasMany(Visit::class, 'agent_id');
+    }
+
+    public function clientVisits()
+    {
+        return $this->hasMany(Visit::class, 'client_id');
+    }
+
 }
