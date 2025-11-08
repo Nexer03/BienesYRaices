@@ -18,7 +18,81 @@
 </head>
 
 <body class="bg-gray-50 text-gray-800">
+<header class="sticky top-0 bg-white shadow-sm z-50">
+  <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+    <!-- Logo -->
+    <div class="text-2xl font-bold text-blue-600 cursor-pointer flex items-center">
+      <i class="fas fa-home mr-2"></i>
+      <span>Sin beca<span class="text-gray-700"> no hay renta </span></span>
+    </div>
 
+   <!-- Botones de header -->
+<div class="flex items-center gap-4">
+  <!-- Botón lupa -->
+  <button id="search-toggle" class="block md:hidden text-gray-700 text-xl focus:outline-none">
+  <i class="fas fa-search"></i>
+</button>
+
+  <!-- Botón menú móvil -->
+  <button id="menu-toggle" class="md:hidden text-gray-700 text-2xl focus:outline-none">
+    <i class="fas fa-bars"></i>
+  </button>
+</div>
+
+
+    <!-- Navegación -->
+    <nav id="main-nav"
+      class="hidden md:flex flex-col md:flex-row fixed md:static top-0 right-0 h-full md:h-auto w-3/4 md:w-auto bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 space-y-4 md:space-y-0 md:space-x-6 text-gray-700 font-medium transition-transform transform md:translate-x-0 translate-x-full z-50">
+      
+      <!-- Botón cerrar -->
+      <button id="close-menu" class="md:hidden text-gray-500 text-2xl self-end mb-4">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <a href="{{ route('visits.my') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Mi agenda
+</a>
+@auth
+<a href="{{ route('favorites.index') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Favoritos
+</a>
+@endauth
+<a href="{{ route('properties.map') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Mapa
+</a>
+@auth
+@if(auth()->user()->role === 'agent')
+<a href="{{ route('agent.home') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Panel de Agente
+</a>
+@else
+<a href="{{ route('agent.view') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Modo vendedor
+</a>
+@endif
+<a href="{{ url('/dashboard') }}"
+   class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
+   Perfil
+</a>
+@else
+<a href="{{ route('agent.view') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Modo vendedor
+</a>
+
+      <button type="button" onclick="openLoginModal()"
+         class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
+         Iniciar sesión
+      </button>
+      @endauth
+    </nav>
+  </div>
+</header>
 <main class="max-w-4xl mx-auto mt-10 px-6">
 
     <div class="mb-4">
