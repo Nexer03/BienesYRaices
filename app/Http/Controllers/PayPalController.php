@@ -178,9 +178,13 @@ class PayPalController extends Controller
                 if ($reservationId > 0) {
                     $reservation = PropertyReservation::find($reservationId);
                     if ($reservation) {
-                        $reservation->status         = 'paid';
-                        $reservation->payment_method = 'paypal';
-                        $reservation->payment_id     = $json['id'] ?? null;  // order id
+                        $reservation->fill([
+                            'status' => 'confirmed',
+                            'payment_status' => 'paid',
+                            'payment_method' => 'paypal',
+                            'payment_id' => $json['id'] ?? null,
+                            'payer_email' => data_get($json, 'payer.email_address', $reservation->payer_email),
+                        ]);
                         $reservation->save();
 
                         event(new \App\Events\ReservationPaid($reservation));

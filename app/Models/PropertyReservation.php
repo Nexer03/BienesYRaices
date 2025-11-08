@@ -11,10 +11,17 @@ class PropertyReservation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'property_id','user_id',
-        'start_date','end_date',
-        'status','payment_status',
+        'property_id',
+        'user_id',
+        'start_date',
+        'end_date',
+        'status',
+        'payment_status',
         'total_price',
+        'payment_id',
+        'payment_method',
+        'payer_email',
+        'meta',
     ];
 
     protected $casts = [
@@ -36,5 +43,34 @@ class PropertyReservation extends Model
         $end   = $this->end_date   ? Carbon::parse($this->end_date)   : null;
         if (!$start || !$end) return 1;
         return max(1, $start->diffInDays($end));
+    }
+
+    public static function overlaps(int $propertyId, $startDate, $endDate, ?int $ignoreReservationId = null): bool
+    {
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end   = Carbon::parse($endDate)->startOfDay();
+
+        if ($start->gt($end)) {
+            [$start, $end] = [$end, $start];
+        }
+
+        $startDateString = $start->toDateString();
+        $endDateString   = $end->toDateString();
+
+        return static::query()
+            ->where('property_id', $propertyId)
+            ->when($ignoreReservationId, function ($query, $ignoreReservationId) {
+                $query->where('id', '!=', $ignoreReservationId);
+            })
+            ->whereNotIn('status', ['cancelled', 'canceled'])
+            ->where(function ($query) use ($startDateString, $endDateString) {
+                $query->whereBetween('start_date', [$startDateString, $endDateString])
+                    ->orWhereBetween('end_date', [$startDateString, $endDateString])
+                    ->orWhere(function ($subQuery) use ($startDateString, $endDateString) {
+                        $subQuery->where('start_date', '<=', $startDateString)
+                            ->where('end_date', '>=', $endDateString);
+                    });
+            })
+            ->exists();
     }
 }
