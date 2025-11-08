@@ -6,14 +6,13 @@ use App\Models\Property;
 use App\Models\PropertyReservation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PropertyReservationTest extends TestCase
 {
     use RefreshDatabase;
 
-    #[Test]
+    /** @test */
     public function it_detects_overlapping_reservations_for_the_same_property(): void
     {
         $agent = User::factory()->create(['role' => 'agent']);

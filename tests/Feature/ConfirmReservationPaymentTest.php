@@ -6,14 +6,13 @@ use App\Models\Property;
 use App\Models\PropertyReservation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ConfirmReservationPaymentTest extends TestCase
 {
     use RefreshDatabase;
 
-    #[Test]
+    /** @test */
     public function admin_users_can_confirm_a_reservation_payment(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -58,7 +57,7 @@ class ConfirmReservationPaymentTest extends TestCase
         ]);
     }
 
-    #[Test]
+    /** @test */
     public function non_authorized_users_cannot_confirm_reservations(): void
     {
         $agent = User::factory()->create(['role' => 'agent']);
