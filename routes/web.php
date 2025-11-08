@@ -84,8 +84,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('reservations.checkout');
 
     // PayPal
-    Route::post('/paypal/create', [\App\Http\Controllers\PayPalController::class,'createOrder'])->name('paypal.createOrder');
-    Route::post('/paypal/capture', [\App\Http\Controllers\PayPalController::class,'captureOrder'])->name('paypal.captureOrder');
+    Route::post('/paypal/create-order', [\App\Http\Controllers\PayPalController::class, 'createOrder'])
+        ->name('paypal.createOrder');
+    Route::post('/paypal/capture-order', [\App\Http\Controllers\PayPalController::class, 'captureOrder'])
+        ->name('paypal.captureOrder');
 
     // NUEVAS: para cuando PayPal redirige por GET con ?token=
     Route::get('/paypal/capture', [PayPalController::class, 'captureReturn'])->name('paypal.captureReturn');
@@ -93,12 +95,6 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-Route::middleware('auth')->group(function () {
-    Route::post('/paypal/create-order', [\App\Http\Controllers\PayPalController::class, 'createOrder'])
-        ->name('paypal.createOrder');
-    Route::post('/paypal/capture-order', [\App\Http\Controllers\PayPalController::class, 'captureOrder'])
-        ->name('paypal.captureOrder');
-});
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
