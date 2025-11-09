@@ -23,17 +23,19 @@ class AgentApplicationController extends Controller
         $validated['rfc'] = strtoupper($validated['rfc']);
         $validated['curp'] = strtoupper($validated['curp']);
 
-        // Crear la solicitud
-        AgentApplication::create([
-            'user_id' => auth()->id(),
-            'rfc' => $validated['rfc'],
-            'curp' => $validated['curp']
-        ]);
-            // Actualizar el rol del usuario a AGENTE XD
-         auth()->user()->update([
-            'role' => 'agent'
-        ]);
+        // Crear o actualizar la solicitud del usuario
+        AgentApplication::updateOrCreate(
+            ['user_id' => auth()->id()],
+            [
+                'rfc' => $validated['rfc'],
+                'curp' => $validated['curp'],
+                'status' => AgentApplication::STATUS_PENDING,
+                'rejection_reason' => null,
+            ]
+        );
 
-         return redirect()->route('agent.home')->with('success', 'Felicitaciones! Ahora eres un agente registrado.');
+        return redirect()
+            ->route('agent.view')
+            ->with('success', 'Tu solicitud para convertirte en agente ha sido enviada y está pendiente de revisión.');
     }
 }
