@@ -24,6 +24,7 @@ class AdminSalesReportTest extends TestCase
             'user_id' => $agent->id,
             'status' => 'sold',
             'price' => 1250000,
+            'city' => 'Guadalajara',
         ]);
 
         $response = $this->actingAs($admin)->get(route('admin.reports.sales'));
