@@ -202,6 +202,7 @@ Route::middleware(['auth', 'verified', 'admin'])
 
     Route::get('/reports/sales', [AdminReportController::class, 'salesReport'])->name('reports.sales');
     Route::get('/reports/visits', [AdminReportController::class, 'visitsReport'])->name('reports.visits');
+    Route::get('/reports/properties/export', [AdminReportController::class, 'exportPropertyReport'])->name('reports.properties.export');
 
     Route::get('agent-applications', [AdminAgentApplicationController::class, 'index'])->name('agent-applications.index');
     Route::get('agent-applications/{agentApplication}', [AdminAgentApplicationController::class, 'show'])->name('agent-applications.show');

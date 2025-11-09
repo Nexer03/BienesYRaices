@@ -31,8 +31,8 @@ class AdminSalesReportTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Agente Ventas');
-        $response->assertSeeText('Total de propiedades vendidas');
-        $response->assertSeeText('Valor total vendido');
+        $response->assertSeeText('Propiedades vendidas');
+        $response->assertSeeText('Ingresos por rentas');
         $response->assertSee('$' . number_format($soldProperty->price, 2, '.', ','));
     }
 }
