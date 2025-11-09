@@ -81,7 +81,17 @@
     </div>
   @endif
 
-  @yield('content')
+  @isset($header)
+    <div class="mb-4">
+      {{ $header }}
+    </div>
+  @endisset
+
+  @isset($slot)
+    {{ $slot }}
+  @else
+    @yield('content')
+  @endisset
 </main>
 
 <footer class="py-4 border-top bg-white">
