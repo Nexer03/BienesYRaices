@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class AgentApplication extends Model
 {
+    use HasFactory;
+
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
     protected $fillable = [
         'user_id',
-        'rfc', 
-        'curp'
+        'rfc',
+        'curp',
+        'status',
+        'rejection_reason',
     ];
 
     public function user()
