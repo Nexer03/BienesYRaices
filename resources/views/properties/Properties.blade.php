@@ -45,86 +45,90 @@
 
 <body class="min-h-screen flex flex-col bg-gray-50">
     {{-- Encabezado --}}
-    <header class="bg-white shadow">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            {{-- Logo (ajustado) --}}
-            <div class="flex items-center space-x-3">
-                <a href="{{ url('/') }}" class="text-xl font-bold text-blue-600 flex items-center">
-                    <i class="fas fa-home mr-2"></i>Sin beca <span class="text-gray-700"> no hay renta </span></a>
+    <header class="sticky top-0 bg-white shadow-sm z-50">
+  <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+    
+    <!-- Logo -->
+    <div class="flex items-center space-x-3">
+      <a href="{{ url('/') }}" class="text-2xl font-bold text-blue-600 flex items-center">
+        <i class="fas fa-home mr-2"></i>
+        Sin beca <span class="text-gray-700"> no hay renta </span>
+      </a>
+    </div>
+
+    <!-- Filtros en el medio -->
+    <div class="hidden md:flex items-center space-x-4 flex-1 justify-center max-w-2xl mx-8">
+      
+      <!-- Inputs ocultos (compatibilidad con filterMarkers) -->
+      <input type="number" id="minPrice" class="hidden" />
+      <input type="number" id="maxPrice" class="hidden" />
+
+      <!-- Precio -->
+      <div class="relative w-full max-w-md">
+        <button type="button" id="price-filter-button"
+          class="w-full text-left border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+          <span>Precio</span>
+        </button>
+
+        <div id="price-dropdown"
+          class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
+          <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
+
+          <div id="price-slider" class="mb-4"></div>
+
+          <div class="flex justify-between items-center text-sm text-gray-700">
+            <div class="flex items-center gap-1 border rounded-md p-2">
+              $ <span id="slider-min-value"></span>
             </div>
-
-            {{-- Filtros en el Medio (del nuevo diseño) --}}
-           <div class="flex items-center space-x-3 flex-1 max-w-2xl mx-8">
-
-                <!-- PRICE FILTER (copied behavior from Home) -->
-                <!-- Hidden numeric inputs kept for compatibility with existing filterMarkers() -->
-                <input type="number" id="minPrice" class="hidden" />
-                <input type="number" id="maxPrice" class="hidden" />
-
-                <!-- Price dropdown trigger -->
-                <div class="relative w-full max-w-md">
-                    <button type="button" id="price-filter-button"
-                        class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-                        <span>Precio</span>
-                    </button>
-
-                    <!-- Dropdown -->
-                    <div id="price-dropdown"
-                        class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
-                        <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
-
-                        <!-- Slider -->
-                        <div id="price-slider" class="mb-4"></div>
-
-                        <!-- Values -->
-                        <div class="flex justify-between items-center text-sm text-gray-700">
-                            <div class="flex items-center gap-1 border rounded-md p-2">
-                                $ <span id="slider-min-value"></span>
-                            </div>
-                            <div class="text-gray-400">-</div>
-                            <div class="flex items-center gap-1 border rounded-md p-2">
-                                $ <span id="slider-max-value"></span>
-                            </div>
-                        </div>
-
-                        <!-- Hidden values for this page (also mirror to #minPrice/#maxPrice) -->
-                        <input type="hidden" id="slider-min-input">
-                        <input type="hidden" id="slider-max-input">
-
-                        <div class="mt-4 text-right">
-                            <button type="button" id="apply-price-button"
-                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
-                                Aplicar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Listing type -->
-                <select id="listingType" class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    <option value="rent">Renta</option>
-                    <option value="sale">Venta</option>
-
-                </select>
-
-                <!-- Filter button (existing) -->
-                <button id="filterBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
-                    Filtrar
-                </button>
+            <div class="text-gray-400">-</div>
+            <div class="flex items-center gap-1 border rounded-md p-2">
+              $ <span id="slider-max-value"></span>
             </div>
+          </div>
 
-            {{-- Navegación (del nuevo diseño, ajustada) --}}
-            <nav class="flex items-center space-x-6 text-sm text-gray-600">
-                @auth
-                    <a href="{{ url('/dashboard') }}"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
-                @else
-                    <button type="button" onclick="openLoginModal()"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Iniciar sesión</button>
-                @endauth
-            </nav>
+          <input type="hidden" id="slider-min-input">
+          <input type="hidden" id="slider-max-input">
+
+          <div class="mt-4 text-right">
+            <button type="button" id="apply-price-button"
+              class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-blue-600 transition">
+              Aplicar
+            </button>
+          </div>
         </div>
-    </header>
+      </div>
+
+      <!-- Tipo de propiedad -->
+      <select id="listingType"
+        class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
+        <option value="rent">Renta</option>
+        <option value="sale">Venta</option>
+      </select>
+
+      <!-- Botón filtrar -->
+      <button id="filterBtn"
+        class="bg-blue-500 text-white px-5 py-2 rounded-full hover:bg-blue-600 transition font-medium">
+        Filtrar
+      </button>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="flex items-center space-x-6 text-sm text-gray-700">
+      @auth
+      <a href="{{ url('/dashboard') }}"
+        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
+        Perfil
+      </a>
+      @else
+      <button type="button" onclick="openLoginModal()"
+        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
+        Iniciar sesión
+      </button>
+      @endauth
+    </nav>
+  </div>
+</header>
+
 
     {{-- Contenido Principal --}}
     <main class="flex-grow">
@@ -207,7 +211,7 @@
                     { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
                 ],
                 mapTypeControl: false,
-                streetViewControl: false
+                streetViewControl: true
             });
 
             // Crear todos los marcadores y guardarlos en array
@@ -417,5 +421,57 @@
         initSlider();
     });
     </script>
+    <footer class="bg-gray-800 text-white py-8 mt-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="md:col-span-2">
+        <div class="flex items-center text-white font-bold text-xl mb-4">
+          <i class="fas fa-home mr-2"></i>
+          <span>SIN BECA NO HAY RENTA</span>
+        </div>
+        <p class="text-gray-300 mb-4">
+          Tu plataforma confiable para la gestión inmobiliaria. Conectamos propiedades
+          con sus futuros dueños de manera eficiente y profesional.
+        </p>
+        <div class="flex space-x-4">
+          <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-lg mb-4">Navegación</h3>
+        <ul class="space-y-2 text-gray-300">
+          <li><a href="{{ route('visits.my') }}" class="hover:text-white transition">Mis Visitas</a></li>
+          <li><a href="{{ route('properties.map') }}" class="hover:text-white transition">Mapa</a></li>
+          <li><a href="{{ route('agent.home') }}" class="hover:text-white transition">Panel de Agente</a></li>
+          <li><a href="{{ route('agent.view') }}" class="hover:text-white transition">Modo Vendedor</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-lg mb-4">Contacto</h3>
+        <ul class="space-y-2 text-gray-300">
+          <li class="flex items-center"><i class="fas fa-envelope mr-2"></i> soporte@sinbeca.com</li>
+          <li class="flex items-center"><i class="fas fa-phone mr-2"></i> +1 (555) 123-4567</li>
+          <li class="flex items-center"><i class="fas fa-map-marker-alt mr-2"></i> Ciudad, País</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-gray-700 mt-8 pt-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <p class="text-gray-300 text-sm">&copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.</p>
+        <div class="flex space-x-6 mt-4 md:mt-0">
+          <a href="#" class="text-gray-300 hover:text-white text-sm transition">Privacidad</a>
+          <a href="#" class="text-gray-300 hover:text-white text-sm transition">Términos</a>
+          <a href="#" class="text-gray-300 hover:text-white text-sm transition">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
 </body>
 </html>
