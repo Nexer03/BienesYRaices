@@ -16,8 +16,13 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PayPalController;
+use App\Http\Controllers\UserController;
 
 
+Route::middleware('auth')->group(function() {
+    Route::get('/chat/{property}', [ChatController::class, 'show'])->name('chat.show');
+    Route::post('/chat/{conversation}/send', [ChatController::class, 'send'])->name('chat.send');
+});
 
 /*
 |--------------------------------------------------------------------------
