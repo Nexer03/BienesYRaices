@@ -32,6 +32,7 @@ class PropertyFactory extends Factory
             'bathrooms' => fake()->numberBetween(1, 4),
             'price' => fake()->numberBetween(500000, 20000000),
             'location' => fake()->address(),
+            'city' => fake()->city(),
             'latitude' => fake()->latitude(20.6, 20.7),
             'longitude' => fake()->longitude(-105.3, -105.2),
             'listing_type' => fake()->randomElement(['sale', 'rent']),

@@ -26,6 +26,18 @@ User::create([
 Si no se muestran las imagenes usa este comando: php artisan storage:link
 Comando para rellenar las amenidades:  php artisan db:seed
 Añadir en env. esta linea: GOOGLE_MAPS_API_KEY=esta en discord
+
+### Pruebas automáticas
+Los tests utilizan SQLite en memoria por defecto. Si la extensión `pdo_sqlite` no
+está disponible, define las siguientes variables antes de ejecutar `php artisan test`:
+
+```
+TEST_DB_CONNECTION=mysql   # Driver a utilizar para las pruebas
+TEST_DB_DATABASE=testing   # Base de datos donde se ejecutarán los tests
+```
+
+Estas variables permiten reutilizar la conexión configurada en tu `.env` (por ejemplo
+MySQL) cuando la base de datos SQLite en memoria no está disponible.
 ## Primer paso
 En la linea de comandos ejecutar: git clone -b develop git@github.com:Nexer03/BienesYRaices.git
 ## Segundo paso
