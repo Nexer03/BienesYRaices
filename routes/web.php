@@ -5,6 +5,7 @@ use App\Http\Controllers\PropertyController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Property;
 use App\Http\Controllers\AgentApplicationController;
+use App\Http\Controllers\Admin\AgentApplicationController as AdminAgentApplicationController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\AdminPropertyController;
@@ -205,6 +206,13 @@ Route::middleware(['auth', 'verified', 'admin'])
     Route::resource('users', AdminUserController::class);
 
     Route::get('/reports/sales', [AdminReportController::class, 'salesReport'])->name('reports.sales');
+    Route::get('/reports/visits', [AdminReportController::class, 'visitsReport'])->name('reports.visits');
+    Route::get('/reports/properties/export', [AdminReportController::class, 'exportPropertyReport'])->name('reports.properties.export');
+
+    Route::get('agent-applications', [AdminAgentApplicationController::class, 'index'])->name('agent-applications.index');
+    Route::get('agent-applications/{agentApplication}', [AdminAgentApplicationController::class, 'show'])->name('agent-applications.show');
+    Route::post('agent-applications/{agentApplication}/approve', [AdminAgentApplicationController::class, 'approve'])->name('agent-applications.approve');
+    Route::post('agent-applications/{agentApplication}/reject', [AdminAgentApplicationController::class, 'reject'])->name('agent-applications.reject');
 });
 
 /*

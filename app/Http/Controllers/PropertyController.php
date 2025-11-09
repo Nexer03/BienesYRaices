@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Property;
 use App\Models\AmenityCategory;
 use App\Models\PropertyImage; // <-- Asegúrate de importar este modelo
+use App\Models\UserPreference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; // <-- Y este para borrar archivos
 use Illuminate\Support\Arr;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewPropertyMatchNotification;
 
 
 class PropertyController extends Controller
@@ -138,18 +142,26 @@ public function index(Request $request)
 
 
     public function myProperties(Request $request)
-    {
+{
+    $query = Property::with(['images', 'amenities'])
+        ->where('user_id', Auth::id())
+        ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+        ->when($request->filled('city'), fn($q) => $q->where('city', $request->city))
+        ->when($request->filled('type') && in_array($request->type, ['rent','sale']), fn($q) => $q->where('listing_type', $request->type))
+        ->latest('updated_at');
 
-        $query = Property::where('user_id', Auth::id())->with(['images', 'amenities']);
+    $properties = $query->paginate(12)->withQueryString();
 
-        if ($request->has('type') && in_array($request->type, ['rent', 'sale'])) {
-            $query->where('listing_type', $request->type);
-        }
+    // Para badge y <select> en UI
+    $allowedStatuses = [
+        'available' => 'Disponible',
+        'pending'   => 'Pendiente',
+        'rented'    => 'Rentada',
+        'sold'      => 'Vendida',
+    ];
 
-        $properties = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        return view('properties.index', compact('properties'));
-    }
+    return view('properties.index', compact('properties','allowedStatuses'));
+}
 
 
     /**
@@ -210,6 +222,9 @@ public function index(Request $request)
         if (!empty($validated['amenities'])) {
             $property->amenities()->attach($validated['amenities']);
         }
+
+        $property->load('amenities');
+        $this->notifyUsersAboutNewProperty($property);
 
         return redirect()
             ->route('properties.my')
@@ -281,6 +296,96 @@ public function index(Request $request)
         ->with('success', 'Propiedad actualizada correctamente.');
 }
 
+    private function notifyUsersAboutNewProperty(Property $property): void
+    {
+        $preferences = UserPreference::with('user')->get();
+        if ($preferences->isEmpty()) {
+            return;
+        }
+
+        $propertyAmenities = $property->amenities->pluck('id')->map(fn ($id) => (string) $id);
+
+        $matchingUsers = $preferences->filter(function (UserPreference $preference) use ($property, $propertyAmenities) {
+            $user = $preference->user;
+            if (!$user) {
+                return false;
+            }
+
+            if ($preference->preferred_listing_type && $preference->preferred_listing_type !== $property->listing_type) {
+                return false;
+            }
+
+            if ($preference->min_price && $property->price < $preference->min_price) {
+                return false;
+            }
+
+            if ($preference->max_price && $property->price > $preference->max_price) {
+                return false;
+            }
+
+            if ($preference->pref_latitude && $preference->pref_longitude && $preference->pref_radius && $property->latitude && $property->longitude) {
+                $distanceKm = $this->distanceBetween(
+                    (float) $preference->pref_latitude,
+                    (float) $preference->pref_longitude,
+                    (float) $property->latitude,
+                    (float) $property->longitude,
+                );
+
+                $radiusKm = ((float) $preference->pref_radius) / 1000; // radius stored in meters
+                if ($distanceKm > $radiusKm) {
+                    return false;
+                }
+            } elseif ($preference->preferred_location && $property->city) {
+                $preferredCity = mb_strtolower($preference->preferred_location);
+                $propertyCity = mb_strtolower($property->city);
+                if (!str_contains($propertyCity, $preferredCity)) {
+                    return false;
+                }
+            }
+
+            if ($preference->min_bedrooms && $property->bedrooms && $property->bedrooms < $preference->min_bedrooms) {
+                return false;
+            }
+
+            if ($preference->min_bathrooms && $property->bathrooms && $property->bathrooms < $preference->min_bathrooms) {
+                return false;
+            }
+
+            if ($preference->preferred_amenities) {
+                $preferredAmenities = collect(explode(',', $preference->preferred_amenities))
+                    ->map(fn ($id) => trim((string) $id))
+                    ->filter();
+
+                if ($preferredAmenities->isNotEmpty() && $preferredAmenities->diff($propertyAmenities)->isNotEmpty()) {
+                    return false;
+                }
+            }
+
+            return true;
+        })
+            ->map(fn (UserPreference $preference) => $preference->user)
+            ->filter()
+            ->unique('id');
+
+        if ($matchingUsers->isEmpty()) {
+            return;
+        }
+
+        Notification::send($matchingUsers, new NewPropertyMatchNotification($property));
+    }
+
+    private function distanceBetween(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $earthRadius = 6371; // km
+        $latDistance = deg2rad($lat2 - $lat1);
+        $lngDistance = deg2rad($lng2 - $lng1);
+
+        $a = sin($latDistance / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($lngDistance / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
+
     /**
      * Elimina una propiedad y sus recursos.
      */
@@ -321,16 +426,25 @@ public function index(Request $request)
     {
         $this->authorize('update', $property);
 
-        // A) Si tienes 'unavailable' en DB:
-        $next = $property->isAvailable() ? 'unavailable' : 'available';
-
-        // B) Si NO tienes 'unavailable', usa 'pending' como no disponible:
-        // $next = $property->isAvailable() ? 'pending' : 'available';
-
-        // Si está sold o rented, no permitir cambiar manualmente
+        // Bloquea cambios manuales si ya está vendida/rentada
         if ($property->isSold() || $property->isRented()) {
             return back()->with('error', 'No se puede cambiar estado manual cuando la propiedad está vendida o rentada.');
         }
+
+        // Si mandas un destino explícito desde <select>, valídalo
+        if ($request->filled('status')) {
+            $request->validate([
+                'status' => ['required', Rule::in(Property::ALLOWED_STATUSES)],
+            ]);
+            $property->update(['status' => $request->status]);
+            return back()->with('success', "Estado actualizado a {$request->status}.");
+        }
+
+        // Mantener tu “toggle” original como fallback (compatible hacia atrás)
+        // A) Si tienes 'unavailable' en DB:
+        $next = $property->isAvailable() ? 'unavailable' : 'available';
+        // B) Si NO tienes 'unavailable', usa 'pending' como “no disponible”:
+        // $next = $property->isAvailable() ? 'pending' : 'available';
 
         $property->update(['status' => $next]);
 

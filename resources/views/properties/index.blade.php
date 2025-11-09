@@ -73,6 +73,22 @@
         {{-- Lista de Propiedades --}}
         <div class="space-y-5">
             @forelse ($properties as $property)
+            @php
+                // Mapas de estilos para el badge de estatus (Tailwind)
+                $badgeMap = [
+                    'available'   => 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200',
+                    'unavailable' => 'bg-gray-100 text-gray-700 ring-1 ring-gray-300',
+                    'rented'      => 'bg-cyan-100 text-cyan-800 ring-1 ring-cyan-200',
+                    'sold'        => 'bg-slate-200 text-slate-800 ring-1 ring-slate-300',
+                ];
+                $dotMap = [
+                    'available'   => 'bg-emerald-500',
+                    'unavailable' => 'bg-gray-400',
+                    'rented'      => 'bg-cyan-500',
+                    'sold'        => 'bg-slate-500',
+                ];
+            @endphp
+
             <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                 <div class="p-6">
                     {{-- Header de la propiedad --}}
@@ -84,12 +100,40 @@
                                     {{ $property->title }}
                                 </a>
                             </h3>
+                            {{-- Badge de Tipo (Renta/Venta) --}}
                             @if($property->listing_type == 'rent')
-                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">Renta</span>
+                                <span class="bg-blue-100 text-blue-800 text-[11px] font-semibold px-3 py-1 rounded-full">Renta</span>
                             @else
-                                <span class="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">Venta</span>
+                                <span class="bg-green-100 text-green-800 text-[11px] font-semibold px-3 py-1 rounded-full">Venta</span>
                             @endif
+                            {{-- Badge de Estatus (Disponible / No disponible / Rentada / Vendida) --}}
+                            @php
+                                $st = $property->status;
+                                $statusClass = $badgeMap[$st] ?? 'bg-gray-100 text-gray-700 ring-1 ring-gray-300';
+                                $dotClass = $dotMap[$st] ?? 'bg-gray-400';
+                            @endphp
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $statusClass }}">
+                                <span class="w-2 h-2 rounded-full {{ $dotClass }}"></span>
+                                {{ $property->status_label }}
+                            </span>
                             <p class="text-2xl font-bold text-blue-600 mt-2">${{ number_format($property->price, 2) }}</p>
+                            {{-- (Opcional) Si está rentada y tienes fecha de término, muéstrala pequeñita: --}}
+                            @php
+                            // Busca una reserva vigente como fallback (end_date >= ahora, status pagado/confirmado)
+                            $activeReservation = $property->reservations()
+                                ->whereIn('status', ['paid','confirmed','completed'])  // ajusta a tus statuses reales
+                                ->whereDate('end_date', '>=', now())
+                                ->orderByDesc('end_date')
+                                ->first();
+
+                            $until = $property->rented_until ?? ($activeReservation?->end_date);
+                        @endphp
+
+                        @if($property->status === 'rented' && $until)
+                            <p class="text-xs text-gray-500 mt-1">
+                                Rentada hasta {{ \Illuminate\Support\Carbon::parse($until)->format('d/m/Y H:i') }}
+                            </p>
+                        @endif
                         </div>
 
                         {{-- Derecha: Botones de Acción (CORREGIDO) --}}
@@ -264,103 +308,134 @@
              </button>
         </div>
     </div>
-    {{-- =============== END DELETE CONFIRMATION MODAL (PROPERTIES) =============== --}}
 
-    {{-- Script para controlar el modal de eliminación de propiedades --}}
-    {{-- Asumiendo que NO usas @stack('scripts') en este archivo directamente --}}
-    <script>
-        // Referencias a los elementos del modal de eliminación de propiedades
-        const deletePropertyModal = document.getElementById('deletePropertyConfirmModal');
-        const deletePropertyForm = document.getElementById('deletePropertyConfirmForm');
-        const deletePropertyNameSpan = document.getElementById('deletePropertyName');
-
-        function openDeletePropertyModal(button) {
-            const propertyName = button.dataset.propertyName;
-            const deleteUrl = button.dataset.deleteUrl;
-
-            // Rellenamos el modal con los datos correctos
-            if (deletePropertyNameSpan) deletePropertyNameSpan.textContent = propertyName;
-            if (deletePropertyForm) deletePropertyForm.action = deleteUrl;
-
-            // Mostramos el modal
-            if (deletePropertyModal) deletePropertyModal.classList.remove('hidden');
-        }
-
-        function closeDeletePropertyModal() {
-            // Ocultamos el modal
-            if (deletePropertyModal) deletePropertyModal.classList.add('hidden');
-        }
-
-        // Opcional: Cerrar modal si se hace clic fuera
-        window.addEventListener('click', function(event) {
-            if (event.target === deletePropertyModal) {
-                closeDeletePropertyModal();
-            }
-        });
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    document.querySelectorAll('.prop-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-        const el   = e.currentTarget;
-        const url  = el.dataset.url;
-        const next = el.dataset.next;   // 'no disponible' | 'disponible'
-        const name = el.dataset.title || 'la propiedad';
+  // Reutilizable: estilo Tailwind para botones del Swal
+  const swalOpts = {
+    buttonsStyling: false,
+    reverseButtons: true,
+    showCancelButton: true,
+    cancelButtonText: 'Cancelar',
+    confirmButtonText: 'Sí, cambiar',
+    customClass: {
+      popup: 'rounded-xl',
+      title: 'text-gray-900',
+      htmlContainer: 'text-gray-700',
+      actions: 'gap-3',
+      confirmButton: 'px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none',
+      cancelButton: 'px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none',
+    },
+  };
 
-        const res = await Swal.fire({
-            title: 'Cambiar estado',
-            html: `¿Seguro que quieres marcar <b>${name}</b> como <b>${next}</b>?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, cambiar',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true,
-            buttonsStyling: false,
-            customClass: {
-            confirmButton: 'btn btn-primary me-2',
-            cancelButton: 'btn btn-secondary'
-            }
+  // ---- CAMBIAR ESTADO ----
+  document.querySelectorAll('.prop-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const el   = e.currentTarget;
+      const url  = el.dataset.url;
+      const next = el.dataset.next;   // 'no disponible' | 'disponible'
+      const name = el.dataset.title || 'la propiedad';
+
+      const res = await Swal.fire({
+        ...swalOpts,
+        icon: 'question',
+        title: 'Cambiar estado',
+        html: `¿Seguro que quieres marcar <b>${name}</b> como <b>${next}</b>?`,
+      });
+      if (!res.isConfirmed) return;
+
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          },
+          body: new URLSearchParams({ _method: 'PATCH' })
         });
-        if (!res.isConfirmed) return;
 
-        try {
-            const resp = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrf,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: new URLSearchParams({ _method: 'PATCH' })
-            });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
 
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
-
-            await Swal.fire({
-            icon: 'success',
-            title: 'Actualizado',
-            text: 'El estado se cambió correctamente.',
-            timer: 1200,
-            showConfirmButton: false
-            });
-
-            // refresca para actualizar badges y botones
-            window.location.reload();
-
-        } catch (err) {
-            Swal.fire({
-            icon: 'error',
-            title: 'Ups',
-            text: 'No se pudo cambiar el estado. Intenta de nuevo.'
-            });
-        }
+        await Swal.fire({
+          ...swalOpts,
+          showCancelButton: false,
+          icon: 'success',
+          title: 'Actualizado',
+          text: 'El estado se cambió correctamente.',
+          confirmButtonText: 'Aceptar'
         });
+
+        window.location.reload();
+      } catch (err) {
+        Swal.fire({
+          ...swalOpts,
+          showCancelButton: false,
+          icon: 'error',
+          title: 'Ups',
+          text: 'No se pudo cambiar el estado. Intenta de nuevo.',
+          confirmButtonText: 'Entendido'
+        });
+      }
     });
+  });
+
+  // ---- ELIMINAR CON EL MISMO DISEÑO ----
+  document.querySelectorAll('[data-delete-url]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const name = btn.dataset.propertyName || 'la propiedad';
+      const url  = btn.dataset.deleteUrl;
+
+      const res = await Swal.fire({
+        ...swalOpts,
+        icon: 'warning',
+        title: 'Eliminar propiedad',
+        html: `¿Seguro que deseas eliminar <b>${name}</b>? Esta acción no se puede deshacer.`,
+        confirmButtonText: 'Sí, eliminar',
+      });
+      if (!res.isConfirmed) return;
+
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          },
+          body: new URLSearchParams({ _method: 'DELETE' })
+        });
+
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+        await Swal.fire({
+          ...swalOpts,
+          showCancelButton: false,
+          icon: 'success',
+          title: 'Eliminada',
+          text: 'La propiedad se eliminó correctamente.',
+          confirmButtonText: 'Aceptar'
+        });
+
+        window.location.reload();
+      } catch (err) {
+        Swal.fire({
+          ...swalOpts,
+          showCancelButton: false,
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo eliminar la propiedad.',
+          confirmButtonText: 'Entendido'
+        });
+      }
     });
-    </script>
+  });
+});
+</script>
+
 
 
 </body>

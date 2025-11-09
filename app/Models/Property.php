@@ -12,6 +12,23 @@ class Property extends Model
 {
     use HasFactory;
 
+    /** Estados permitidos (fuente de verdad) */
+    public const STATUS_AVAILABLE   = 'available';
+    public const STATUS_UNAVAILABLE = 'unavailable';
+    public const STATUS_RENTED      = 'rented';
+    public const STATUS_SOLD        = 'sold';
+
+    /** Si mantendrás 'pending', descomenta: */
+    // public const STATUS_PENDING     = 'pending';
+
+    public const ALLOWED_STATUSES = [
+        self::STATUS_AVAILABLE,
+        self::STATUS_UNAVAILABLE,
+        self::STATUS_RENTED,
+        self::STATUS_SOLD,
+        // self::STATUS_PENDING,
+    ];
+
     protected $fillable = [
         'user_id', 'title', 'description', 'location', 'price', 'type', 'city',
         'bedrooms',            // <-- ya lo tenías
@@ -32,139 +49,101 @@ class Property extends Model
     ];
 
      /** Scopes */
-    public function scopeAvailable($q)
+     public function scopeStatus($q, string $status)
     {
-        return $q->where('status', 'available');
+        return $q->where('status', $status);
     }
-    public function scopeRented($q)
+    public function scopeAvailable($q)   { return $q->where('status', self::STATUS_AVAILABLE); }
+    public function scopeUnavailable($q) { return $q->where('status', self::STATUS_UNAVAILABLE); }
+    public function scopeRented($q)      { return $q->where('status', self::STATUS_RENTED); }
+    public function scopeSold($q)        { return $q->where('status', self::STATUS_SOLD); }
+
+    public function scopeByAgent($q, int $userId)
     {
-        return $q->where('status', 'rented');
-    }
-    public function scopeSold($q)
-    {
-        return $q->where('status', 'sold');
+        return $q->where('user_id', $userId);
     }
 
-    // Si tienes 'unavailable' en DB:
-    public function scopeUnavailable($q)
+    public function scopeCity($q, string $city)
     {
-        return $q->where('status', 'unavailable');
+        return $q->where('city', $city);
+    }
+
+    public function scopePriceBetween($q, float $min, float $max)
+    {
+        return $q->whereBetween('price', [$min, $max]);
     }
 
     /** Helpers de estado */
-    public function isAvailable(): bool
-    {
-        return $this->status === 'available';
-    }
-    public function isRented(): bool
-    {
-        return $this->status === 'rented';
-    }
-    public function isSold(): bool
-    {
-        return $this->status === 'sold';
-    }
-    public function isUnavailable(): bool
-    {
-        // A) si existe 'unavailable' en DB:
-        return $this->status === 'unavailable';
-        // B) si NO existe, “simula” con pending:
-        // return $this->status === 'pending';
-    }
+    public function isAvailable(): bool   { return $this->status === self::STATUS_AVAILABLE; }
+    public function isUnavailable(): bool { return $this->status === self::STATUS_UNAVAILABLE; }
+    public function isRented(): bool      { return $this->status === self::STATUS_RENTED; }
+    public function isSold(): bool        { return $this->status === self::STATUS_SOLD; }
+
+
 
     /* ===================== Relaciones ===================== */
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    public function user()        { return $this->belongsTo(User::class); }
+    public function images()      { return $this->hasMany(PropertyImage::class); }
+    public function amenities()   { return $this->belongsToMany(Amenity::class, 'amenity_property'); }
+    public function reviews()     { return $this->hasMany(Review::class)->where('is_public', true)->latest(); }
+    public function favoredBy()   { return $this->belongsToMany(User::class, 'favorites')->withTimestamps(); }
+    public function reservations(){ return $this->hasMany(PropertyReservation::class); }
+    public function visits()      { return $this->hasMany(Visit::class); }
 
-    public function images()
+    /** Etiqueta amigable para UI/exports */
+    public function getStatusLabelAttribute(): string
     {
-        return $this->hasMany(PropertyImage::class);
-    }
-
-    public function amenities()
-    {
-        return $this->belongsToMany(Amenity::class, 'amenity_property');
-    }
-
-    public function reviews()
-    {
-        // Mostrar solo reseñas públicas y más recientes primero
-        return $this->hasMany(Review::class)->where('is_public', true)->latest();
-    }
-
-    public function favoredBy()
-    {
-        return $this->belongsToMany(User::class, 'favorites')->withTimestamps();
-    }
-
-    public function reservations()
-    {
-        return $this->hasMany(PropertyReservation::class);
-    }
-
-    public function visits()
-    {
-        return $this->hasMany(Visit::class);
+        return match ($this->status) {
+            self::STATUS_AVAILABLE   => 'Disponible',
+            self::STATUS_UNAVAILABLE => 'No disponible',
+            self::STATUS_RENTED      => 'Rentada',
+            self::STATUS_SOLD        => 'Vendida',
+            default                  => ucfirst($this->status),
+        };
     }
 
     /* ===================== Helpers de estado ===================== */
 
     /** ¿Está rentada en este momento (y la renta sigue vigente)? */
-    public function isRentedNow(): bool
+     public function isRentedNow(): bool
     {
-        return $this->status === 'rented'
-            && $this->rented_until
-            && now()->lt($this->rented_until);
+        return $this->isRented() && $this->rented_until && now()->lt($this->rented_until);
     }
 
-    /** ¿Está disponible ahora (no rentada vigente y status available)? */
     public function isAvailableNow(): bool
     {
-        // disponible solo si status=available y no hay renta vigente
-        if ($this->status !== 'available') return false;
+        if (!$this->isAvailable()) return false;
         if ($this->rented_until && now()->lt($this->rented_until)) return false;
         return true;
     }
 
-    /** Marcar manualmente como NO disponible. */
     public function markUnavailable(): void
     {
-        $this->update(['status' => 'unavailable']);
+        $this->update(['status' => self::STATUS_UNAVAILABLE]);
     }
 
-    /** Marcar disponible (manual o al vencer renta). */
     public function markAvailable(): void
     {
-        $this->update(['status' => 'available', 'rented_until' => null]);
+        $this->update(['status' => self::STATUS_AVAILABLE, 'rented_until' => null]);
     }
 
-    /** Marcar como rentada hasta una fecha/hora final. */
-    public function markRentedUntil(Carbon|string $end): void
+    public function markRentedUntil(\Carbon\Carbon|string $end): void
     {
-        $endAt = $end instanceof Carbon ? $end : Carbon::parse($end);
-        $this->update(['status' => 'rented', 'rented_until' => $endAt]);
-    }
-
-    /** Si la renta ya venció, liberar automáticamente. */
-    public function releaseIfExpired(): void
-    {
-        if ($this->status === 'rented' && $this->rented_until && now()->gte($this->rented_until)) {
-            $this->markAvailable();
-        }
-    }
-
-
-    public function markPending(): void
-    {
-        $this->update(['status' => 'pending']);
+        $endAt = $end instanceof \Carbon\Carbon ? $end : \Carbon\Carbon::parse($end);
+        $this->update(['status' => self::STATUS_RENTED, 'rented_until' => $endAt]);
     }
 
     public function markSold(): void
     {
-        $this->update(['status' => 'sold', 'rented_until' => null]);
+        $this->update(['status' => self::STATUS_SOLD, 'rented_until' => null]);
+    }
+
+    public function releaseIfExpired(): void
+    {
+        if ($this->isRented() && $this->rented_until && now()->gte($this->rented_until)) {
+            $this->markAvailable();
+        }
     }
 
 }

@@ -57,115 +57,151 @@
 
     {{-- HEADER (del nuevo welcome.blade.php, con botón de modal login del welcomeold) --}}
     <header class="sticky top-0 bg-white shadow-sm z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-            <div class="text-2xl font-bold text-blue-600 cursor-pointer">
-                <i class="fas fa-home mr-2"></i> {{-- Icono del nuevo diseño --}}
-                Sin beca<span class="text-gray-700"> no hay renta </span>
+  <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+    <!-- Logo -->
+    <div class="text-2xl font-bold text-blue-600 cursor-pointer flex items-center">
+      <i class="fas fa-home mr-2"></i>
+      <span>Sin beca<span class="text-gray-700"> no hay renta </span></span>
+    </div>
+
+   <!-- Botones de header -->
+<div class="flex items-center gap-4">
+  <!-- Botón lupa -->
+  <button id="search-toggle" class="block md:hidden text-gray-700 text-xl focus:outline-none">
+  <i class="fas fa-search"></i>
+</button>
+
+  <!-- Botón menú móvil -->
+  <button id="menu-toggle" class="md:hidden text-gray-700 text-2xl focus:outline-none">
+    <i class="fas fa-bars"></i>
+  </button>
+</div>
+
+
+    <!-- Navegación -->
+    <nav id="main-nav"
+      class="hidden md:flex flex-col md:flex-row fixed md:static top-0 right-0 h-full md:h-auto w-3/4 md:w-auto bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 space-y-4 md:space-y-0 md:space-x-6 text-gray-700 font-medium transition-transform transform md:translate-x-0 translate-x-full z-50">
+      
+      <!-- Botón cerrar -->
+      <button id="close-menu" class="md:hidden text-gray-500 text-2xl self-end mb-4">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <a href="{{ route('visits.my') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Mi agenda
+</a>
+@auth
+<a href="{{ route('favorites.index') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Favoritos
+</a>
+@endauth
+<a href="{{ route('properties.map') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Mapa
+</a>
+@auth
+@if(auth()->user()->role === 'agent')
+<a href="{{ route('agent.home') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Panel de Agente
+</a>
+@else
+<a href="{{ route('agent.view') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Modo vendedor
+</a>
+@endif
+<a href="{{ url('/dashboard') }}"
+   class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
+   Perfil
+</a>
+@else
+<a href="{{ route('agent.view') }}"
+   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+   Modo vendedor
+</a>
+
+      <button type="button" onclick="openLoginModal()"
+         class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
+         Iniciar sesión
+      </button>
+      @endauth
+    </nav>
+  </div>
+</header>
+
+
+
+       <!-- Filtro (siempre visible en PC, desplegable en móvil) -->
+<section id="filter-panel"
+  class="bg-white shadow-md w-full py-6 md:translate-y-0 transform -translate-y-full transition-transform duration-300 fixed md:static top-16 md:top-auto left-0 z-40 md:z-0">
+  <div class="max-w-6xl mx-auto px-6">
+    <form id="property-filter-form" method="GET" action="{{ route('home') }}"
+      class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 text-center">
+      
+      {{-- Tipo de propiedad --}}
+      <div class="w-full md:w-auto">
+        <select name="type" id="type_filter_select"
+          class="w-full md:w-40 border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+          <option value="rent" {{ request('type') === 'rent' ? 'selected' : '' }}>Renta</option>
+          <option value="sale" {{ request('type') === 'sale' ? 'selected' : '' }}>Venta</option>
+        </select>
+      </div>
+
+      {{-- Ciudad --}}
+      <div class="w-full md:w-40">
+        <select name="city" id="city" onchange="this.form.submit()"
+          class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+          <option value="">Todas las ciudades</option>
+          @foreach($cities as $city)
+          <option value="{{ $city }}" {{ request('city') === $city ? 'selected' : '' }}>
+            {{ $city }}
+          </option>
+          @endforeach
+        </select>
+      </div>
+
+      {{-- Filtro de precio --}}
+      <div class="relative w-full md:w-64">
+        <button type="button" id="price-filter-button"
+          class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+          <span>Precio</span>
+        </button>
+
+        <div id="price-dropdown"
+          class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
+          <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
+          <div id="price-slider" class="mb-4"></div>
+          <div class="flex justify-between items-center text-sm text-gray-700">
+            <div class="flex items-center gap-1 border rounded-md p-2">
+              $ <span id="slider-min-value"></span>
             </div>
-            <nav class="flex items-center space-x-6 text-gray-700 font-medium">
-                <a href="{{ route('visits.my') }}" class="hover:text-blue-600 transition">Mi agenda</a>
-                @auth
-                <a href="{{ route('favorites.index') }}" class="...">Favoritos</a>
-                @endauth
-                <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
-                @auth
-                @if(auth()->user()->role === 'agent')
-                <a href="{{ route('agent.home') }}" class="hover:text-blue-600 transition">Panel de Agente</a>
-                @else
-                <a href="{{ route('agent.view') }}" class="hover:text-blue-600 transition">Modo vendedor</a>
-                @endif
-                <a href="{{ url('/dashboard') }}"
-                    class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
-                @else
-                <a href="{{ route('agent.view') }}" class="hover:text-blue-600 transition">Modo vendedor</a>
-                {{-- Botón para abrir modal (del welcomeold) --}}
-                <button type="button" onclick="openLoginModal()"
-                    class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
-                    Iniciar sesión
-                </button>
-                @endauth
-            </nav>
-        </div>
-    </header>
-
-        <section class="bg-white shadow-sm w-full py-6">
-        <div class="max-w-6xl mx-auto px-6">
-            <form id="property-filter-form" method="GET" action="{{ route('home') }}" class="flex flex-col md:flex-row items-center gap-4">
-
-                {{-- Tipo de propiedad --}}
-                <div class="w-full md:w-auto">
-                    <select name="type" id="type_filter_select"
-                        class="w-full md:w-40 border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-                        <option value="rent" {{ request('type') === 'rent' ? 'selected' : '' }}>Renta</option>
-                        <option value="sale" {{ request('type') === 'sale' ? 'selected' : '' }}>Venta</option>
-                    </select>
-                </div>
-
-                {{-- Ciudad --}}
-                <div class="w-full md:w-40">
-                    <select name="city" id="city" onchange="this.form.submit()"
-                        class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-                        <option value="">Todas las ciudades</option>
-                        @foreach($cities as $city)
-                            <option value="{{ $city }}" {{ request('city') === $city ? 'selected' : '' }}>
-                                {{ $city }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- ###################################################### --}}
-            {{-- ##      INICIO DEL FILTRO DE PRECIO DESPLEGABLE     ## --}}
-            {{-- ###################################################### --}}
-            <div class="relative w-full md:w-64">
-                {{-- Botón que muestra el rango y abre el dropdown --}}
-                <button type="button" id="price-filter-button"
-                    class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-                    <span>Precio</span>
-                </button>
-
-                {{-- El panel desplegable (oculto por defecto) --}}
-                <div id="price-dropdown" class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
-                    <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
-
-                    {{-- El slider va aquí --}}
-                    <div id="price-slider" class="mb-4"></div>
-
-                    {{-- Muestra de valores --}}
-                    <div class="flex justify-between items-center text-sm text-gray-700">
-                        <div class="flex items-center gap-1 border rounded-md p-2">
-                            $ <span id="slider-min-value"></span>
-                        </div>
-                        <div class="text-gray-400">-</div>
-                        <div class="flex items-center gap-1 border rounded-md p-2">
-                            $ <span id="slider-max-value"></span>
-                        </div>
-                    </div>
-
-                    {{-- Inputs ocultos para el formulario --}}
-                    <input type="hidden" name="min_price" id="slider-min-input">
-                    <input type="hidden" name="max_price" id="slider-max-input">
-
-                    {{-- Botón para aplicar --}}
-                    <div class="mt-4 text-right">
-                        <button type="button" id="apply-price-button" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Aplicar</button>
-                    </div>
-                </div>
+            <div class="text-gray-400">-</div>
+            <div class="flex items-center gap-1 border rounded-md p-2">
+              $ <span id="slider-max-value"></span>
             </div>
-            {{-- ###################################################### --}}
-            {{-- ##       FIN DEL FILTRO DE PRECIO DESPLEGABLE       ## --}}
-            {{-- ###################################################### --}}
-
-                {{-- Botón buscar --}}
-                <div class="w-full md:w-auto">
-                    <button type="submit"
-                        class="w-full md:w-auto bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
-                        Buscar
-                    </button>
-                </div>
-            </form>
+          </div>
+          <input type="hidden" name="min_price" id="slider-min-input">
+          <input type="hidden" name="max_price" id="slider-max-input">
+          <div class="mt-4 text-right">
+            <button type="button" id="apply-price-button"
+              class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Aplicar</button>
+          </div>
         </div>
-    </section>
+      </div>
+
+      {{-- Botón buscar --}}
+      <div class="w-full md:w-auto">
+        <button type="submit"
+          class="w-full md:w-auto bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
+          Buscar
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
 
 
 
@@ -589,6 +625,77 @@
     });
     </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+
+<!-- Botón flotante modo oscuro -->
+<button id="theme-toggle"
+  class="fixed bottom-6 right-6 z-50 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-yellow-300 p-3 rounded-full shadow-lg hover:scale-110 transition transform focus:outline-none">
+  <i class="fas fa-moon text-xl"></i>
+</button>
+
 </body>
+
+<script>
+  const menuToggle = document.getElementById('menu-toggle');
+  const closeMenu = document.getElementById('close-menu');
+  const nav = document.getElementById('main-nav');
+
+  menuToggle.addEventListener('click', () => {
+    nav.classList.remove('translate-x-full', 'hidden');
+  });
+
+  closeMenu.addEventListener('click', () => {
+    nav.classList.add('translate-x-full');
+    setTimeout(() => nav.classList.add('hidden'), 300);
+  });
+</script>
+
+<script>
+  const searchToggle = document.getElementById('search-toggle');
+  const filterPanel = document.getElementById('filter-panel');
+  let isFilterVisible = false;
+
+  function toggleFilter() {
+    // Solo ejecuta la animación si la pantalla es menor que 768px (modo móvil)
+    if (window.innerWidth < 768) {
+      isFilterVisible = !isFilterVisible;
+      filterPanel.style.transform = isFilterVisible ? 'translateY(0)' : 'translateY(-100%)';
+    }
+  }
+
+  if (searchToggle) {
+    searchToggle.addEventListener('click', toggleFilter);
+  }
+
+  // Al cambiar el tamaño de pantalla, si volvemos a PC, se resetea el filtro visible
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768) {
+      filterPanel.style.transform = 'translateY(0)';
+    } else if (!isFilterVisible) {
+      filterPanel.style.transform = 'translateY(-100%)';
+    }
+  });
+</script>
+
+<script>
+  const themeToggle = document.getElementById('theme-toggle');
+  const html = document.documentElement;
+  const icon = themeToggle.querySelector('i');
+
+  // Cargar preferencia guardada
+  if (localStorage.theme === 'dark') {
+    html.classList.add('dark');
+    icon.classList.replace('fa-moon', 'fa-sun');
+  }
+
+  // Alternar tema
+  themeToggle.addEventListener('click', () => {
+    html.classList.toggle('dark');
+    const isDark = html.classList.contains('dark');
+    icon.classList.toggle('fa-moon', !isDark);
+    icon.classList.toggle('fa-sun', isDark);
+    localStorage.theme = isDark ? 'dark' : 'light';
+  });
+</script>
+
 
 </html>
