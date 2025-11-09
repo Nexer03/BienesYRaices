@@ -17,7 +17,7 @@
                     </x-nav-link>
                     @if (Auth::user()?->role === 'admin')
                         <x-nav-link :href="route('admin.reports.sales')" :active="request()->routeIs('admin.reports.sales')">
-                            {{ __('Reporte de Ventas') }}
+                            {{ __('Reporte de Ventas y Rentas') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.reports.visits')" :active="request()->routeIs('admin.reports.visits')">
                             {{ __('Reporte de Visitas') }}
@@ -80,7 +80,7 @@
             </x-responsive-nav-link>
             @if (Auth::user()?->role === 'admin')
                 <x-responsive-nav-link :href="route('admin.reports.sales')" :active="request()->routeIs('admin.reports.sales')">
-                    {{ __('Reporte de Ventas') }}
+                    {{ __('Reporte de Ventas y Rentas') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.reports.visits')" :active="request()->routeIs('admin.reports.visits')">
                     {{ __('Reporte de Visitas') }}
