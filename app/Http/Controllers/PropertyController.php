@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; // <-- Y este para borrar archivos
 use Illuminate\Support\Arr;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rule;
 
 
 class PropertyController extends Controller
@@ -138,18 +139,26 @@ public function index(Request $request)
 
 
     public function myProperties(Request $request)
-    {
+{
+    $query = Property::with(['images', 'amenities'])
+        ->where('user_id', Auth::id())
+        ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+        ->when($request->filled('city'), fn($q) => $q->where('city', $request->city))
+        ->when($request->filled('type') && in_array($request->type, ['rent','sale']), fn($q) => $q->where('listing_type', $request->type))
+        ->latest('updated_at');
 
-        $query = Property::where('user_id', Auth::id())->with(['images', 'amenities']);
+    $properties = $query->paginate(12)->withQueryString();
 
-        if ($request->has('type') && in_array($request->type, ['rent', 'sale'])) {
-            $query->where('listing_type', $request->type);
-        }
+    // Para badge y <select> en UI
+    $allowedStatuses = [
+        'available' => 'Disponible',
+        'pending'   => 'Pendiente',
+        'rented'    => 'Rentada',
+        'sold'      => 'Vendida',
+    ];
 
-        $properties = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        return view('properties.index', compact('properties'));
-    }
+    return view('properties.index', compact('properties','allowedStatuses'));
+}
 
 
     /**
@@ -321,16 +330,25 @@ public function index(Request $request)
     {
         $this->authorize('update', $property);
 
-        // A) Si tienes 'unavailable' en DB:
-        $next = $property->isAvailable() ? 'unavailable' : 'available';
-
-        // B) Si NO tienes 'unavailable', usa 'pending' como no disponible:
-        // $next = $property->isAvailable() ? 'pending' : 'available';
-
-        // Si está sold o rented, no permitir cambiar manualmente
+        // Bloquea cambios manuales si ya está vendida/rentada
         if ($property->isSold() || $property->isRented()) {
             return back()->with('error', 'No se puede cambiar estado manual cuando la propiedad está vendida o rentada.');
         }
+
+        // Si mandas un destino explícito desde <select>, valídalo
+        if ($request->filled('status')) {
+            $request->validate([
+                'status' => ['required', Rule::in(Property::ALLOWED_STATUSES)],
+            ]);
+            $property->update(['status' => $request->status]);
+            return back()->with('success', "Estado actualizado a {$request->status}.");
+        }
+
+        // Mantener tu “toggle” original como fallback (compatible hacia atrás)
+        // A) Si tienes 'unavailable' en DB:
+        $next = $property->isAvailable() ? 'unavailable' : 'available';
+        // B) Si NO tienes 'unavailable', usa 'pending' como “no disponible”:
+        // $next = $property->isAvailable() ? 'pending' : 'available';
 
         $property->update(['status' => $next]);
 
