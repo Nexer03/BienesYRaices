@@ -12,6 +12,7 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         \App\Events\ReservationPaid::class => [
             \App\Listeners\SetPropertyRentedOnPaid::class,
+            \App\Listeners\NotifyAdminsOfReservationPaid::class,
         ],
     ];
 
