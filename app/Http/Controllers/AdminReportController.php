@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PropertyZoneComparisonExport;
 use App\Models\Property;
+use App\Models\PropertyReservation;
 use App\Models\User;
 use App\Models\Visit;
 use Illuminate\Contracts\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AdminReportController extends Controller
 {
@@ -19,9 +23,47 @@ class AdminReportController extends Controller
 
         $totalValueSold = Property::where('status', 'sold')->sum('price');
 
+        $rentalBaseQuery = PropertyReservation::query()
+            ->whereIn('property_reservations.status', ['confirmed', 'paid', 'completed'])
+            ->where('property_reservations.payment_status', 'paid');
+
+        $totalRentalRevenue = (clone $rentalBaseQuery)->sum('property_reservations.total_price');
+        $totalRentalReservations = (clone $rentalBaseQuery)->count();
+
+        $rentalsByAgent = (clone $rentalBaseQuery)
+            ->join('properties', 'property_reservations.property_id', '=', 'properties.id')
+            ->selectRaw('properties.user_id as agent_id, COUNT(*) as total_reservations, SUM(property_reservations.total_price) as total_revenue')
+            ->groupBy('properties.user_id')
+            ->get();
+
+        $agents = User::whereIn('id', $rentalsByAgent->pluck('agent_id')->filter()->unique())
+            ->get()
+            ->keyBy('id');
+
+        $rentalsByAgent = $rentalsByAgent->map(function ($row) use ($agents) {
+            $row->agent = $agents->get($row->agent_id);
+            return $row;
+        })->filter(fn ($row) => $row->agent !== null);
+
+        $zoneComparison = Property::query()
+            ->select('city')
+            ->whereNotNull('city')
+            ->selectRaw('COUNT(*) as total_properties')
+            ->selectRaw("SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold_count")
+            ->selectRaw("SUM(CASE WHEN status = 'rented' THEN 1 ELSE 0 END) as rented_count")
+            ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_count")
+            ->selectRaw('AVG(price) as average_price')
+            ->groupBy('city')
+            ->orderByDesc('total_properties')
+            ->get();
+
         return view('admin.reports.sales', [
             'salesByAgent' => $salesByAgent,
             'totalValueSold' => $totalValueSold,
+            'rentalsByAgent' => $rentalsByAgent,
+            'totalRentalRevenue' => $totalRentalRevenue,
+            'totalRentalReservations' => $totalRentalReservations,
+            'zoneComparison' => $zoneComparison,
         ]);
     }
 
@@ -69,5 +111,12 @@ class AdminReportController extends Controller
             'upcomingVisits' => $upcomingVisits,
             'upcomingVisitsCount' => $upcomingVisitsQuery->count(),
         ]);
+    }
+
+    public function exportPropertyReport(): BinaryFileResponse
+    {
+        $fileName = 'reporte_propiedades_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new PropertyZoneComparisonExport(), $fileName);
     }
 }
