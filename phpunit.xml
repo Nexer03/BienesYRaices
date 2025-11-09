@@ -24,6 +24,11 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
+        <!--
+            Si la extensión pdo_sqlite no está disponible, establece TEST_DB_CONNECTION y
+            TEST_DB_DATABASE para apuntar a una base de datos alternativa antes de ejecutar
+            las pruebas (por ejemplo en tu archivo .env.testing).
+        -->
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
