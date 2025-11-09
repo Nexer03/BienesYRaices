@@ -13,6 +13,8 @@ abstract class TestCase extends BaseTestCase
         $this->configureTestDatabaseEnvironment();
 
         parent::setUp();
+
+        $this->withoutVite();
     }
 
     protected function resolveApplicationConfiguration($app)

@@ -31,8 +31,20 @@ class AdminSalesReportTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Agente Ventas');
-        $response->assertSeeText('Total de propiedades vendidas');
-        $response->assertSeeText('Valor total vendido');
+        $response->assertSeeText('Propiedades vendidas');
+        $response->assertSeeText('Ingresos por rentas');
         $response->assertSee('$' . number_format($soldProperty->price, 2, '.', ','));
+    }
+
+    /** @test */
+    public function admin_can_download_the_zone_comparison_export(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->get(route('admin.reports.properties.export'));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertStringContainsString('attachment; filename=', $response->headers->get('content-disposition'));
     }
 }
