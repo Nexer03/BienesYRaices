@@ -11,14 +11,18 @@ class NotifyAdminsOfReservationPaid
 {
     public function handle(ReservationPaid $event): void
     {
+        $reservation = $event->reservation->loadMissing('property.user');
+
         $admins = User::query()->where('role', 'admin')->get();
 
-        if ($admins->isEmpty()) {
-            return;
+        if ($admins->isNotEmpty()) {
+            Notification::send($admins, new ReservationPaidNotification($reservation));
         }
 
-        $reservation = $event->reservation->loadMissing('property');
+        $agent = $reservation->property?->user;
 
-        Notification::send($admins, new ReservationPaidNotification($reservation));
+        if ($agent && !$admins->contains('id', $agent->id)) {
+            $agent->notify(new ReservationPaidNotification($reservation));
+        }
     }
 }

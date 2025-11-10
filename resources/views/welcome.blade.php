@@ -66,6 +66,52 @@
 
    <!-- Botones de header -->
 <div class="flex items-center gap-4">
+  @auth
+    @if(in_array(auth()->user()->role, ['agent','admin']))
+    <div class="relative" id="notification-wrapper">
+      <button id="notification-button" class="relative text-gray-700 text-xl focus:outline-none" aria-label="Ver notificaciones">
+        <i class="fa-regular fa-bell"></i>
+        @if(($unreadNotificationCount ?? 0) > 0)
+        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5">
+          {{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}
+        </span>
+        @endif
+      </button>
+      <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <h4 class="text-sm font-semibold text-gray-700">Notificaciones</h4>
+          <form method="POST" action="{{ route('notifications.markAllRead') }}">
+            @csrf
+            <button type="submit" class="text-xs text-indigo-600 hover:text-indigo-500">
+              Marcar todas como leídas
+            </button>
+          </form>
+        </div>
+        <div class="max-h-80 overflow-y-auto divide-y divide-gray-100">
+          @forelse(($headerNotifications ?? collect()) as $notification)
+          <a href="{{ route('notifications.redirect', $notification['id']) }}" class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition">
+            <span class="text-indigo-500 text-lg">
+              <i class="{{ $notification['icon'] }}"></i>
+            </span>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-gray-800">{{ $notification['title'] }}</p>
+              <p class="text-xs text-gray-500">{{ $notification['description'] }}</p>
+              <p class="text-[11px] text-gray-400 mt-1">{{ $notification['time'] }}</p>
+            </div>
+            @if(!$notification['read'])
+              <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
+            @endif
+          </a>
+          @empty
+          <div class="px-4 py-6 text-center text-sm text-gray-500">
+            Sin notificaciones por ahora.
+          </div>
+          @endforelse
+        </div>
+      </div>
+    </div>
+    @endif
+  @endauth
   <!-- Botón lupa -->
   <button id="search-toggle" class="block md:hidden text-gray-700 text-xl focus:outline-none">
   <i class="fas fa-search"></i>
@@ -633,6 +679,25 @@
 </button>
 
 </body>
+
+<script>
+  const notificationButton = document.getElementById('notification-button');
+  const notificationDropdown = document.getElementById('notification-dropdown');
+  const notificationWrapper = document.getElementById('notification-wrapper');
+
+  if (notificationButton && notificationDropdown && notificationWrapper) {
+    notificationButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      notificationDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!notificationWrapper.contains(event.target)) {
+        notificationDropdown.classList.add('hidden');
+      }
+    });
+  }
+</script>
 
 <script>
   const menuToggle = document.getElementById('menu-toggle');

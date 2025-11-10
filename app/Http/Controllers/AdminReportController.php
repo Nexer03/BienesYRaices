@@ -7,6 +7,7 @@ use App\Models\Property;
 use App\Models\PropertyReservation;
 use App\Models\User;
 use App\Models\Visit;
+use App\Services\CommissionService;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -15,13 +16,48 @@ class AdminReportController extends Controller
 {
     public function salesReport(): View
     {
+        $commissionService = app(CommissionService::class);
+
         $salesByAgent = User::where('role', 'agent')
             ->withCount(['properties' => function ($query) {
                 $query->where('status', 'sold');
             }])
             ->get();
 
-        $totalValueSold = Property::where('status', 'sold')->sum('price');
+        $soldProperties = Property::with('user')
+            ->where('status', 'sold')
+            ->get();
+
+        $totalValueSold = $soldProperties->sum('price');
+
+        $salesCommissionByAgent = $soldProperties
+            ->groupBy('user_id')
+            ->map(function ($properties) use ($commissionService) {
+                $agent = $properties->first()->user;
+                $agentId = $agent?->id;
+                $totalSold = $properties->sum('price');
+                $rate = $commissionService->rateFor($agentId, 'sale');
+
+                return (object) [
+                    'agent' => $agent,
+                    'total_sold' => $totalSold,
+                    'rate' => $rate,
+                    'commission' => $commissionService->calculate($agentId, 'sale', $totalSold),
+                ];
+            })
+            ->values();
+
+        $salesByAgent = $salesByAgent->map(function ($agent) use ($salesCommissionByAgent) {
+            $commissionData = $salesCommissionByAgent->first(function ($row) use ($agent) {
+                return optional($row->agent)->id === $agent->id;
+            });
+
+            $agent->total_sales_amount = $commissionData->total_sold ?? 0;
+            $agent->commission_rate = $commissionData->rate;
+            $agent->commission_total = $commissionData->commission ?? 0;
+
+            return $agent;
+        });
 
         $rentalBaseQuery = PropertyReservation::query()
             ->whereIn('property_reservations.status', ['confirmed', 'paid', 'completed'])
@@ -40,10 +76,17 @@ class AdminReportController extends Controller
             ->get()
             ->keyBy('id');
 
-        $rentalsByAgent = $rentalsByAgent->map(function ($row) use ($agents) {
-            $row->agent = $agents->get($row->agent_id);
+        $rentalsByAgent = $rentalsByAgent->map(function ($row) use ($agents, $commissionService) {
+            $agent = $agents->get($row->agent_id);
+            $rate = $commissionService->rateFor($agent?->id, 'rent');
+            $row->agent = $agent;
+            $row->commission_rate = $rate;
+            $row->commission_total = $commissionService->calculate($agent?->id, 'rent', (float) $row->total_revenue);
             return $row;
         })->filter(fn ($row) => $row->agent !== null);
+
+        $rentalCommissionTotal = $rentalsByAgent->sum('commission_total');
+        $salesCommissionTotal = $salesCommissionByAgent->sum('commission');
 
         $zoneComparison = Property::query()
             ->select('city')
@@ -64,6 +107,9 @@ class AdminReportController extends Controller
             'totalRentalRevenue' => $totalRentalRevenue,
             'totalRentalReservations' => $totalRentalReservations,
             'zoneComparison' => $zoneComparison,
+            'salesCommissionByAgent' => $salesCommissionByAgent,
+            'salesCommissionTotal' => $salesCommissionTotal,
+            'rentalCommissionTotal' => $rentalCommissionTotal,
         ]);
     }
 

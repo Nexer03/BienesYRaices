@@ -11,6 +11,8 @@ use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\AdminPropertyController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminReportController;
+use App\Http\Controllers\Admin\SystemCommissionController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PropertyReservationController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ReviewController;
@@ -34,6 +36,9 @@ Route::middleware('auth')->group(function () {
 
     // Enviar mensaje
     Route::post('/chat/{conversation}/send', [ChatController::class, 'send'])->name('chat.send');
+
+    Route::get('/notifications/{notification}/redirect', [NotificationController::class, 'redirect'])->name('notifications.redirect');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
 });
 
 /*
@@ -229,6 +234,8 @@ Route::middleware(['auth', 'verified', 'admin'])
     Route::get('agent-applications/{agentApplication}', [AdminAgentApplicationController::class, 'show'])->name('agent-applications.show');
     Route::post('agent-applications/{agentApplication}/approve', [AdminAgentApplicationController::class, 'approve'])->name('agent-applications.approve');
     Route::post('agent-applications/{agentApplication}/reject', [AdminAgentApplicationController::class, 'reject'])->name('agent-applications.reject');
+
+    Route::resource('commissions', SystemCommissionController::class)->except(['show']);
 });
 
 /*
