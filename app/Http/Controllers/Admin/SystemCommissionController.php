@@ -76,7 +76,6 @@ class SystemCommissionController extends Controller
             'user_id' => ['nullable', 'exists:users,id'],
             'listing_type' => ['required', 'in:' . implode(',', $listingTypes)],
             'percentage' => ['required', 'numeric', 'min:0', 'max:100'],
-            'customer_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
             'effective_from' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:255'],
         ];
