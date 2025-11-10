@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Property;
+use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -107,6 +109,17 @@ class ChatController extends Controller
 
         // actualiza orden en inbox
         $conversation->touch();
+
+        $recipientId = $conversation->agent_id === $userId
+            ? $conversation->client_id
+            : $conversation->agent_id;
+
+        if ($recipientId && $recipientId !== $userId) {
+            $recipient = User::find($recipientId);
+            if ($recipient) {
+                $recipient->notify(new NewMessageNotification($message));
+            }
+        }
 
         // broadcast opcional (cuando conectes Pusher/Echo)
         // broadcast(new \App\Events\MessageSent($conversation, $message))->toOthers();

@@ -22,6 +22,9 @@
                         <x-nav-link :href="route('admin.reports.visits')" :active="request()->routeIs('admin.reports.visits')">
                             {{ __('Reporte de Visitas') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
+                            {{ __('Comisiones') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -84,6 +87,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.reports.visits')" :active="request()->routeIs('admin.reports.visits')">
                     {{ __('Reporte de Visitas') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
+                    {{ __('Comisiones') }}
                 </x-responsive-nav-link>
             @endif
         </div>

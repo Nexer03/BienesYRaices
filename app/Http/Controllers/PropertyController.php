@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewPropertyMatchNotification;
+use App\Support\NotificationPresenter;
 
 
 class PropertyController extends Controller
@@ -26,6 +27,8 @@ public function index(Request $request)
     $typeFilter = $request->get('type', 'rent');
     $userPreferences = null;
     $recommendedProperties = collect();
+    $headerNotifications = collect();
+    $unreadNotificationCount = 0;
 
     $rentMinRange = 100;
     $rentMaxRange = 10000; // Rango para Renta (0 - 10k)
@@ -125,6 +128,19 @@ public function index(Request $request)
         }
     }
 
+    if (Auth::check() && in_array(Auth::user()->role, ['agent', 'admin'])) {
+        $user = Auth::user();
+        $presenter = app(NotificationPresenter::class);
+
+        $notifications = $user->notifications()
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        $headerNotifications = $notifications->map(fn ($notification) => $presenter->summarize($notification, $user));
+        $unreadNotificationCount = $user->unreadNotifications()->count();
+    }
+
     // --- 6. Enviar datos a la vista ---
     return view('welcome', [
         'properties' => $properties,
@@ -137,6 +153,8 @@ public function index(Request $request)
         'rentMaxRange' => $rentMaxRange, // <-- AÑADIDO
         'saleMinRange' => $saleMinRange,   // <-- AÑADIDO
         'saleMaxRange' => $saleMaxRange, // <-- AÑADIDO
+        'headerNotifications' => $headerNotifications,
+        'unreadNotificationCount' => $unreadNotificationCount,
     ]);
 }
 

@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\AgentApplication;
+use App\Models\User;
+use App\Notifications\NewAgentApplicationSubmitted;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class AgentApplicationController extends Controller
 {
@@ -36,7 +39,7 @@ class AgentApplicationController extends Controller
         $backPath  = $request->file('ine_back')->store('ine_photos', 'public');
 
         // Crear la solicitud del agente
-        AgentApplication::create([
+        $application = AgentApplication::create([
             'user_id'   => Auth::id(),
             'rfc'       => $request->rfc,
             'curp'      => $request->curp,
@@ -44,6 +47,12 @@ class AgentApplicationController extends Controller
             'ine_back'  => $backPath,
             'status'    => 'pending',
         ]);
+
+        $admins = User::query()->where('role', 'admin')->get();
+
+        if ($admins->isNotEmpty()) {
+            Notification::send($admins, new NewAgentApplicationSubmitted($application));
+        }
 
         return redirect()->route('dashboard')->with(
             'success',
