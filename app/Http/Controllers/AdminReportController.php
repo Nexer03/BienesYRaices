@@ -11,123 +11,178 @@ use App\Services\CommissionService;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Http\Request;
 
 class AdminReportController extends Controller
 {
-    public function salesReport(): View
+    public function salesReport(Request $request): View
     {
         $commissionService = app(CommissionService::class);
 
+        // ====== Filtros ======
+        $filters = [
+            'from'   => $request->date('from'),
+            'to'     => $request->date('to'),
+            'agent'  => $request->integer('agent'),
+            'city'   => $request->string('city')->toString() ?: null,
+        ];
+
+        // Catálogos para selects
+        $agentsOptions = User::where('role', 'agent')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $citiesOptions = Property::query()
+            ->whereNotNull('city')
+            ->select('city')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
+
+        // ====== Ventas (inmuebles vendidos) ======
+        $soldQuery = Property::with('user')
+            ->where('status', 'sold');
+
+        if ($filters['agent']) {
+            $soldQuery->where('user_id', $filters['agent']);
+        }
+        if ($filters['city']) {
+            $soldQuery->where('city', $filters['city']);
+        }
+        if ($filters['from']) {
+            $soldQuery->whereDate('updated_at', '>=', $filters['from']); // usa sold_at si lo tienes
+        }
+        if ($filters['to']) {
+            $soldQuery->whereDate('updated_at', '<=', $filters['to']);
+        }
+
+        $soldProperties = $soldQuery->get();
+        $totalValueSold = $soldProperties->sum('price');
+
+        // Ventas por agente (conteo)
         $salesByAgent = User::where('role', 'agent')
-            ->withCount(['properties' => function ($query) {
-                $query->where('status', 'sold');
+            ->when($filters['agent'], fn($q) => $q->where('id', $filters['agent']))
+            ->withCount(['properties' => function ($q) use ($filters) {
+                $q->where('status', 'sold');
+                if ($filters['city']) $q->where('city', $filters['city']);
+                if ($filters['from']) $q->whereDate('updated_at', '>=', $filters['from']);
+                if ($filters['to'])   $q->whereDate('updated_at', '<=', $filters['to']);
             }])
             ->get();
 
-        $soldProperties = Property::with('user')
-            ->where('status', 'sold')
-            ->get();
-
-        $totalValueSold = $soldProperties->sum('price');
-
+        // Comisiones por ventas (por agente)
         $salesCommissionByAgent = $soldProperties
             ->groupBy('user_id')
             ->map(function ($properties) use ($commissionService) {
                 $agent = $properties->first()->user;
-                $agentId = $agent?->id;
-                $totalSold = $properties->sum('price');
-                $rate = $commissionService->rateFor($agentId, 'sale');
-                $customerRate = $commissionService->customerRateFor($agentId, 'sale');
-
+                $agentId = $agent?->id ?? 0;
+                $totalSold = (float) $properties->sum('price');
                 return (object) [
-                    'agent' => $agent,
-                    'total_sold' => $totalSold,
-                    'rate' => $rate,
-                    'commission' => $commissionService->calculate($agentId, 'sale', $totalSold),
-                    'customer_rate' => $customerRate,
-                    'customer_charge' => $commissionService->calculateCustomer($agentId, 'sale', $totalSold),
+                    'agent'           => $agent,
+                    'total_sold'      => $totalSold,
+                    'rate'            => $commissionService->rateFor($agentId, 'sale'),
+                    'commission'      => (float) $commissionService->calculate($agentId, 'sale', $totalSold),
+                    'customer_rate'   => $commissionService->customerRateFor($agentId, 'sale'),
+                    'customer_charge' => (float) $commissionService->calculateCustomer($agentId, 'sale', $totalSold),
                 ];
-            })
-            ->values();
+            })->values();
 
         $salesByAgent = $salesByAgent->map(function ($agent) use ($salesCommissionByAgent) {
-            $commissionData = $salesCommissionByAgent->first(function ($row) use ($agent) {
-                return optional($row->agent)->id === $agent->id;
-            });
-
-            $agent->total_sales_amount = $commissionData?->total_sold ?? 0;
-            $agent->commission_rate = $commissionData?->rate;
-            $agent->commission_total = $commissionData?->commission ?? 0;
-            $agent->customer_rate = $commissionData?->customer_rate;
-            $agent->customer_charge_total = $commissionData?->customer_charge ?? 0;
-            $agent->total_sales_amount = $commissionData->total_sold ?? 0;
-            $agent->commission_rate = $commissionData->rate;
-            $agent->commission_total = $commissionData->commission ?? 0;
-
+            $cd = $salesCommissionByAgent->first(fn($row) => optional($row->agent)->id === $agent->id);
+            $agent->total_sales_amount    = (float) ($cd->total_sold ?? 0);
+            $agent->commission_rate       = $cd->rate ?? null;
+            $agent->commission_total      = (float) ($cd->commission ?? 0);
+            $agent->customer_rate         = $cd->customer_rate ?? null;
+            $agent->customer_charge_total = (float) ($cd->customer_charge ?? 0);
             return $agent;
         });
 
+        // ====== Rentas (reservas pagadas/confirmadas) ======
         $rentalBaseQuery = PropertyReservation::query()
             ->whereIn('property_reservations.status', ['confirmed', 'paid', 'completed'])
             ->where('property_reservations.payment_status', 'paid');
 
-        $totalRentalRevenue = (clone $rentalBaseQuery)->sum('property_reservations.total_price');
-        $totalRentalReservations = (clone $rentalBaseQuery)->count();
+        // joins/filters por agente/ciudad/fechas
+        $rentalFiltered = (clone $rentalBaseQuery)
+            ->join('properties', 'property_reservations.property_id', '=', 'properties.id');
 
-        $rentalsByAgent = (clone $rentalBaseQuery)
-            ->join('properties', 'property_reservations.property_id', '=', 'properties.id')
+        if ($filters['agent']) {
+            $rentalFiltered->where('properties.user_id', $filters['agent']);
+        }
+        if ($filters['city']) {
+            $rentalFiltered->where('properties.city', $filters['city']);
+        }
+        if ($filters['from']) {
+            $rentalFiltered->whereDate('property_reservations.created_at', '>=', $filters['from']); // ajusta si usas otro campo
+        }
+        if ($filters['to']) {
+            $rentalFiltered->whereDate('property_reservations.created_at', '<=', $filters['to']);
+        }
+
+        $totalRentalRevenue      = (clone $rentalFiltered)->sum('property_reservations.total_price');
+        $totalRentalReservations = (clone $rentalFiltered)->count();
+
+        $rentalsByAgent = (clone $rentalFiltered)
             ->selectRaw('properties.user_id as agent_id, COUNT(*) as total_reservations, SUM(property_reservations.total_price) as total_revenue')
             ->groupBy('properties.user_id')
             ->get();
 
-        $agents = User::whereIn('id', $rentalsByAgent->pluck('agent_id')->filter()->unique())
-            ->get()
-            ->keyBy('id');
+        $agents = User::whereIn('id', $rentalsByAgent->pluck('agent_id')->filter()->unique())->get()->keyBy('id');
 
         $rentalsByAgent = $rentalsByAgent->map(function ($row) use ($agents, $commissionService) {
-            $agent = $agents->get($row->agent_id);
-            $rate = $commissionService->rateFor($agent?->id, 'rent');
-            $customerRate = $commissionService->customerRateFor($agent?->id, 'rent');
-            $row->agent = $agent;
-            $row->commission_rate = $rate;
-            $row->commission_total = $commissionService->calculate($agent?->id, 'rent', (float) $row->total_revenue);
-            $row->customer_rate = $customerRate;
-            $row->customer_charge = $commissionService->calculateCustomer($agent?->id, 'rent', (float) $row->total_revenue);
-            $row->agent = $agent;
-            $row->commission_rate = $rate;
-            $row->commission_total = $commissionService->calculate($agent?->id, 'rent', (float) $row->total_revenue);
+            $agent   = $agents->get($row->agent_id);
+            $agentId = $agent?->id ?? 0;
+            $rate         = $commissionService->rateFor($agentId, 'rent');
+            $customerRate = $commissionService->customerRateFor($agentId, 'rent');
+
+            $row->agent              = $agent;
+            $row->commission_rate    = $rate ?? null;
+            $row->commission_total   = (float) $commissionService->calculate($agentId, 'rent', (float) $row->total_revenue);
+            $row->customer_rate      = $customerRate ?? null;
+            $row->customer_charge    = (float) $commissionService->calculateCustomer($agentId, 'rent', (float) $row->total_revenue);
             return $row;
         })->filter(fn ($row) => $row->agent !== null);
 
-        $rentalCommissionTotal = $rentalsByAgent->sum('commission_total');
-        $salesCommissionTotal = $salesCommissionByAgent->sum('commission');
-        $rentalCustomerChargeTotal = $rentalsByAgent->sum('customer_charge');
-        $salesCustomerChargeTotal = $salesCommissionByAgent->sum('customer_charge');
+        $rentalCommissionTotal      = $rentalsByAgent->sum('commission_total');
+        $salesCommissionTotal       = $salesCommissionByAgent->sum('commission');
+        $rentalCustomerChargeTotal  = $rentalsByAgent->sum('customer_charge');
+        $salesCustomerChargeTotal   = $salesCommissionByAgent->sum('customer_charge');
 
-        $zoneComparison = Property::query()
+        // ====== Comparativa por zona (filtrada por fechas y, opcionalmente, agente) ======
+        $zoneQuery = Property::query()
             ->select('city')
             ->whereNotNull('city')
             ->selectRaw('COUNT(*) as total_properties')
             ->selectRaw("SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold_count")
             ->selectRaw("SUM(CASE WHEN status = 'rented' THEN 1 ELSE 0 END) as rented_count")
             ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_count")
-            ->selectRaw('AVG(price) as average_price')
-            ->groupBy('city')
-            ->orderByDesc('total_properties')
-            ->get();
+            ->selectRaw('AVG(price) as average_price');
+
+        if ($filters['agent']) $zoneQuery->where('user_id', $filters['agent']);
+        if ($filters['city'])  $zoneQuery->where('city', $filters['city']);
+        if ($filters['from'])  $zoneQuery->whereDate('updated_at', '>=', $filters['from']);
+        if ($filters['to'])    $zoneQuery->whereDate('updated_at', '<=', $filters['to']);
+
+        $zoneComparison = $zoneQuery->groupBy('city')->orderByDesc('total_properties')->get();
 
         return view('admin.reports.sales', [
-            'salesByAgent' => $salesByAgent,
-            'totalValueSold' => $totalValueSold,
-            'rentalsByAgent' => $rentalsByAgent,
-            'totalRentalRevenue' => $totalRentalRevenue,
-            'totalRentalReservations' => $totalRentalReservations,
-            'zoneComparison' => $zoneComparison,
-            'salesCommissionByAgent' => $salesCommissionByAgent,
-            'salesCommissionTotal' => $salesCommissionTotal,
-            'rentalCommissionTotal' => $rentalCommissionTotal,
-            'salesCustomerChargeTotal' => $salesCustomerChargeTotal,
-            'rentalCustomerChargeTotal' => $rentalCustomerChargeTotal,
+            // datos
+            'salesByAgent'               => $salesByAgent,
+            'totalValueSold'             => $totalValueSold,
+            'rentalsByAgent'             => $rentalsByAgent,
+            'totalRentalRevenue'         => $totalRentalRevenue,
+            'totalRentalReservations'    => $totalRentalReservations,
+            'zoneComparison'             => $zoneComparison,
+            'salesCommissionByAgent'     => $salesCommissionByAgent,
+            'salesCommissionTotal'       => $salesCommissionTotal,
+            'rentalCommissionTotal'      => $rentalCommissionTotal,
+            'salesCustomerChargeTotal'   => $salesCustomerChargeTotal,
+            'rentalCustomerChargeTotal'  => $rentalCustomerChargeTotal,
+            // filtros + catálogos
+            'filters'        => $filters,
+            'agentsOptions'  => $agentsOptions,
+            'citiesOptions'  => $citiesOptions,
         ]);
     }
 
