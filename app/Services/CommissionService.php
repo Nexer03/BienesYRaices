@@ -22,14 +22,6 @@ class CommissionService
         $listingType = in_array($listingType, ['sale', 'rent'], true) ? $listingType : 'both';
 
         return $this->commissions
-            ->get();
-    }
-
-    public function rateFor(?int $agentId, string $listingType): ?float
-    {
-        $listingType = $listingType === 'sale' ? 'sale' : ($listingType === 'rent' ? 'rent' : 'both');
-
-        $match = $this->commissions
             ->filter(function (SystemCommission $commission) use ($agentId, $listingType) {
                 $matchesAgent = $commission->user_id === $agentId;
                 $matchesDefault = $commission->user_id === null;
@@ -49,10 +41,6 @@ class CommissionService
     public function rateFor(?int $agentId, string $listingType): ?float
     {
         return $this->matchCommission($agentId, $listingType)?->percentage;
-            ->sortByDesc(fn (SystemCommission $commission) => $commission->user_id === $agentId ? 1 : 0)
-            ->first();
-
-        return $match?->percentage;
     }
 
     public function calculate(?int $agentId, string $listingType, float $amount): float
