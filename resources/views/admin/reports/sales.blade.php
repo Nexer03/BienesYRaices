@@ -20,6 +20,7 @@
                     </div>
 
                     <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                         <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg shadow">
                             <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300">Propiedades vendidas</h4>
                             <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -96,6 +97,10 @@
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Total cargo
+                                        Comisión aplicada
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Comisión generada
                                     </th>
                                 </tr>
                             </thead>
@@ -127,6 +132,10 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
                                             No hay ventas registradas para mostrar.
                                         </td>
                                     </tr>
@@ -161,6 +170,10 @@
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Total cargo
+                                        Comisión aplicada
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Comisión generada
                                     </th>
                                 </tr>
                             </thead>
@@ -192,6 +205,10 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
                                             No hay reservas confirmadas para mostrar.
                                         </td>
                                     </tr>

@@ -48,6 +48,7 @@
                             <div>
                                 <label for="percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {{ __('Comisión del agente (%)') }}
+                                    {{ __('Porcentaje (%)') }}
                                 </label>
                                 <input type="number" step="0.01" min="0" max="100" name="percentage" id="percentage" value="{{ old('percentage', $commission->percentage) }}" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
                                 @error('percentage')

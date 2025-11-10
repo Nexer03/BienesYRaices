@@ -60,6 +60,9 @@ class AdminReportController extends Controller
             $agent->commission_total = $commissionData?->commission ?? 0;
             $agent->customer_rate = $commissionData?->customer_rate;
             $agent->customer_charge_total = $commissionData?->customer_charge ?? 0;
+            $agent->total_sales_amount = $commissionData->total_sold ?? 0;
+            $agent->commission_rate = $commissionData->rate;
+            $agent->commission_total = $commissionData->commission ?? 0;
 
             return $agent;
         });
@@ -90,6 +93,9 @@ class AdminReportController extends Controller
             $row->commission_total = $commissionService->calculate($agent?->id, 'rent', (float) $row->total_revenue);
             $row->customer_rate = $customerRate;
             $row->customer_charge = $commissionService->calculateCustomer($agent?->id, 'rent', (float) $row->total_revenue);
+            $row->agent = $agent;
+            $row->commission_rate = $rate;
+            $row->commission_total = $commissionService->calculate($agent?->id, 'rent', (float) $row->total_revenue);
             return $row;
         })->filter(fn ($row) => $row->agent !== null);
 
