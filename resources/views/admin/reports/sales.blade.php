@@ -19,7 +19,7 @@
                         </form>
                     </div>
 
-                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg shadow">
                             <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300">Propiedades vendidas</h4>
                             <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -44,6 +44,30 @@
                                 ${{ number_format($totalRentalRevenue, 2, '.', ',') }}
                             </p>
                         </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg shadow">
+                            <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300">Comisiones por ventas</h4>
+                            <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                ${{ number_format($salesCommissionTotal, 2, '.', ',') }}
+                            </p>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg shadow">
+                            <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300">Comisiones por rentas</h4>
+                            <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                ${{ number_format($rentalCommissionTotal, 2, '.', ',') }}
+                            </p>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg shadow">
+                            <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300">Cargos al cliente por ventas</h4>
+                            <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                ${{ number_format($salesCustomerChargeTotal, 2, '.', ',') }}
+                            </p>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg shadow">
+                            <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300">Cargos al cliente por rentas</h4>
+                            <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                ${{ number_format($rentalCustomerChargeTotal, 2, '.', ',') }}
+                            </p>
+                        </div>
                     </div>
 
                     <h3 class="text-lg font-semibold mt-8 mb-4">Ventas por agente</h3>
@@ -58,6 +82,21 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Propiedades vendidas
                                     </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Total vendido
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Comisión agente
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Total comisión
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Cargo cliente
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Total cargo
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -69,10 +108,25 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                                             {{ $agent->properties_count }}
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            ${{ number_format($agent->total_sales_amount ?? 0, 2, '.', ',') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            {{ $agent->commission_rate !== null ? number_format($agent->commission_rate, 2) . '%' : '—' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            ${{ number_format($agent->commission_total ?? 0, 2, '.', ',') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            {{ $agent->customer_rate !== null ? number_format($agent->customer_rate, 2) . '%' : '—' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            ${{ number_format($agent->customer_charge_total ?? 0, 2, '.', ',') }}
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="2" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
+                                        <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
                                             No hay ventas registradas para mostrar.
                                         </td>
                                     </tr>
@@ -96,6 +150,18 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Ingresos generados
                                     </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Comisión agente
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Total comisión
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Cargo cliente
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Total cargo
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -110,10 +176,22 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                                             ${{ number_format($row->total_revenue, 2, '.', ',') }}
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            {{ $row->commission_rate !== null ? number_format($row->commission_rate, 2) . '%' : '—' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            ${{ number_format($row->commission_total ?? 0, 2, '.', ',') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            {{ $row->customer_rate !== null ? number_format($row->customer_rate, 2) . '%' : '—' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                            ${{ number_format($row->customer_charge ?? 0, 2, '.', ',') }}
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
+                                        <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">
                                             No hay reservas confirmadas para mostrar.
                                         </td>
                                     </tr>
