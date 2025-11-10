@@ -38,7 +38,14 @@
                         <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Gestionar Usuarios</h4>
                         <p class="text-gray-600 dark:text-gray-400">Ver, editar, filtrar y eliminar usuarios registrados.</p>
                     </a>
-
+                    {{-- Tarjeta: Solicitudes de Agentes --}}
+                    <a href="{{ route('admin.agent-applications.index') }}"
+                    class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition">
+                        <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Solicitudes de Agentes</h4>
+                        <p class="text-gray-600 dark:text-gray-400">
+                            Revisar, aprobar o rechazar solicitudes de usuarios que desean convertirse en agentes.
+                        </p>
+                    </a>
                     {{-- Tarjeta: Reportes (Ejemplo HU-05, HU-12) --}}
                     <a href="{{ route('admin.reports.sales') }}" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition">
                         <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Reportes de Ventas/Rentas</h4>
@@ -62,6 +69,7 @@
                         <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Exportar Reportes</h4>
                         <p class="text-gray-600 dark:text-gray-400">Descargar datos de propiedades en Excel.</p>
                     </a>
+
 
                 </div>
             </div>

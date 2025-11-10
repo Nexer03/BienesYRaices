@@ -29,7 +29,7 @@
         <p class="text-gray-500 mt-2">Completa los siguientes campos para enviar tu solicitud</p>
       </div>
 
-      <form action="{{ route('agent.register.store') }}" method="POST" id="agentForm" class="space-y-6">
+      <form action="{{ route('agent.register.store') }}" method="POST" id="agentForm" class="space-y-6" enctype="multipart/form-data">
         @csrf
 
         {{-- RFC --}}
@@ -53,6 +53,17 @@
             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 uppercase">
           <small class="text-gray-500 text-sm">Formato: 4 letras, 6 números, 1 letra (H/M), 5 letras, 2 caracteres</small>
         </div>
+        <div class="mb-4">
+        <label for="ine_front" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Foto INE (frontal)</label>
+        <input type="file" name="ine_front" id="ine_front" accept="image/*" required
+              class="mt-1 block w-full text-sm text-gray-900 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
+      </div>
+
+      <div class="mb-4">
+        <label for="ine_back" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Foto INE (reverso)</label>
+        <input type="file" name="ine_back" id="ine_back" accept="image/*" required
+              class="mt-1 block w-full text-sm text-gray-900 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
+      </div>
 
         <button type="submit"
           class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
