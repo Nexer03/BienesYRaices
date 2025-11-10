@@ -22,7 +22,8 @@ class NotifyAdminsOfReservationPaidTest extends TestCase
 
         $admins = User::factory(2)->create(['role' => 'admin']);
         $nonAdmin = User::factory()->create(['role' => 'client']);
-        $property = Property::factory()->create();
+        $agent = User::factory()->create(['role' => 'agent']);
+        $property = Property::factory()->create(['user_id' => $agent->id]);
 
         $reservation = PropertyReservation::create([
             'property_id' => $property->id,
@@ -43,14 +44,16 @@ class NotifyAdminsOfReservationPaidTest extends TestCase
 
         Notification::assertSentToTimes($admins[0], ReservationPaidNotification::class, 1);
         Notification::assertSentToTimes($admins[1], ReservationPaidNotification::class, 1);
-        Notification::assertNothingSentTo($nonAdmin);
+        Notification::assertSentToTimes($agent, ReservationPaidNotification::class, 1);
+        Notification::assertNotSentTo($nonAdmin, ReservationPaidNotification::class);
     }
 
     public function test_it_does_not_fail_when_no_admins_exist(): void
     {
         Notification::fake();
 
-        $property = Property::factory()->create();
+        $agent = User::factory()->create(['role' => 'agent']);
+        $property = Property::factory()->create(['user_id' => $agent->id]);
         $user = User::factory()->create(['role' => 'client']);
 
         $reservation = PropertyReservation::create([
@@ -66,7 +69,6 @@ class NotifyAdminsOfReservationPaidTest extends TestCase
 
         $listener->handle($event);
 
-        Notification::assertNothingSent();
-        $this->assertTrue(true); // Se ejecutó sin errores
+        Notification::assertSentTo($agent, ReservationPaidNotification::class);
     }
 }
