@@ -22,6 +22,7 @@
 
                     <div>
                         <h3 class="text-lg font-semibold mb-4">{{ __('Registrar nueva comisión') }}</h3>
+                        <form method="POST" action="{{ route('admin.commissions.store') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <form method="POST" action="{{ route('admin.commissions.store') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             @csrf
                             <div>
@@ -55,10 +56,21 @@
 
                             <div>
                                 <label for="percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {{ __('Comisión del agente (%)') }}
                                     {{ __('Porcentaje (%)') }}
                                 </label>
                                 <input type="number" step="0.01" min="0" max="100" name="percentage" id="percentage" value="{{ old('percentage') }}" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
                                 @error('percentage')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="customer_percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {{ __('Cargo al cliente (%)') }}
+                                </label>
+                                <input type="number" step="0.01" min="0" max="100" name="customer_percentage" id="customer_percentage" value="{{ old('customer_percentage') }}" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
+                                @error('customer_percentage')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -99,6 +111,8 @@
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Tipo') }}</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Agente') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Comisión del agente') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Cargo al cliente') }}</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Porcentaje') }}</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Vigente desde') }}</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Notas') }}</th>
@@ -117,6 +131,7 @@
                                                 {{ $commission->agent?->name ?? __('General del sistema') }}
                                             </td>
                                             <td class="px-4 py-3 text-sm">{{ number_format($commission->percentage, 2) }}%</td>
+                                            <td class="px-4 py-3 text-sm">{{ number_format($commission->customer_percentage, 2) }}%</td>
                                             <td class="px-4 py-3 text-sm">
                                                 {{ optional($commission->effective_from)->format('d/m/Y') ?? __('Sin especificar') }}
                                             </td>
@@ -136,6 +151,7 @@
                                         </tr>
                                     @empty
                                         <tr>
+                                            <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">
                                             <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
                                                 {{ __('Aún no hay comisiones configuradas.') }}
                                             </td>

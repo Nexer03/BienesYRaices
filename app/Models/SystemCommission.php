@@ -13,12 +13,14 @@ class SystemCommission extends Model
         'user_id',
         'listing_type',
         'percentage',
+        'customer_percentage',
         'effective_from',
         'notes',
     ];
 
     protected $casts = [
         'percentage' => 'float',
+        'customer_percentage' => 'float',
         'effective_from' => 'date',
     ];
 

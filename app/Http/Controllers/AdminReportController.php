@@ -37,12 +37,15 @@ class AdminReportController extends Controller
                 $agentId = $agent?->id;
                 $totalSold = $properties->sum('price');
                 $rate = $commissionService->rateFor($agentId, 'sale');
+                $customerRate = $commissionService->customerRateFor($agentId, 'sale');
 
                 return (object) [
                     'agent' => $agent,
                     'total_sold' => $totalSold,
                     'rate' => $rate,
                     'commission' => $commissionService->calculate($agentId, 'sale', $totalSold),
+                    'customer_rate' => $customerRate,
+                    'customer_charge' => $commissionService->calculateCustomer($agentId, 'sale', $totalSold),
                 ];
             })
             ->values();
@@ -52,6 +55,11 @@ class AdminReportController extends Controller
                 return optional($row->agent)->id === $agent->id;
             });
 
+            $agent->total_sales_amount = $commissionData?->total_sold ?? 0;
+            $agent->commission_rate = $commissionData?->rate;
+            $agent->commission_total = $commissionData?->commission ?? 0;
+            $agent->customer_rate = $commissionData?->customer_rate;
+            $agent->customer_charge_total = $commissionData?->customer_charge ?? 0;
             $agent->total_sales_amount = $commissionData->total_sold ?? 0;
             $agent->commission_rate = $commissionData->rate;
             $agent->commission_total = $commissionData->commission ?? 0;
@@ -79,6 +87,12 @@ class AdminReportController extends Controller
         $rentalsByAgent = $rentalsByAgent->map(function ($row) use ($agents, $commissionService) {
             $agent = $agents->get($row->agent_id);
             $rate = $commissionService->rateFor($agent?->id, 'rent');
+            $customerRate = $commissionService->customerRateFor($agent?->id, 'rent');
+            $row->agent = $agent;
+            $row->commission_rate = $rate;
+            $row->commission_total = $commissionService->calculate($agent?->id, 'rent', (float) $row->total_revenue);
+            $row->customer_rate = $customerRate;
+            $row->customer_charge = $commissionService->calculateCustomer($agent?->id, 'rent', (float) $row->total_revenue);
             $row->agent = $agent;
             $row->commission_rate = $rate;
             $row->commission_total = $commissionService->calculate($agent?->id, 'rent', (float) $row->total_revenue);
@@ -87,6 +101,8 @@ class AdminReportController extends Controller
 
         $rentalCommissionTotal = $rentalsByAgent->sum('commission_total');
         $salesCommissionTotal = $salesCommissionByAgent->sum('commission');
+        $rentalCustomerChargeTotal = $rentalsByAgent->sum('customer_charge');
+        $salesCustomerChargeTotal = $salesCommissionByAgent->sum('customer_charge');
 
         $zoneComparison = Property::query()
             ->select('city')
@@ -110,6 +126,8 @@ class AdminReportController extends Controller
             'salesCommissionByAgent' => $salesCommissionByAgent,
             'salesCommissionTotal' => $salesCommissionTotal,
             'rentalCommissionTotal' => $rentalCommissionTotal,
+            'salesCustomerChargeTotal' => $salesCustomerChargeTotal,
+            'rentalCustomerChargeTotal' => $rentalCustomerChargeTotal,
         ]);
     }
 
