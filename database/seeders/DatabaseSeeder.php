@@ -13,6 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            AdminUserSeeder::class,
+        ]);
+
         // Crear algunos usuarios (incluyendo agentes) si no los tienes
        // User::factory(5)->create(['role' => 'client']);
         //User::factory(2)->create(['role' => 'agent']);
