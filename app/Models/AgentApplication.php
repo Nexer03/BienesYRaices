@@ -17,6 +17,8 @@ class AgentApplication extends Model
         'user_id',
         'rfc',
         'curp',
+        'ine_front',
+        'ine_back',
         'status',
         'rejection_reason',
     ];
