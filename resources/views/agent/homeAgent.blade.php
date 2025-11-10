@@ -80,10 +80,10 @@
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Mensajería</h3>
                 <p class="text-gray-600 mb-4">Comunícate con clientes y prospectos</p>
-                <a href="#"
-                   class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
-                    Abrir mensajería →
-                </a>
+              <a href="{{ route('chat.index') }}"
+   class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
+  Abrir mensajería →
+</a>
             </div>
             <!-- Estadísticas -->
             <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">

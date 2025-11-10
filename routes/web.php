@@ -18,10 +18,20 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ChatController;
 
 
-Route::middleware('auth')->group(function() {
+Route::middleware('auth')->group(function () {
+    // Inbox de chats (lista de conversaciones del usuario logueado)
+    Route::get('/chats', [ChatController::class, 'index'])->name('chat.index');
+
+    // Abrir chat por propiedad (cliente inicia)
     Route::get('/chat/{property}', [ChatController::class, 'show'])->name('chat.show');
+
+    // Abrir chat por conversación (agente entra desde inbox)
+    Route::get('/chat/c/{conversation}', [ChatController::class, 'open'])->name('chat.open');
+
+    // Enviar mensaje
     Route::post('/chat/{conversation}/send', [ChatController::class, 'send'])->name('chat.send');
 });
 

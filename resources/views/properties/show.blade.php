@@ -279,14 +279,22 @@
         @endif
 
         @if($property->listing_type == 'sale')
-          <button type="button" class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold cursor-not-allowed" title="La mensajería se habilitará próximamente">
-            Contactar con el agente
-          </button>
-        @elseif($property->listing_type == 'rent')
-          <button id="reserveButton" class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 font-semibold">
-            Reservar
-          </button>
-        @endif
+  @auth
+    <a href="{{ route('chat.show', $property) }}" 
+       class="block w-full text-center border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
+      Contactar con el agente
+    </a>
+  @else
+    <button type="button" onclick="openLoginModal()" 
+            class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
+      Inicia sesión para contactar
+    </button>
+  @endauth
+@elseif($property->listing_type == 'rent')
+  <button id="reserveButton" class="w-full bg-blue-500 text-white py-3 rounded-lg mt-4 hover:bg-blue-600 font-semibold">
+    Reservar
+  </button>
+@endif
 
         @auth
           @php $isFav = auth()->user()->favoriteProperties()->where('properties.id',$property->id)->exists(); @endphp
