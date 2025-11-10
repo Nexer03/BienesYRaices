@@ -17,6 +17,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\PayPalController;
+use App\Http\Controllers\AgentReservationController;
 
 
 
@@ -178,12 +179,17 @@ Route::middleware(['auth', 'agent'])->group(function () {
         // Rutas del calendario (feed JSON)
         Route::get('agent/visits/feed', [VisitController::class, 'feed'])->name('agent.visits.feed');
 
-        // Cambio rápido de estado (opcional)
+       
         Route::patch('visits/{visit}/status', [VisitController::class, 'updateStatus'])->name('visits.status');
     });
     Route::get('/agent/analytics', [\App\Http\Controllers\AgentAnalyticsController::class, 'index'])
     ->name('agent.analytics');
-
+   Route::prefix('agent')->name('agent.')->group(function () {
+    Route::get('reservations', [AgentReservationController::class, 'index'])
+        ->name('reservations.index');
+    Route::get('reservations/feed', [AgentReservationController::class, 'feed'])
+        ->name('reservations.feed');
+    });
 });
 /*
 |--------------------------------------------------------------------------

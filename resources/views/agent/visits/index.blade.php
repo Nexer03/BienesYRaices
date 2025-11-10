@@ -4,6 +4,23 @@
 
 @section('content')
 <div class="container py-4">
+  {{-- Navegación entre secciones --}}
+<div class="flex justify-center mb-6">
+  <div class="inline-flex rounded-md shadow-sm" role="group">
+    <a href="{{ route('agent.visits.index') }}"
+      class="px-4 py-2 text-sm font-medium 
+             {{ request()->routeIs('agent.visits.index') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} 
+             rounded-l-lg focus:ring-2 focus:ring-blue-400">
+      <i class="bi bi-calendar-check me-1"></i> Visitas
+    </a>
+    <a href="{{ route('agent.reservations.index') }}"
+      class="px-4 py-2 text-sm font-medium 
+             {{ request()->routeIs('agent.reservations.index') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }} 
+             rounded-r-lg focus:ring-2 focus:ring-blue-400">
+      <i class="bi bi-house-door me-1"></i> Reservaciones
+    </a>
+  </div>
+</div>
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0">Mis visitas</h3>
