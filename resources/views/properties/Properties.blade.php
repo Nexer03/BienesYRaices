@@ -47,7 +47,7 @@
     {{-- Encabezado --}}
     <header class="sticky top-0 bg-white shadow-sm z-50">
   <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-    
+
     <!-- Logo -->
     <div class="flex items-center space-x-3">
       <a href="{{ url('/') }}" class="text-2xl font-bold text-blue-600 flex items-center">
@@ -58,7 +58,7 @@
 
     <!-- Filtros en el medio -->
     <div class="hidden md:flex items-center space-x-4 flex-1 justify-center max-w-2xl mx-8">
-      
+
       <!-- Inputs ocultos (compatibilidad con filterMarkers) -->
       <input type="number" id="minPrice" class="hidden" />
       <input type="number" id="maxPrice" class="hidden" />

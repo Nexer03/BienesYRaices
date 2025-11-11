@@ -12,29 +12,7 @@
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
     {{-- Header --}}
-    <header class="sticky top-0 bg-white shadow-sm z-50">
-        {{-- ... (Contenido del header sin cambios) ... --}}
-         <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-8">
-                    <div class="text-2xl font-bold text-blue-600 cursor-pointer">
-                        <a href="{{ url('/') }}">
-                        <i class="fas fa-home mr-2"></i>
-                        Sin beca<span class="text-gray-700"> no hay renta </span>
-                    </div>
-                    <h1 class="text-2xl font-bold text-gray-900 border-l border-gray-300 pl-8">Mis Propiedades</h1>
-                </div>
-                <nav class="flex items-center space-x-6 text-gray-700 font-medium">
-                    {{-- Ajusta estos enlaces según tus rutas --}}
-                    <a href="{{ route('agent.home') ?? '#' }}" class="hover:text-blue-600 transition">Panel de Agente</a>
-                    <a href="{{ route('home') }}" class="hover:text-blue-600 transition">Modo Visitante</a>
-                    <a href="{{ url('/dashboard') }}"
-                        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">Perfil</a>
-                </nav>
-            </div>
-
-        </div>
-    </header>
+    <x-main-header />
 
     {{-- Contenido Principal --}}
     <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
