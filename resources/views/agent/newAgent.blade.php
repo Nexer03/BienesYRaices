@@ -12,13 +12,7 @@
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
   {{-- HEADER --}}
-  <header class="bg-white shadow fixed top-0 left-0 w-full z-50">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <a href="{{ route('home') }}" class="flex items-center text-2xl font-bold text-blue-600 hover:text-blue-700">
-        <i class="fas fa-home mr-2"></i> Sin beca <span class="text-gray-700 ml-1">no hay renta</span>
-      </a>
-    </div>
-  </header>
+  <x-main-header />
 
   {{-- CONTENIDO PRINCIPAL --}}
   <main class="flex-1 flex items-center justify-center mt-24 px-4">

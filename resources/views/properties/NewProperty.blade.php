@@ -20,47 +20,27 @@
   textarea,
   select {
     background-color: #fff;
-    border: 1.5px solid #d1d5db; /* gris visible */
+    border: 1.5px solid #d1d5db;
     border-radius: 0.75rem;
     padding: 0.6rem 0.9rem;
     transition: all 0.25s ease;
     width: 100%;
   }
-
   input[type="text"]:hover,
   input[type="number"]:hover,
   textarea:hover,
-  select:hover {
-    border-color: #9ca3af; /* gris más oscuro al pasar el mouse */
-  }
-
+  select:hover { border-color: #9ca3af; }
   input[type="text"]:focus,
   input[type="number"]:focus,
   textarea:focus,
   select:focus {
-    border-color: #3b82f6; /* azul Tailwind */
+    border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
     outline: none;
   }
-
-  /* Campos deshabilitados */
-  input[readonly] {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
-    color: #6b7280;
-  }
-
-  /* Radios y checkboxes más visibles */
-  input[type="radio"],
-  input[type="checkbox"] {
-    accent-color: #3b82f6; /* azul moderno */
-    transform: scale(1.15);
-  }
-
-  /* Placeholder más suave */
-  ::placeholder {
-    color: #9ca3af;
-  }
+  input[readonly] { background-color: #f3f4f6; border-color: #d1d5db; color:#6b7280; }
+  input[type="radio"], input[type="checkbox"] { accent-color:#3b82f6; transform: scale(1.15); }
+  ::placeholder { color:#9ca3af; }
 </style>
 </head>
 
@@ -75,23 +55,6 @@
         <h1 class="text-3xl font-bold">Crear Nueva Propiedad</h1>
         <p class="text-gray-600">Completa los pasos y guarda tu propiedad.</p>
       </div>
-
-      <!-- Alerts -->
-      @if(session('success'))
-        <div class="mb-6 rounded-lg border border-green-200 bg-green-50 text-green-800 px-4 py-3">
-          {{ session('success') }}
-        </div>
-      @endif
-
-      @if ($errors->any())
-        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 text-red-800 px-4 py-3">
-          <ul class="list-disc pl-6 space-y-1 mb-0">
-            @foreach ($errors->all() as $error)
-              <li>{{ $error }}</li>
-            @endforeach
-          </ul>
-        </div>
-      @endif
 
       <!-- Wizard -->
       <div class="bg-white shadow-xl rounded-2xl overflow-hidden">
@@ -126,21 +89,18 @@
               <div class="grid md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
                   <label for="title" class="block text-sm font-medium text-gray-700">Título de la propiedad</label>
-                  <input type="text" id="title" name="title" value="{{ old('title') }}" required
-                         class="mt-1 w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                  <input type="text" id="title" name="title" value="{{ old('title') }}" required>
                 </div>
 
                 <div class="md:col-span-2">
                   <label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
-                  <textarea id="description" name="description" rows="4"
-                            class="mt-1 w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                            placeholder="Describe la propiedad, zona, reglas, etc."></textarea>
+                  <textarea id="description" name="description" rows="4" placeholder="Describe la propiedad, zona, reglas, etc."></textarea>
                 </div>
 
                 <div>
                   <label for="type" class="block text-sm font-medium text-gray-700">Tipo</label>
-                  <select id="type" name="type" required
-                          class="mt-1 w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                  <select id="type" name="type" required>
+                    <option value="">Selecciona…</option>
                     <option value="house">Casa</option>
                     <option value="apartment">Departamento</option>
                     <option value="land">Terreno</option>
@@ -151,13 +111,11 @@
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label for="bedrooms" class="block text-sm font-medium text-gray-700">Habitaciones</label>
-                    <input type="number" min="0" id="bedrooms" name="bedrooms" value="{{ old('bedrooms') }}"
-                           class="mt-1 w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                    <input type="number" min="1" id="bedrooms" name="bedrooms" value="{{ old('bedrooms') }}" required>
                   </div>
                   <div>
                     <label for="bathrooms" class="block text-sm font-medium text-gray-700">Baños</label>
-                    <input type="number" min="0" id="bathrooms" name="bathrooms" value="{{ old('bathrooms') }}"
-                           class="mt-1 w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                    <input type="number" min="1" id="bathrooms" name="bathrooms" value="{{ old('bathrooms') }}" required>
                   </div>
                 </div>
               </div>
@@ -184,20 +142,21 @@
                   <label for="price" id="price-label" class="block text-sm font-medium text-gray-700">Precio por día (MXN)</label>
                   <div class="mt-1 relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input type="number" id="price" name="price" step="any" required max="99999999.99"
-                           class="pl-7 w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                    <input type="number" id="price" name="price" step="any" required max="99999999.99" class="pl-7">
                   </div>
                 </div>
 
                 <!-- Imágenes -->
                 <div class="md:col-span-2">
                   <label class="block text-sm font-medium text-gray-700">Imágenes de la Propiedad</label>
-                  <div class="mt-2 flex items-center gap-3">
+                  <div class="mt-2 flex items-center gap-3 flex-wrap">
                     <label for="images" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 cursor-pointer">
                       <i class="fa-solid fa-camera"></i> Añadir imágenes
                     </label>
                     <input type="file" id="images" name="images[]" multiple class="hidden" accept="image/*">
-                    <span class="text-xs text-gray-500">Puedes subir varias a la vez</span>
+                    <span id="images-counter" class="text-xs text-gray-600">
+                      0 seleccionadas · mínimo 5 para continuar
+                    </span>
                   </div>
                   <div id="image-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
                 </div>
@@ -209,9 +168,7 @@
               <div class="space-y-6">
                 <div>
                   <label for="address-input" class="block text-sm font-medium text-gray-700">Dirección</label>
-                  <input type="text" id="address-input" name="location" placeholder="Calle, número, ciudad"
-                         value="{{ old('location') }}" autocomplete="off" required
-                         class="mt-1 w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                  <input type="text" id="address-input" name="location" placeholder="Calle, número, ciudad" value="{{ old('location') }}" autocomplete="off" required>
                   <p class="mt-1 text-xs text-gray-500">Selecciona una sugerencia para autocompletar ciudad y coordenadas.</p>
                 </div>
 
@@ -262,6 +219,7 @@
                     </div>
                   </div>
                 @endforeach
+                <p class="text-xs text-gray-500">Selecciona al menos 5 amenidades para continuar.</p>
               </div>
             </section>
 
@@ -379,6 +337,24 @@
     </div>
   </footer>
 
+  <!-- ============== MODAL GENÉRICO ============== -->
+  <div id="app-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+      <button type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeAppModal()">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      <div class="flex items-center gap-3 mb-3">
+        <div id="app-modal-icon" class="text-blue-600"><i class="fa-solid fa-circle-info text-xl"></i></div>
+        <h3 id="app-modal-title" class="text-lg font-semibold text-gray-900">Aviso</h3>
+      </div>
+      <div id="app-modal-message" class="text-gray-700"></div>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" class="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-50" onclick="closeAppModal()">Cerrar</button>
+        <button type="button" id="app-modal-confirm" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Entendido</button>
+      </div>
+    </div>
+  </div>
+
   <!-- JS: Menú móvil -->
   <script>
     const menuToggle = document.getElementById('menuToggle');
@@ -386,7 +362,36 @@
     menuToggle?.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
   </script>
 
-  <!-- JS: Wizard -->
+  <!-- JS: Utilidades modal -->
+  <script>
+    const appModal = document.getElementById('app-modal');
+    const appModalTitle = document.getElementById('app-modal-title');
+    const appModalMsg = document.getElementById('app-modal-message');
+    const appModalConfirm = document.getElementById('app-modal-confirm');
+    const appModalIcon = document.getElementById('app-modal-icon');
+
+    function openAppModal({ title = 'Aviso', message = '', type = 'info', onConfirm = null, confirmText = 'Entendido' } = {}) {
+      appModalTitle.textContent = title;
+      appModalMsg.innerHTML = message;
+      appModalConfirm.textContent = confirmText;
+
+      let iconHtml = '<i class="fa-solid fa-circle-info text-xl"></i>';
+      if (type === 'error') iconHtml = '<i class="fa-solid fa-triangle-exclamation text-xl text-red-600"></i>';
+      if (type === 'success') iconHtml = '<i class="fa-solid fa-circle-check text-xl text-green-600"></i>';
+      if (type === 'warning') iconHtml = '<i class="fa-solid fa-circle-exclamation text-xl text-yellow-500"></i>';
+      appModalIcon.innerHTML = iconHtml;
+
+      const handler = () => { closeAppModal(); if (typeof onConfirm === 'function') onConfirm(); };
+      appModalConfirm.onclick = handler;
+
+      appModal.classList.remove('hidden'); appModal.classList.add('flex');
+    }
+    function closeAppModal() { appModal.classList.add('hidden'); appModal.classList.remove('flex'); }
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAppModal(); });
+    appModal.addEventListener('click', (e) => { if (e.target === appModal) closeAppModal(); });
+  </script>
+
+  <!-- JS: Wizard (con validaciones por paso) -->
   <script>
     const panels = Array.from(document.querySelectorAll('.step-panel'));
     const nextBtn = document.getElementById('nextBtn');
@@ -395,6 +400,20 @@
     const progressBar = document.getElementById('progressBar');
     const stepLabel = document.getElementById('stepLabel');
     const form = document.getElementById('property-create-form');
+
+    // refs campos
+    const f = {
+      title: document.getElementById('title'),
+      description: document.getElementById('description'),
+      type: document.getElementById('type'),
+      bedrooms: document.getElementById('bedrooms'),
+      bathrooms: document.getElementById('bathrooms'),
+      price: document.getElementById('price'),
+      address: document.getElementById('address-input'),
+      lat: document.getElementById('latitude'),
+      lng: document.getElementById('longitude'),
+      cityHidden: document.getElementById('city-hidden'),
+    };
 
     let currentStep = 1;
     const totalSteps = panels.length;
@@ -405,7 +424,6 @@
         if (step === n) { p.classList.remove('step-hidden','absolute'); p.classList.add('step-active'); }
         else { p.classList.add('step-hidden','absolute'); p.classList.remove('step-active'); }
       });
-
       prevBtn.classList.toggle('hidden', n === 1);
       nextBtn.classList.toggle('hidden', n === totalSteps);
       submitBtn.classList.toggle('hidden', n !== totalSteps);
@@ -417,26 +435,64 @@
       if (n === totalSteps) fillReview();
     }
 
-    function validateStep(n) {
-      // Validaciones mínimas por paso (sin romper backend)
-      if (n === 1) {
-        if (!form.title.value.trim()) { alert('Ingresa un título.'); return false; }
-        if (!form.type.value) { alert('Selecciona el tipo.'); return false; }
+    function countSelectedAmenities() {
+      return document.querySelectorAll('input[name="amenities[]"]:checked').length;
+    }
+
+    function validateStepGate(fromStep) {
+      // valida lo necesario para pasar del step actual al siguiente
+      if (fromStep === 1) {
+        if (!f.title.value.trim()) { openAppModal({ title:'Falta información', message:'Ingresa un <b>título</b> para la propiedad.', type:'warning' }); return false; }
+        if (!f.description.value.trim()) { openAppModal({ title:'Falta información', message:'Añade una <b>descripción</b>.', type:'warning' }); return false; }
+        if (!f.type.value) { openAppModal({ title:'Falta información', message:'Selecciona el <b>tipo de propiedad</b>.', type:'warning' }); return false; }
+        // Habitaciones y baños: obligatorio, entero >= 0 (no permitir vacío)
+        const bedRaw  = f.bedrooms.value.trim();
+        const bathRaw = f.bathrooms.value.trim();
+
+        if (bedRaw === '' || !/^\d+$/.test(bedRaw)) {
+        openAppModal({
+            title:'Dato requerido',
+            message:'Indica la cantidad de <b>habitaciones</b>.',
+            type:'warning'
+        });
+        return false;
+        }
+        if (bathRaw === '' || !/^\d+$/.test(bathRaw)) {
+        openAppModal({
+            title:'Dato requerido',
+            message:'Indica la cantidad de <b>baños</b>.',
+            type:'warning'
+        });
+        return false;
+        }
+        }
+      if (fromStep === 2) {
+        if (!f.price.value || Number(f.price.value) <= 0) {
+          openAppModal({ title:'Falta información', message:'Indica un <b>precio</b> válido.', type:'warning' }); return false;
+        }
+        if (imageStore.files.length < 5) {
+          openAppModal({ title:'Faltan imágenes', message:`Debes añadir al menos <b>5 imágenes</b> para continuar. Actualmente tienes <b>${imageStore.files.length}</b>.`, type:'warning' }); return false;
+        }
       }
-      if (n === 2) {
-        if (!form.price.value) { alert('Indica un precio.'); return false; }
+      if (fromStep === 3) {
+        if (!f.address.value.trim()) {
+          openAppModal({ title:'Ubicación incompleta', message:'Selecciona una <b>dirección</b> de las sugerencias.', type:'warning' }); return false;
+        }
+        if (!f.lat.value || !f.lng.value || !f.cityHidden.value) {
+          openAppModal({ title:'Ubicación incompleta', message:'Asegúrate de elegir una sugerencia para rellenar <b>ciudad</b> y <b>coordenadas</b>.', type:'warning' }); return false;
+        }
       }
-      if (n === 3) {
-        if (!form.location.value.trim()) { alert('Selecciona una dirección de las sugerencias.'); return false; }
-        if (!form.latitude.value || !form.longitude.value || !document.getElementById('city-hidden').value) {
-          alert('Asegúrate de elegir una sugerencia para rellenar ciudad y coordenadas.'); return false;
+      if (fromStep === 4) {
+        const amenCount = countSelectedAmenities();
+        if (amenCount < 5) {
+          openAppModal({ title:'Faltan amenidades', message:`Selecciona al menos <b>5 amenidades</b>. Actualmente tienes <b>${amenCount}</b>.`, type:'warning' }); return false;
         }
       }
       return true;
     }
 
     nextBtn.addEventListener('click', () => {
-      if (!validateStep(currentStep)) return;
+      if (!validateStepGate(currentStep)) return;
       currentStep = Math.min(totalSteps, currentStep + 1);
       showStep(currentStep);
     });
@@ -447,21 +503,20 @@
     });
 
     function fillReview() {
-      // General
-      document.getElementById('rev-title').textContent = form.title.value || '—';
-      document.getElementById('rev-type').textContent = form.type.value || '—';
-      document.getElementById('rev-bed').textContent = form.bedrooms.value || '0';
-      document.getElementById('rev-bath').textContent = form.bathrooms.value || '0';
-      // Comercial
+      document.getElementById('rev-title').textContent = f.title.value || '—';
+      document.getElementById('rev-type').textContent = f.type.value || '—';
+      document.getElementById('rev-bed').textContent = f.bedrooms.value || '0';
+      document.getElementById('rev-bath').textContent = f.bathrooms.value || '0';
+
       const purpose = (form.querySelector('input[name="listing_type"]:checked') || {}).value || 'rent';
       document.getElementById('rev-purpose').textContent = (purpose === 'sale') ? 'Venta' : 'Renta';
-      document.getElementById('rev-price').textContent = form.price.value || '0';
-      // Ubicación
-      document.getElementById('rev-address').textContent = form.location.value || '—';
-      document.getElementById('rev-city').textContent = document.getElementById('city-hidden').value || '—';
-      document.getElementById('rev-lat').textContent = form.latitude.value || '—';
-      document.getElementById('rev-lng').textContent = form.longitude.value || '—';
-      // Imágenes
+      document.getElementById('rev-price').textContent = f.price.value || '0';
+
+      document.getElementById('rev-address').textContent = f.address.value || '—';
+      document.getElementById('rev-city').textContent = f.cityHidden.value || '—';
+      document.getElementById('rev-lat').textContent = f.lat.value || '—';
+      document.getElementById('rev-lng').textContent = f.lng.value || '—';
+
       const revImages = document.getElementById('rev-images');
       revImages.innerHTML = '';
       Array.from(imageStore.files).forEach(file => {
@@ -481,16 +536,23 @@
     showStep(currentStep);
   </script>
 
-  <!-- JS: Imágenes (misma lógica, nuevo UI) -->
+  <!-- JS: Imágenes (contador y eliminación) -->
   <script>
     const imageInput = document.getElementById('images');
     const previewContainer = document.getElementById('image-preview-container');
+    const imagesCounter = document.getElementById('images-counter');
     const imageStore = new DataTransfer();
+
+    function updateImagesCounter() {
+      const n = imageStore.files.length;
+      imagesCounter.textContent = `${n} seleccionadas · mínimo 5 para continuar`;
+    }
 
     imageInput?.addEventListener('change', (e) => {
       for (const file of e.target.files) imageStore.items.add(file);
       imageInput.files = imageStore.files;
       renderPreviews();
+      updateImagesCounter();
     });
 
     function renderPreviews() {
@@ -519,12 +581,12 @@
       kept.forEach(f => imageStore.items.add(f));
       imageInput.files = imageStore.files;
       renderPreviews();
+      updateImagesCounter();
     }
   </script>
 
-  <!-- JS: Google Maps + Autocomplete (mismo backend /maps-key) -->
+  <!-- JS: Google Maps + Autocomplete -->
   <script>
-    // Cargar Maps con /maps-key
     fetch('/maps-key')
       .then(res => res.json())
       .then(data => {
@@ -582,7 +644,6 @@
           .catch(e => console.log("Geocoder failed:", e));
       });
 
-      // Evitar Enter si no hay dropdown visible
       addressInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
           const container = document.querySelector('.pac-container');
@@ -593,7 +654,7 @@
     }
   </script>
 
-  <!-- JS: Amenidades por tipo + etiqueta de precio + protección Enter -->
+  <!-- JS: Amenidades por tipo + etiqueta de precio + validación final submit -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const listingTypeRadios = document.querySelectorAll('input[name="listing_type"]');
@@ -611,41 +672,74 @@
       listingTypeRadios.forEach(r => r.addEventListener('change', () => { toggleAmenities(); updatePriceLabel(); }));
       toggleAmenities(); updatePriceLabel();
 
-      // Bloquear Enter en precio y dirección
       const priceInput = document.getElementById('price');
       const addressInput = document.getElementById('address-input');
       priceInput?.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
       addressInput?.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
 
-      // Verificación mínima antes del submit (si el usuario fuerza submit)
+      // Validación redundante al submit (por seguridad)
       const form = document.getElementById('property-create-form');
       form?.addEventListener('submit', function (e) {
+        // exige todas las reglas finales
+        if (!document.getElementById('title').value.trim()
+          || !document.getElementById('description').value.trim()
+          || !document.getElementById('type').value
+          || !(Number(document.getElementById('bedrooms').value) >= 0)
+          || !(Number(document.getElementById('bathrooms').value) >= 0)) {
+          e.preventDefault();
+          openAppModal({ title:'Falta información', type:'warning', message:'Completa todos los campos de <b>General</b>.' });
+          return;
+        }
+        if (!priceInput.value || Number(priceInput.value) <= 0 || imageStore.files.length < 5) {
+          e.preventDefault();
+          openAppModal({ title:'Revisa Comercial', type:'warning', message:'Indica un <b>precio válido</b> y añade <b>al menos 5 imágenes</b>.' });
+          return;
+        }
         const lat = document.getElementById('latitude')?.value;
         const lon = document.getElementById('longitude')?.value;
         const city = document.getElementById('city-hidden')?.value;
-        if (!lat || !lon || !city) {
+        if (!addressInput.value.trim() || !lat || !lon || !city) {
           e.preventDefault();
-          alert('Por favor selecciona una dirección de las sugerencias para completar ciudad y coordenadas.');
-          addressInput?.focus();
+          openAppModal({ title:'Ubicación incompleta', type:'warning', message:'Selecciona una <b>dirección</b> de las sugerencias para completar <b>ciudad</b> y <b>coordenadas</b>.' });
+          return;
+        }
+        if (document.querySelectorAll('input[name="amenities[]"]:checked').length < 5) {
+          e.preventDefault();
+          openAppModal({ title:'Faltan amenidades', type:'warning', message:'Selecciona al menos <b>5 amenidades</b>.' });
+          return;
         }
       });
     });
   </script>
 
-  <!-- SCRIPT PARA MENÚ RESPONSIVE -->
-<script>
-  const menuToggle = document.getElementById('menu-toggle');
-  const closeMenu = document.getElementById('close-menu');
-  const mainNav = document.getElementById('main-nav');
+  <!-- SCRIPT responsive del header (si aplica en tu proyecto) -->
+  <script>
+    const menuToggle2 = document.getElementById('menu-toggle');
+    const closeMenu = document.getElementById('close-menu');
+    const mainNav = document.getElementById('main-nav');
+    menuToggle2?.addEventListener('click', () => { mainNav.classList.remove('translate-x-full', 'hidden'); });
+    closeMenu?.addEventListener('click', () => {
+      mainNav.classList.add('translate-x-full');
+      setTimeout(() => mainNav.classList.add('hidden'), 300);
+    });
+  </script>
 
-  menuToggle?.addEventListener('click', () => {
-    mainNav.classList.remove('translate-x-full', 'hidden');
-  });
-
-  closeMenu?.addEventListener('click', () => {
-    mainNav.classList.add('translate-x-full');
-    setTimeout(() => mainNav.classList.add('hidden'), 300);
-  });
-</script>
+  <!-- Auto-open modals para mensajes del servidor -->
+  <script>
+    @if(session('success'))
+      openAppModal({ title: 'Listo', type: 'success', message: `{!! addslashes(session('success')) !!}` });
+    @endif
+    @if ($errors->any())
+      openAppModal({
+        title: 'Revisa los datos',
+        type: 'error',
+        message: `<ul class="list-disc pl-5 mt-1 text-sm">
+          @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>`
+      });
+    @endif
+  </script>
 </body>
 </html>
