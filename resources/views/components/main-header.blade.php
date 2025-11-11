@@ -73,19 +73,20 @@
         <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
 
         <button type="button"
-                onclick="openLoginModal()"
+                onclick="handleHeaderLoginClick()"
                 class="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
-          <i class="fa-regular fa-user"></i>
-          <span>Iniciar sesión</span>
+        <i class="fa-regular fa-user"></i>
+        <span>Iniciar sesión</span>
         </button>
-      @endguest
+    @endguest
+
 
       @auth
         @php($role = auth()->user()->role)
 
         {{-- USER (no agent/admin) --}}
         @if(!in_array($role, ['agent','admin']))
-          <a href="{{ route('visits.my') }}" class="hover:text-blue-600 transition">Mi agenda</a>
+          <a href="{{ route('visits.my') }}" class="hover:text-blue-600 transition">Mis Reservas</a>
           <a href="{{ route('favorites.index') }}" class="hover:text-blue-600 transition">Favoritos</a>
           <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
           <a href="{{ route('agent.view') }}" class="hover:text-blue-600 transition">Vuélvete Agente</a>
@@ -132,9 +133,107 @@
     </nav>
   </div>
 
+    @guest
+  {{-- Modal de login (fallback para vistas que NO usan el layout app.blade) --}}
+  <div id="header-login-modal"
+       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+      <button type="button"
+              class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              onclick="window.handleHeaderCloseLogin && window.handleHeaderCloseLogin()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+        <i class="fa-regular fa-user"></i>
+        <span>Iniciar sesión</span>
+      </h2>
+
+      <form method="POST" action="{{ route('login') }}" class="space-y-4">
+        @csrf
+
+        <div>
+          <label for="header-login-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input id="header-login-email"
+                 type="email"
+                 name="email"
+                 required
+                 autocomplete="username"
+                 class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+        </div>
+
+        <div>
+          <label for="header-login-password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+          <input id="header-login-password"
+                 type="password"
+                 name="password"
+                 required
+                 autocomplete="current-password"
+                 class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+        </div>
+
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center gap-2 text-gray-700">
+            <input type="checkbox" name="remember" value="1" class="rounded border-gray-300">
+            <span>Recuérdame</span>
+          </label>
+
+          @if (Route::has('password.request'))
+            <a href="{{ route('password.request') }}" class="text-blue-600 hover:underline">
+              ¿Olvidaste tu contraseña?
+            </a>
+          @endif
+        </div>
+
+        <button type="submit"
+                class="w-full inline-flex justify-center items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+          Entrar
+        </button>
+
+        @if (Route::has('register'))
+          <p class="mt-3 text-center text-xs text-gray-500">
+            ¿Aún no tienes cuenta?
+            <a href="{{ route('register') }}" class="text-blue-600 hover:underline">Regístrate</a>
+          </p>
+        @endif
+      </form>
+    </div>
+  </div>
+  @endguest
+
   {{-- JS del componente (toggle menús) --}}
   <script>
     (function () {
+        // Login (modal desde header): usa el modal global si existe, si no uno propio del header
+      window.handleHeaderLoginClick = function () {
+        // 1) Si la vista usa el layout y existe openLoginModal(), usamos el modal Bootstrap global
+        if (typeof openLoginModal === 'function') {
+          openLoginModal();
+          return;
+        }
+
+        // 2) Si no existe, usamos el modal Tailwind del header
+        const modal = document.getElementById('header-login-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+        }
+      };
+      window.handleHeaderCloseLogin = function () {
+        const modal = document.getElementById('header-login-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+        }
+      };
+
+      // Cerrar modal haciendo click fuera del cuadro
+      const hLoginModal = document.getElementById('header-login-modal');
+      if (hLoginModal) {
+        hLoginModal.addEventListener('click', (e) => {
+          if (e.target === hLoginModal) {
+            window.handleHeaderCloseLogin();
+          }
+        });
+      }
       // Perfil
       const pWrap = document.getElementById('header-profile');
       if (pWrap) {

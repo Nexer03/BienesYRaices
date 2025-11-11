@@ -313,71 +313,6 @@
         </div>
     </footer>
 
-    {{-- LOGIN MODAL --}}
-    <div id="loginModal"
-         class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 md:p-8 w-full max-w-md relative">
-            <button onclick="closeLoginModal()"
-                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <div class="mb-6 text-center">
-                <h3 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Iniciar Sesión</h3>
-            </div>
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
-                <div class="mb-4">
-                    <label for="email" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                    <input id="email"
-                           class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm"
-                           type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" />
-                    @error('email') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
-                </div>
-                <div class="mb-4">
-                    <label for="password" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
-                    <input id="password"
-                           class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm"
-                           type="password" name="password" required autocomplete="current-password" />
-                    @error('password') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
-                </div>
-                <div class="block mb-4">
-                    <label for="remember_me" class="inline-flex items-center">
-                        <input id="remember_me" type="checkbox"
-                               class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-blue-600 shadow-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
-                               name="remember">
-                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Recuérdame</span>
-                    </label>
-                </div>
-                <div class="flex items-center justify-end mb-4">
-                    @if (Route::has('password.request'))
-                        <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                           href="{{ route('password.request') }}">
-                            ¿Olvidaste tu contraseña?
-                        </a>
-                    @endif
-                </div>
-                <button type="submit"
-                        class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-semibold">
-                    Iniciar Sesión
-                </button>
-                <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                    ¿No tienes cuenta?
-                    <a href="{{ route('register') }}" class="underline hover:text-blue-600 dark:hover:text-blue-400">
-                        Regístrate aquí
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- Botón flotante modo oscuro --}}
-    <button id="theme-toggle"
-            class="fixed bottom-6 right-6 z-50 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-yellow-300 p-3 rounded-full shadow-lg hover:scale-110 transition transform focus:outline-none">
-        <i class="fas fa-moon text-xl"></i>
-    </button>
-
     {{-- JS de noUiSlider (debe ir antes del script que lo usa) --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 
@@ -399,20 +334,6 @@
         if (promptElement && localStorage.getItem('hidePreferencePrompt') === 'true') {
             promptElement.style.display = 'none';
         }
-
-        // Modal de login
-        const loginModal = document.getElementById('loginModal');
-
-        function openLoginModal() {
-            if (loginModal) loginModal.classList.remove('hidden');
-        }
-        function closeLoginModal() {
-            if (loginModal) loginModal.classList.add('hidden');
-        }
-
-        window.addEventListener('click', function(event) {
-            if (event.target === loginModal) closeLoginModal();
-        });
 
         document.addEventListener('DOMContentLoaded', function () {
             // Carruseles
@@ -524,44 +445,6 @@
             updateButtonText(currentMin, currentMax);
         });
 
-        // Notificaciones header
-        (function () {
-            const notificationButton   = document.getElementById('notification-button');
-            const notificationDropdown = document.getElementById('notification-dropdown');
-            const notificationWrapper  = document.getElementById('notification-wrapper');
-
-            if (notificationButton && notificationDropdown && notificationWrapper) {
-                notificationButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    notificationDropdown.classList.toggle('hidden');
-                });
-
-                document.addEventListener('click', (event) => {
-                    if (!notificationWrapper.contains(event.target)) {
-                        notificationDropdown.classList.add('hidden');
-                    }
-                });
-            }
-        })();
-
-        // Menú móvil
-        (function () {
-            const menuToggle = document.getElementById('menu-toggle');
-            const closeMenu  = document.getElementById('close-menu');
-            const nav        = document.getElementById('main-nav');
-
-            if (!menuToggle || !closeMenu || !nav) return;
-
-            menuToggle.addEventListener('click', () => {
-                nav.classList.remove('translate-x-full', 'hidden');
-            });
-
-            closeMenu.addEventListener('click', () => {
-                nav.classList.add('translate-x-full');
-                setTimeout(() => nav.classList.add('hidden'), 300);
-            });
-        })();
-
         // Filtro en móvil (search toggle)
         (function () {
             const searchToggle = document.getElementById('search-toggle');
@@ -584,24 +467,6 @@
                     filterPanel.style.transform = 'translateY(0)';
                 } else if (!isFilterVisible) {
                     filterPanel.style.transform = 'translateY(-100%)';
-                }
-            });
-        })();
-
-        // Perfil dropdown
-        (function () {
-            const btn  = document.getElementById('profile-menu-btn');
-            const menu = document.getElementById('profile-menu');
-            if (!btn || !menu) return;
-
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                menu.classList.toggle('hidden');
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!menu.contains(e.target) && e.target !== btn) {
-                    menu.classList.add('hidden');
                 }
             });
         })();
