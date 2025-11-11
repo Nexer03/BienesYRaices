@@ -1,300 +1,184 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienes Raíces</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    {{-- Añadido Font Awesome para los iconos del nuevo diseño --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
-    <style>
-    /* Pequeño helper para ocultar la barra de scroll en el carrusel */
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
 
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
+    {{-- Tailwind --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    {{-- Iconos --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    {{-- noUiSlider --}}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
+
+    <style>
+        /* Ocultar scroll en carruseles */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800">
 
+    {{-- Prompt de preferencias --}}
     @auth
-    @if (is_null($userPreferences))
-    <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-4"
-        id="preferences-prompt">
-        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md text-center">
-            <h3 class="text-xl font-semibold mb-3">¡Personaliza tu búsqueda!</h3>
-            <p class="text-gray-600 mb-4">
-                Aún no has guardado tus preferencias. Añádelas para que podamos mostrarte las propiedades que más te
-                interesan.
-            </p>
-            <div class="mb-4 text-left">
-                <input type="checkbox" id="dont-show-again" class="mr-2">
-                <label for="dont-show-again" class="text-sm text-gray-600">No volver a mostrar este mensaje</label>
+        @if (is_null($userPreferences))
+            <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-4"
+                 id="preferences-prompt">
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-md text-center">
+                    <h3 class="text-xl font-semibold mb-3">¡Personaliza tu búsqueda!</h3>
+                    <p class="text-gray-600 mb-4">
+                        Aún no has guardado tus preferencias. Añádelas para que podamos mostrarte las propiedades que más te interesan.
+                    </p>
+                    <div class="mb-4 text-left">
+                        <input type="checkbox" id="dont-show-again" class="mr-2">
+                        <label for="dont-show-again" class="text-sm text-gray-600">No volver a mostrar este mensaje</label>
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <a href="{{ route('preferences.edit') }}"
+                           class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition">
+                            Añadir Preferencias
+                        </a>
+                        <button type="button" onclick="dismissPrompt()"
+                                class="bg-gray-300 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-400 transition">
+                            Ahora No
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="flex justify-center gap-4">
-                <a href="{{ route('preferences.edit') }}"
-                    class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition">
-                    Añadir Preferencias
-                </a>
-                <button type="button" onclick="dismissPrompt()"
-                    class="bg-gray-300 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-400 transition">
-                    Ahora No
-                </button>
-            </div>
-        </div>
-    </div>
-    @endif
-    @endauth
-    {{-- ========================================================== --}}
-
-
-    {{-- HEADER (del nuevo welcome.blade.php, con botón de modal login del welcomeold) --}}
-    <header class="sticky top-0 bg-white shadow-sm z-50">
-  <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-    <!-- Logo -->
-    <div class="text-2xl font-bold text-blue-600 cursor-pointer flex items-center">
-      <i class="fas fa-home mr-2"></i>
-      <span>Sin beca<span class="text-gray-700"> no hay renta </span></span>
-    </div>
-
-   <!-- Botones de header -->
-<div class="flex items-center gap-4">
-  @auth
-    @if(in_array(auth()->user()->role, ['agent','admin']))
-    <div class="relative" id="notification-wrapper">
-      <button id="notification-button" class="relative text-gray-700 text-xl focus:outline-none" aria-label="Ver notificaciones">
-        <i class="fa-regular fa-bell"></i>
-        @if(($unreadNotificationCount ?? 0) > 0)
-        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5">
-          {{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}
-        </span>
         @endif
-      </button>
-      <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
-        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h4 class="text-sm font-semibold text-gray-700">Notificaciones</h4>
-          <form method="POST" action="{{ route('notifications.markAllRead') }}">
-            @csrf
-            <button type="submit" class="text-xs text-indigo-600 hover:text-indigo-500">
-              Marcar todas como leídas
-            </button>
-          </form>
+    @endauth
+
+    {{-- HEADER --}}
+    <x-main-header />
+
+    {{-- Filtro principal --}}
+    <section id="filter-panel"
+             class="bg-white shadow-md w-full py-6 md:translate-y-0 transform -translate-y-full transition-transform duration-300 fixed md:static top-16 md:top-auto left-0 z-40 md:z-0">
+        <div class="max-w-6xl mx-auto px-6">
+            <form id="property-filter-form" method="GET" action="{{ route('home') }}"
+                  class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 text-center">
+
+                {{-- Tipo de propiedad --}}
+                <div class="w-full md:w-auto">
+                    <select name="type" id="type_filter_select"
+                            class="w-full md:w-40 border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                        <option value="rent" {{ request('type') === 'rent' ? 'selected' : '' }}>Renta</option>
+                        <option value="sale" {{ request('type') === 'sale' ? 'selected' : '' }}>Venta</option>
+                    </select>
+                </div>
+
+                {{-- Ciudad --}}
+                <div class="w-full md:w-40">
+                    <select name="city" id="city" onchange="this.form.submit()"
+                            class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                        <option value="">Todas las ciudades</option>
+                        @foreach($cities as $city)
+                            <option value="{{ $city }}" {{ request('city') === $city ? 'selected' : '' }}>
+                                {{ $city }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Filtro de precio --}}
+                <div class="relative w-full md:w-64">
+                    <button type="button" id="price-filter-button"
+                            class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                        <span>Precio</span>
+                    </button>
+
+                    <div id="price-dropdown"
+                         class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
+                        <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
+                        <div id="price-slider" class="mb-4"></div>
+                        <div class="flex justify-between items-center text-sm text-gray-700">
+                            <div class="flex items-center gap-1 border rounded-md p-2">
+                                $ <span id="slider-min-value"></span>
+                            </div>
+                            <div class="text-gray-400">-</div>
+                            <div class="flex items-center gap-1 border rounded-md p-2">
+                                $ <span id="slider-max-value"></span>
+                            </div>
+                        </div>
+                        <input type="hidden" name="min_price" id="slider-min-input">
+                        <input type="hidden" name="max_price" id="slider-max-input">
+                        <div class="mt-4 text-right">
+                            <button type="button" id="apply-price-button"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                                Aplicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Botón buscar --}}
+                <div class="w-full md:w-auto">
+                    <button type="submit"
+                            class="w-full md:w-auto bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
+                        Buscar
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="max-h-80 overflow-y-auto divide-y divide-gray-100">
-          @forelse(($headerNotifications ?? collect()) as $notification)
-          <a href="{{ route('notifications.redirect', $notification['id']) }}" class="flex gap-3 px-4 py-3 hover:bg-gray-50 transition">
-            <span class="text-indigo-500 text-lg">
-              <i class="{{ $notification['icon'] }}"></i>
-            </span>
-            <div class="flex-1">
-              <p class="text-sm font-semibold text-gray-800">{{ $notification['title'] }}</p>
-              <p class="text-xs text-gray-500">{{ $notification['description'] }}</p>
-              <p class="text-[11px] text-gray-400 mt-1">{{ $notification['time'] }}</p>
-            </div>
-            @if(!$notification['read'])
-              <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
-            @endif
-          </a>
-          @empty
-          <div class="px-4 py-6 text-center text-sm text-gray-500">
-            Sin notificaciones por ahora.
-          </div>
-          @endforelse
-        </div>
-      </div>
-    </div>
-    @endif
-  @endauth
-  <!-- Botón lupa -->
-  <button id="search-toggle" class="block md:hidden text-gray-700 text-xl focus:outline-none">
-  <i class="fas fa-search"></i>
-</button>
-
-  <!-- Botón menú móvil -->
-  <button id="menu-toggle" class="md:hidden text-gray-700 text-2xl focus:outline-none">
-    <i class="fas fa-bars"></i>
-  </button>
-</div>
-
-
-    <!-- Navegación -->
-    <nav id="main-nav"
-      class="hidden md:flex flex-col md:flex-row fixed md:static top-0 right-0 h-full md:h-auto w-3/4 md:w-auto bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 space-y-4 md:space-y-0 md:space-x-6 text-gray-700 font-medium transition-transform transform md:translate-x-0 translate-x-full z-50">
-      
-      <!-- Botón cerrar -->
-      <button id="close-menu" class="md:hidden text-gray-500 text-2xl self-end mb-4">
-        <i class="fas fa-times"></i>
-      </button>
-
-      <a href="{{ route('visits.my') }}"
-   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-   Mi agenda
-</a>
-@auth
-<a href="{{ route('favorites.index') }}"
-   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-   Favoritos
-</a>
-@endauth
-<a href="{{ route('properties.map') }}"
-   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-   Mapa
-</a>
-@auth
-@if(auth()->user()->role === 'agent')
-<a href="{{ route('agent.home') }}"
-   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-   Panel de Agente
-</a>
-@else
-<a href="{{ route('agent.view') }}"
-   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-   Modo vendedor
-</a>
-@endif
-<a href="{{ url('/dashboard') }}"
-   class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
-   Perfil
-</a>
-@else
-<a href="{{ route('agent.view') }}"
-   class="block px-4 py-2 rounded-full text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-   Modo vendedor
-</a>
-
-      <button type="button" onclick="openLoginModal()"
-         class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
-         Iniciar sesión
-      </button>
-      @endauth
-    </nav>
-  </div>
-</header>
-
-
-
-       <!-- Filtro (siempre visible en PC, desplegable en móvil) -->
-<section id="filter-panel"
-  class="bg-white shadow-md w-full py-6 md:translate-y-0 transform -translate-y-full transition-transform duration-300 fixed md:static top-16 md:top-auto left-0 z-40 md:z-0">
-  <div class="max-w-6xl mx-auto px-6">
-    <form id="property-filter-form" method="GET" action="{{ route('home') }}"
-      class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 text-center">
-      
-      {{-- Tipo de propiedad --}}
-      <div class="w-full md:w-auto">
-        <select name="type" id="type_filter_select"
-          class="w-full md:w-40 border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-          <option value="rent" {{ request('type') === 'rent' ? 'selected' : '' }}>Renta</option>
-          <option value="sale" {{ request('type') === 'sale' ? 'selected' : '' }}>Venta</option>
-        </select>
-      </div>
-
-      {{-- Ciudad --}}
-      <div class="w-full md:w-40">
-        <select name="city" id="city" onchange="this.form.submit()"
-          class="w-full border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-          <option value="">Todas las ciudades</option>
-          @foreach($cities as $city)
-          <option value="{{ $city }}" {{ request('city') === $city ? 'selected' : '' }}>
-            {{ $city }}
-          </option>
-          @endforeach
-        </select>
-      </div>
-
-      {{-- Filtro de precio --}}
-      <div class="relative w-full md:w-64">
-        <button type="button" id="price-filter-button"
-          class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-          <span>Precio</span>
-        </button>
-
-        <div id="price-dropdown"
-          class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
-          <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
-          <div id="price-slider" class="mb-4"></div>
-          <div class="flex justify-between items-center text-sm text-gray-700">
-            <div class="flex items-center gap-1 border rounded-md p-2">
-              $ <span id="slider-min-value"></span>
-            </div>
-            <div class="text-gray-400">-</div>
-            <div class="flex items-center gap-1 border rounded-md p-2">
-              $ <span id="slider-max-value"></span>
-            </div>
-          </div>
-          <input type="hidden" name="min_price" id="slider-min-input">
-          <input type="hidden" name="max_price" id="slider-max-input">
-          <div class="mt-4 text-right">
-            <button type="button" id="apply-price-button"
-              class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Aplicar</button>
-          </div>
-        </div>
-      </div>
-
-      {{-- Botón buscar --}}
-      <div class="w-full md:w-auto">
-        <button type="submit"
-          class="w-full md:w-auto bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
-          Buscar
-        </button>
-      </div>
-    </form>
-  </div>
-</section>
-
-
-
-
+    </section>
 
     {{-- Contenido Principal --}}
     <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
-    {{-- Sección Recomendaciones (del welcomeold.blade.php) --}}
-            @auth
+
+        {{-- Recomendaciones --}}
+        @auth
             @if ($recommendedProperties->isNotEmpty())
-            <section>
-                <h2 class="text-2xl font-semibold mb-4">Recomendado para Tí segun tus preferencias.</h2>
-                {{-- Puedes usar el mismo estilo de carrusel aquí si quieres --}}
-                <div class="relative group">
-                    <button
-                        class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
-                        <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
-                    </button>
-                    <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-                        @foreach ($recommendedProperties as $property)
-                        <a href="{{ route('properties.show', $property) }}"
-                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
-                            @if ($property->images->isNotEmpty())
-                            <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                                alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
-                            @else
-                            <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
-                                class="w-full h-48 object-cover rounded-t-xl">
-                            @endif
-                            <div class="p-3">
-                                <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                                <p class="text-sm text-gray-500 truncate mt-1">
-                                    {{ $property->location ?? 'Ubicación no especificada' }}</p>
-                                <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
-                            </div>
-                        </a>
-                        @endforeach
+                <section>
+                    <h2 class="text-2xl font-semibold mb-4">Recomendado para Tí según tus preferencias.</h2>
+                    <div class="relative group">
+                        <button
+                            class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                            <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
+                        </button>
+                        <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
+                            @foreach ($recommendedProperties as $property)
+                                <a href="{{ route('properties.show', $property) }}"
+                                   class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
+                                    @if ($property->images->isNotEmpty())
+                                        <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                             alt="Imagen de {{ $property->title }}"
+                                             class="w-full h-48 object-cover rounded-t-xl">
+                                    @else
+                                        <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
+                                             class="w-full h-48 object-cover rounded-t-xl">
+                                    @endif
+                                    <div class="p-3">
+                                        <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                        <p class="text-sm text-gray-500 truncate mt-1">
+                                            {{ $property->location ?? 'Ubicación no especificada' }}
+                                        </p>
+                                        <p class="mt-2 font-semibold text-blue-600">
+                                            ${{ number_format($property->price, 2) }}
+                                        </p>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                        <button
+                            class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                            <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
+                        </button>
                     </div>
-                    <button
-                        class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
-                        <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
-                    </button>
-                </div>
-            </section>
+                </section>
             @endif
-            @endauth
-         @foreach($propertiesByCity as $city => $cityProperties)
+        @endauth
+
+        {{-- Propiedades por ciudad --}}
+        @foreach($propertiesByCity as $city => $cityProperties)
             <section>
                 <h2 class="text-2xl font-semibold mb-4">Propiedades en {{ $city }}</h2>
                 <div class="relative group">
@@ -305,18 +189,24 @@
                     <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
                         @foreach($cityProperties as $property)
                             <a href="{{ route('properties.show', $property) }}"
-                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
+                               class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
                                 @if($property->images->isNotEmpty())
                                     <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                                        alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
+                                         alt="Imagen de {{ $property->title }}"
+                                         class="w-full h-48 object-cover rounded-t-xl">
                                 @else
                                     <img src="https://via.placeholder.com/300x200?text=Sin+Imagen"
-                                        alt="Sin imagen disponible" class="w-full h-48 object-cover rounded-t-xl">
+                                         alt="Sin imagen disponible"
+                                         class="w-full h-48 object-cover rounded-t-xl">
                                 @endif
                                 <div class="p-3">
                                     <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                                    <p class="text-sm text-gray-500 truncate mt-1">{{ $property->location ?? 'Ubicación no especificada' }}</p>
-                                    <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
+                                    <p class="text-sm text-gray-500 truncate mt-1">
+                                        {{ $property->location ?? 'Ubicación no especificada' }}
+                                    </p>
+                                    <p class="mt-2 font-semibold text-blue-600">
+                                        ${{ number_format($property->price, 2) }}
+                                    </p>
                                 </div>
                             </a>
                         @endforeach
@@ -328,7 +218,8 @@
                 </div>
             </section>
         @endforeach
-        {{-- Carrusel Propiedades Recientes (del nuevo welcome.blade.php) --}}
+
+        {{-- Propiedades recientes --}}
         <section>
             <h2 class="text-2xl font-semibold mb-4">Propiedades Recientes</h2>
             <div class="relative group">
@@ -338,24 +229,28 @@
                 </button>
                 <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
                     @forelse ($properties as $property)
-                    <a href="{{ route('properties.show', $property) }}"
-                        class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
-                        @if ($property->images->isNotEmpty())
-                        <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                            alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl">
-                        @else
-                        <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
-                            class="w-full h-48 object-cover rounded-t-xl">
-                        @endif
-                        <div class="p-3">
-                            <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                            <p class="text-sm text-gray-500 truncate mt-1">
-                                {{ $property->location ?? 'Ubicación no especificada' }}</p>
-                            <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
-                        </div>
-                    </a>
+                        <a href="{{ route('properties.show', $property) }}"
+                           class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
+                            @if ($property->images->isNotEmpty())
+                                <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                     alt="Imagen de {{ $property->title }}"
+                                     class="w-full h-48 object-cover rounded-t-xl">
+                            @else
+                                <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
+                                     class="w-full h-48 object-cover rounded-t-xl">
+                            @endif
+                            <div class="p-3">
+                                <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                <p class="text-sm text-gray-500 truncate mt-1">
+                                    {{ $property->location ?? 'Ubicación no especificada' }}
+                                </p>
+                                <p class="mt-2 font-semibold text-blue-600">
+                                    ${{ number_format($property->price, 2) }}
+                                </p>
+                            </div>
+                        </a>
                     @empty
-                    <p class="text-gray-500">Aún no hay propiedades para mostrar.</p>
+                        <p class="text-gray-500">Aún no hay propiedades para mostrar.</p>
                     @endforelse
                 </div>
                 <button
@@ -367,7 +262,7 @@
 
     </main>
 
-    {{-- Footer (del nuevo welcome.blade.php) --}}
+    {{-- Footer --}}
     <footer class="bg-gray-800 text-white py-8 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -381,30 +276,19 @@
                         con sus futuros dueños de manera eficiente y profesional.
                     </p>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i
-                                class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
                 <div>
                     <h3 class="font-semibold text-lg mb-4">Navegación</h3>
                     <ul class="space-y-2">
-                        <li><a href="{{ route('visits.my') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Mis Visitas</a>
-                        </li>
-                        <li><a href="{{ route('properties.map') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Mapa</a></li>
-                        <li><a href="{{ route('agent.home') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Panel de
-                                Agente</a></li>
-                        <li><a href="{{ route('agent.view') }}"
-                                class="text-gray-300 hover:text-white transition-colors duration-200">Modo Vendedor</a>
-                        </li>
+                        <li><a href="{{ route('visits.my') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Mis Visitas</a></li>
+                        <li><a href="{{ route('properties.map') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Mapa</a></li>
+                        <li><a href="{{ route('agent.home') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Panel de Agente</a></li>
+                        <li><a href="{{ route('agent.view') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Modo Vendedor</a></li>
                     </ul>
                 </div>
                 <div>
@@ -418,27 +302,23 @@
             </div>
             <div class="border-t border-gray-700 mt-8 pt-6">
                 <div class="flex flex-col md:flex-row justify-between items-center">
-                    <p class="text-gray-300 text-sm">&copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos
-                        reservados.</p>
+                    <p class="text-gray-300 text-sm">&copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.</p>
                     <div class="flex space-x-6 mt-4 md:mt-0">
-                        <a href="#"
-                            class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Privacidad</a>
-                        <a href="#"
-                            class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Términos</a>
-                        <a href="#"
-                            class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Cookies</a>
+                        <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Privacidad</a>
+                        <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Términos</a>
+                        <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Cookies</a>
                     </div>
                 </div>
             </div>
         </div>
     </footer>
 
-    {{-- ===================== LOGIN MODAL (del welcomeold) ===================== --}}
+    {{-- LOGIN MODAL --}}
     <div id="loginModal"
-        class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
+         class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 md:p-8 w-full max-w-md relative">
             <button onclick="closeLoginModal()"
-                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -449,318 +329,303 @@
             <form method="POST" action="{{ route('login') }}">
                 @csrf
                 <div class="mb-4">
-                    <label for="email"
-                        class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                    <label for="email" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                     <input id="email"
-                        class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm"
-                        type="email" name="email" value="{{ old('email') }}" required autofocus
-                        autocomplete="username" />
+                           class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm"
+                           type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" />
                     @error('email') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="password"
-                        class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
+                    <label for="password" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
                     <input id="password"
-                        class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm"
-                        type="password" name="password" required autocomplete="current-password" />
-                    @error('password') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
+                           class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-sm"
+                           type="password" name="password" required autocomplete="current-password" />
+                    @error('password') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
                 </div>
                 <div class="block mb-4">
                     <label for="remember_me" class="inline-flex items-center">
                         <input id="remember_me" type="checkbox"
-                            class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-blue-600 shadow-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
-                            name="remember">
+                               class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-blue-600 shadow-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
+                               name="remember">
                         <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Recuérdame</span>
                     </label>
                 </div>
                 <div class="flex items-center justify-end mb-4">
                     @if (Route::has('password.request'))
-                    <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                        href="{{ route('password.request') }}">
-                        ¿Olvidaste tu contraseña?
-                    </a>
+                        <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                           href="{{ route('password.request') }}">
+                            ¿Olvidaste tu contraseña?
+                        </a>
                     @endif
                 </div>
                 <button type="submit"
-                    class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-semibold">
+                        class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-semibold">
                     Iniciar Sesión
                 </button>
                 <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                    ¿No tienes cuenta? <a href="{{ route('register') }}"
-                        class="underline hover:text-blue-600 dark:hover:text-blue-400">Regístrate aquí</a>
+                    ¿No tienes cuenta?
+                    <a href="{{ route('register') }}" class="underline hover:text-blue-600 dark:hover:text-blue-400">
+                        Regístrate aquí
+                    </a>
                 </div>
             </form>
         </div>
     </div>
-    {{-- =================== END LOGIN MODAL =================== --}}
 
-    {{-- SCRIPTS --}}
-<script>
-    // --- LÓGICA DEL PROMPT DE PREFERENCIAS (GLOBAL) ---
-    const promptElement = document.getElementById('preferences-prompt');
-    const dontShowCheckbox = document.getElementById('dont-show-again');
+    {{-- Botón flotante modo oscuro --}}
+    <button id="theme-toggle"
+            class="fixed bottom-6 right-6 z-50 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-yellow-300 p-3 rounded-full shadow-lg hover:scale-110 transition transform focus:outline-none">
+        <i class="fas fa-moon text-xl"></i>
+    </button>
 
-    function dismissPrompt() {
-        if (dontShowCheckbox && dontShowCheckbox.checked) {
-            localStorage.setItem('hidePreferencePrompt', 'true');
+    {{-- JS de noUiSlider (debe ir antes del script que lo usa) --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+
+    {{-- Lógica principal de la página --}}
+    <script>
+        // Prompt de preferencias
+        const promptElement = document.getElementById('preferences-prompt');
+        const dontShowCheckbox = document.getElementById('dont-show-again');
+
+        function dismissPrompt() {
+            if (dontShowCheckbox && dontShowCheckbox.checked) {
+                localStorage.setItem('hidePreferencePrompt', 'true');
+            }
+            if (promptElement) {
+                promptElement.style.display = 'none';
+            }
         }
-        if (promptElement) {
+
+        if (promptElement && localStorage.getItem('hidePreferencePrompt') === 'true') {
             promptElement.style.display = 'none';
         }
-    }
-    // Oculta el prompt si la bandera ya está guardada en localStorage
-    if (promptElement && localStorage.getItem('hidePreferencePrompt') === 'true') {
-        promptElement.style.display = 'none';
-    }
 
-    // --- LÓGICA DEL MODAL DE LOGIN (GLOBAL) ---
-    const loginModal = document.getElementById('loginModal');
+        // Modal de login
+        const loginModal = document.getElementById('loginModal');
 
-    function openLoginModal() {
-        if (loginModal) loginModal.classList.remove('hidden');
-    }
-    function closeLoginModal() {
-        if (loginModal) loginModal.classList.add('hidden');
-    }
-    // Cierra el modal de login si se hace clic fuera de él
-    window.addEventListener('click', function(event) {
-        if (event.target === loginModal) closeLoginModal();
-    });
+        function openLoginModal() {
+            if (loginModal) loginModal.classList.remove('hidden');
+        }
+        function closeLoginModal() {
+            if (loginModal) loginModal.classList.add('hidden');
+        }
 
-    // --- LÓGICA DE LA PÁGINA (CARRUSEL, SLIDER, FILTROS) ---
-    document.addEventListener('DOMContentLoaded', function() {
-
-        // --- LÓGICA DEL CARRUSEL ---
-        document.querySelectorAll('.relative.group').forEach(carousel => {
-            const container = carousel.querySelector('.carousel-container');
-            const prevBtn = carousel.querySelector('.carousel-prev');
-            const nextBtn = carousel.querySelector('.carousel-next');
-            const scrollAmount = 300;
-
-            if (container && prevBtn && nextBtn) {
-                prevBtn.addEventListener('click', () => container.scrollBy({ left: -scrollAmount, behavior: 'smooth' }));
-                nextBtn.addEventListener('click', () => container.scrollBy({ left: scrollAmount, behavior: 'smooth' }));
-            }
+        window.addEventListener('click', function(event) {
+            if (event.target === loginModal) closeLoginModal();
         });
 
-        // --- LÓGICA DEL SLIDER DE PRECIO Y FILTROS ---
-        const priceSlider = document.getElementById('price-slider');
-        const minInput = document.getElementById('slider-min-input');
-        const maxInput = document.getElementById('slider-max-input');
-        const typeFilterSelect = document.getElementById('type_filter_select');
-        const filterForm = document.getElementById('property-filter-form'); // Asume que tu form tiene este ID
+        document.addEventListener('DOMContentLoaded', function () {
+            // Carruseles
+            document.querySelectorAll('.relative.group').forEach(carousel => {
+                const container = carousel.querySelector('.carousel-container');
+                const prevBtn = carousel.querySelector('.carousel-prev');
+                const nextBtn = carousel.querySelector('.carousel-next');
+                const scrollAmount = 300;
 
-        // --- ¡NUEVA LÓGICA DE RESETEO! ---
-        if (typeFilterSelect && filterForm) {
-            typeFilterSelect.addEventListener('change', function() {
-                // Al cambiar el tipo (renta/venta), limpia los valores de precio
-                if (minInput) minInput.value = '';
-                if (maxInput) maxInput.value = '';
-
-                // Y luego envía el formulario
-                filterForm.submit();
+                if (container && prevBtn && nextBtn) {
+                    prevBtn.addEventListener('click', () => {
+                        container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                    });
+                    nextBtn.addEventListener('click', () => {
+                        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    });
+                }
             });
-        }
-        // --- FIN DE LA NUEVA LÓGICA ---
 
-        // Si el slider no existe en esta página, detenemos el resto del script del slider
-        if (!priceSlider) {
-            return;
-        }
+            // Slider de precio y filtros
+            const priceSlider      = document.getElementById('price-slider');
+            const minInput         = document.getElementById('slider-min-input');
+            const maxInput         = document.getElementById('slider-max-input');
+            const typeFilterSelect = document.getElementById('type_filter_select');
+            const filterForm       = document.getElementById('property-filter-form');
 
-        const minDisplay = document.getElementById('slider-min-value');
-        const maxDisplay = document.getElementById('slider-max-value');
-        const priceButton = document.getElementById('price-filter-button');
-        const priceDropdown = document.getElementById('price-dropdown');
-        const applyPriceButton = document.getElementById('apply-price-button');
+            if (typeFilterSelect && filterForm) {
+                typeFilterSelect.addEventListener('change', function () {
+                    if (minInput) minInput.value = '';
+                    if (maxInput) maxInput.value = '';
+                    filterForm.submit();
+                });
+            }
 
-        // Configuración de rangos (viene de PHP/Controlador)
-        const currentType = '{{ $typeFilter }}';
-        const rentMin = {{ $rentMinRange ?? 0 }};
-        const rentMax = {{ $rentMaxRange ?? 10000 }};
-        const saleMin = {{ $saleMinRange ?? 500000 }};
-        const saleMax = {{ $saleMaxRange ?? 10000000 }};
+            if (!priceSlider) {
+                return;
+            }
 
-        let minRange, maxRange, step;
-        if (currentType === 'rent') {
-            minRange = rentMin; maxRange = rentMax; step = 100;
-        } else { // 'sale'
-            minRange = saleMin; maxRange = saleMax; step = 50000;
-        }
+            const minDisplay      = document.getElementById('slider-min-value');
+            const maxDisplay      = document.getElementById('slider-max-value');
+            const priceButton     = document.getElementById('price-filter-button');
+            const priceDropdown   = document.getElementById('price-dropdown');
+            const applyPriceButton = document.getElementById('apply-price-button');
 
-        // Obtener valores de la URL o usar los defaults DINÁMICOS
-        const currentMinFromRequest = {{ request('min_price', 'null') }};
-        const currentMaxFromRequest = {{ request('max_price', 'null') }};
+            const currentType = '{{ $typeFilter }}';
+            const rentMin  = {{ $rentMinRange ?? 0 }};
+            const rentMax  = {{ $rentMaxRange ?? 10000 }};
+            const saleMin  = {{ $saleMinRange ?? 500000 }};
+            const saleMax  = {{ $saleMaxRange ?? 10000000 }};
 
-        const currentMin = currentMinFromRequest !== null ? currentMinFromRequest : minRange;
-        const currentMax = currentMaxFromRequest !== null ? currentMaxFromRequest : maxRange;
-
-        const formatter = new Intl.NumberFormat('es-MX', { style: 'decimal', maximumFractionDigits: 0 });
-
-        function updateButtonText(minVal, maxVal) {
-            if (minVal > minRange || maxVal < maxRange) {
-                priceButton.innerHTML = `<span>$${formatter.format(minVal)} - $${formatter.format(maxVal)}</span>`;
+            let minRange, maxRange, step;
+            if (currentType === 'rent') {
+                minRange = rentMin; maxRange = rentMax; step = 100;
             } else {
-                priceButton.innerHTML = `<span>Precio</span>`;
+                minRange = saleMin; maxRange = saleMax; step = 50000;
             }
-        }
 
-        // Inicializar noUiSlider
-        noUiSlider.create(priceSlider, {
-            start: [currentMin, currentMax],
-            connect: true,
-            step: step,
-            range: { 'min': minRange, 'max': maxRange }
-        });
+            const currentMinFromRequest = {{ request('min_price', 'null') }};
+            const currentMaxFromRequest = {{ request('max_price', 'null') }};
 
-        // Evento 'update' del slider
-        priceSlider.noUiSlider.on('update', function(values) {
-            const minValue = parseFloat(values[0]);
-            const maxValue = parseFloat(values[1]);
+            const currentMin = currentMinFromRequest !== null ? currentMinFromRequest : minRange;
+            const currentMax = currentMaxFromRequest !== null ? currentMaxFromRequest : maxRange;
 
-            minDisplay.textContent = formatter.format(minValue);
-            maxDisplay.textContent = formatter.format(maxValue);
+            const formatter = new Intl.NumberFormat('es-MX', { style: 'decimal', maximumFractionDigits: 0 });
 
-            minInput.value = minValue;
-            maxInput.value = maxValue;
-
-            updateButtonText(minValue, maxValue);
-        });
-
-        // Lógica del dropdown de precio
-        priceButton.addEventListener('click', (e) => { e.stopPropagation(); priceDropdown.classList.toggle('hidden'); });
-        applyPriceButton.addEventListener('click', () => priceDropdown.classList.add('hidden'));
-        window.addEventListener('click', (e) => {
-            if (!priceDropdown.classList.contains('hidden') && !priceDropdown.contains(e.target) && e.target !== priceButton) {
-                priceDropdown.classList.add('hidden');
+            function updateButtonText(minVal, maxVal) {
+                if (minVal > minRange || maxVal < maxRange) {
+                    priceButton.innerHTML = `<span>$${formatter.format(minVal)} - $${formatter.format(maxVal)}</span>`;
+                } else {
+                    priceButton.innerHTML = `<span>Precio</span>`;
+                }
             }
+
+            noUiSlider.create(priceSlider, {
+                start: [currentMin, currentMax],
+                connect: true,
+                step: step,
+                range: { 'min': minRange, 'max': maxRange }
+            });
+
+            priceSlider.noUiSlider.on('update', function (values) {
+                const minValue = parseFloat(values[0]);
+                const maxValue = parseFloat(values[1]);
+
+                minDisplay.textContent = formatter.format(minValue);
+                maxDisplay.textContent = formatter.format(maxValue);
+
+                minInput.value = minValue;
+                maxInput.value = maxValue;
+
+                updateButtonText(minValue, maxValue);
+            });
+
+            priceButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                priceDropdown.classList.toggle('hidden');
+            });
+
+            applyPriceButton.addEventListener('click', () => priceDropdown.classList.add('hidden'));
+
+            window.addEventListener('click', (e) => {
+                if (!priceDropdown.classList.contains('hidden') &&
+                    !priceDropdown.contains(e.target) &&
+                    e.target !== priceButton) {
+                    priceDropdown.classList.add('hidden');
+                }
+            });
+
+            updateButtonText(currentMin, currentMax);
         });
 
-        // Actualizar texto del botón al cargar
-        updateButtonText(currentMin, currentMax);
-    });
-</script>
+        // Notificaciones header
+        (function () {
+            const notificationButton   = document.getElementById('notification-button');
+            const notificationDropdown = document.getElementById('notification-dropdown');
+            const notificationWrapper  = document.getElementById('notification-wrapper');
 
-    {{-- Script para los carruseles (del nuevo welcome.blade.php) --}}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const carousels = document.querySelectorAll(
-            '.relative.group'); // Selecciona los contenedores de carrusel
-        carousels.forEach(carousel => {
-            const container = carousel.querySelector('.carousel-container');
-            const prevBtn = carousel.querySelector('.carousel-prev');
-            const nextBtn = carousel.querySelector('.carousel-next');
-            const scrollAmount = 300; // Ajusta según necesites
-
-            if (container && prevBtn && nextBtn) {
-                prevBtn.addEventListener('click', () => {
-                    container.scrollBy({
-                        left: -scrollAmount,
-                        behavior: 'smooth'
-                    });
+            if (notificationButton && notificationDropdown && notificationWrapper) {
+                notificationButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    notificationDropdown.classList.toggle('hidden');
                 });
-                nextBtn.addEventListener('click', () => {
-                    container.scrollBy({
-                        left: scrollAmount,
-                        behavior: 'smooth'
-                    });
+
+                document.addEventListener('click', (event) => {
+                    if (!notificationWrapper.contains(event.target)) {
+                        notificationDropdown.classList.add('hidden');
+                    }
                 });
             }
-        });
-    });
+        })();
+
+        // Menú móvil
+        (function () {
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeMenu  = document.getElementById('close-menu');
+            const nav        = document.getElementById('main-nav');
+
+            if (!menuToggle || !closeMenu || !nav) return;
+
+            menuToggle.addEventListener('click', () => {
+                nav.classList.remove('translate-x-full', 'hidden');
+            });
+
+            closeMenu.addEventListener('click', () => {
+                nav.classList.add('translate-x-full');
+                setTimeout(() => nav.classList.add('hidden'), 300);
+            });
+        })();
+
+        // Filtro en móvil (search toggle)
+        (function () {
+            const searchToggle = document.getElementById('search-toggle');
+            const filterPanel  = document.getElementById('filter-panel');
+            if (!searchToggle || !filterPanel) return;
+
+            let isFilterVisible = false;
+
+            function toggleFilter() {
+                if (window.innerWidth < 768) {
+                    isFilterVisible = !isFilterVisible;
+                    filterPanel.style.transform = isFilterVisible ? 'translateY(0)' : 'translateY(-100%)';
+                }
+            }
+
+            searchToggle.addEventListener('click', toggleFilter);
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    filterPanel.style.transform = 'translateY(0)';
+                } else if (!isFilterVisible) {
+                    filterPanel.style.transform = 'translateY(-100%)';
+                }
+            });
+        })();
+
+        // Perfil dropdown
+        (function () {
+            const btn  = document.getElementById('profile-menu-btn');
+            const menu = document.getElementById('profile-menu');
+            if (!btn || !menu) return;
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!menu.contains(e.target) && e.target !== btn) {
+                    menu.classList.add('hidden');
+                }
+            });
+        })();
+
+        // Tema oscuro
+        (function () {
+            const themeToggle = document.getElementById('theme-toggle');
+            if (!themeToggle) return;
+            const html = document.documentElement;
+            const icon = themeToggle.querySelector('i');
+
+            if (localStorage.theme === 'dark') {
+                html.classList.add('dark');
+                icon.classList.replace('fa-moon', 'fa-sun');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                const isDark = html.classList.contains('dark');
+                icon.classList.toggle('fa-moon', !isDark);
+                icon.classList.toggle('fa-sun', isDark);
+                localStorage.theme = isDark ? 'dark' : 'light';
+            });
+        })();
     </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
-
-<!-- Botón flotante modo oscuro -->
-<button id="theme-toggle"
-  class="fixed bottom-6 right-6 z-50 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-yellow-300 p-3 rounded-full shadow-lg hover:scale-110 transition transform focus:outline-none">
-  <i class="fas fa-moon text-xl"></i>
-</button>
-
 </body>
-
-<script>
-  const notificationButton = document.getElementById('notification-button');
-  const notificationDropdown = document.getElementById('notification-dropdown');
-  const notificationWrapper = document.getElementById('notification-wrapper');
-
-  if (notificationButton && notificationDropdown && notificationWrapper) {
-    notificationButton.addEventListener('click', (event) => {
-      event.stopPropagation();
-      notificationDropdown.classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!notificationWrapper.contains(event.target)) {
-        notificationDropdown.classList.add('hidden');
-      }
-    });
-  }
-</script>
-
-<script>
-  const menuToggle = document.getElementById('menu-toggle');
-  const closeMenu = document.getElementById('close-menu');
-  const nav = document.getElementById('main-nav');
-
-  menuToggle.addEventListener('click', () => {
-    nav.classList.remove('translate-x-full', 'hidden');
-  });
-
-  closeMenu.addEventListener('click', () => {
-    nav.classList.add('translate-x-full');
-    setTimeout(() => nav.classList.add('hidden'), 300);
-  });
-</script>
-
-<script>
-  const searchToggle = document.getElementById('search-toggle');
-  const filterPanel = document.getElementById('filter-panel');
-  let isFilterVisible = false;
-
-  function toggleFilter() {
-    // Solo ejecuta la animación si la pantalla es menor que 768px (modo móvil)
-    if (window.innerWidth < 768) {
-      isFilterVisible = !isFilterVisible;
-      filterPanel.style.transform = isFilterVisible ? 'translateY(0)' : 'translateY(-100%)';
-    }
-  }
-
-  if (searchToggle) {
-    searchToggle.addEventListener('click', toggleFilter);
-  }
-
-  // Al cambiar el tamaño de pantalla, si volvemos a PC, se resetea el filtro visible
-  window.addEventListener('resize', () => {
-    if (window.innerWidth >= 768) {
-      filterPanel.style.transform = 'translateY(0)';
-    } else if (!isFilterVisible) {
-      filterPanel.style.transform = 'translateY(-100%)';
-    }
-  });
-</script>
-
-<script>
-  const themeToggle = document.getElementById('theme-toggle');
-  const html = document.documentElement;
-  const icon = themeToggle.querySelector('i');
-
-  // Cargar preferencia guardada
-  if (localStorage.theme === 'dark') {
-    html.classList.add('dark');
-    icon.classList.replace('fa-moon', 'fa-sun');
-  }
-
-  // Alternar tema
-  themeToggle.addEventListener('click', () => {
-    html.classList.toggle('dark');
-    const isDark = html.classList.contains('dark');
-    icon.classList.toggle('fa-moon', !isDark);
-    icon.classList.toggle('fa-sun', isDark);
-    localStorage.theme = isDark ? 'dark' : 'light';
-  });
-</script>
-
-
 </html>

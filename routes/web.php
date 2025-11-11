@@ -199,7 +199,7 @@ Route::middleware(['auth', 'agent'])->group(function () {
         // Rutas del calendario (feed JSON)
         Route::get('agent/visits/feed', [VisitController::class, 'feed'])->name('agent.visits.feed');
 
-       
+
         Route::patch('visits/{visit}/status', [VisitController::class, 'updateStatus'])->name('visits.status');
     });
     Route::get('/agent/analytics', [\App\Http\Controllers\AgentAnalyticsController::class, 'index'])
@@ -220,6 +220,8 @@ Route::middleware(['auth', 'verified', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+
+    Route::get('/', function () {return view('admin.index');})->name('index');
 
     Route::get('/properties', [AdminPropertyController::class, 'index'])->name('properties.index');
     Route::delete('/properties/{property}', [AdminPropertyController::class, 'destroy'])->name('properties.destroy');

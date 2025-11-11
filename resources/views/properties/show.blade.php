@@ -10,6 +10,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <style>
     /* ===== Modal y mapa ===== */
@@ -86,42 +87,8 @@
 </head>
 
 <body class="bg-gray-50 text-gray-800">
-<header class="sticky top-0 bg-white shadow-sm z-50">
-  <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-    <div class="text-2xl font-bold text-blue-600 flex items-center">
-      <i class="fas fa-home mr-2"></i>
-      <span>Sin beca<span class="text-gray-700"> no hay renta </span></span>
-    </div>
 
-    <div class="flex items-center gap-4">
-      <button id="search-toggle" class="block md:hidden text-gray-700 text-xl"><i class="fas fa-search"></i></button>
-      <button id="menu-toggle" class="md:hidden text-gray-700 text-2xl"><i class="fas fa-bars"></i></button>
-    </div>
-
-    <nav id="main-nav"
-         class="hidden md:flex flex-col md:flex-row fixed md:static top-0 right-0 h-full md:h-auto w-3/4 md:w-auto bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 space-y-4 md:space-y-0 md:space-x-6 text-gray-700 font-medium">
-      <button id="close-menu" class="md:hidden text-gray-500 text-2xl self-end mb-4"><i class="fas fa-times"></i></button>
-
-      <a href="{{ route('visits.my') }}" class="block px-4 py-2 rounded-full hover:bg-blue-50 hover:text-blue-600">Mi agenda</a>
-      @auth
-        <a href="{{ route('favorites.index') }}" class="block px-4 py-2 rounded-full hover:bg-blue-50 hover:text-blue-600">Favoritos</a>
-      @endauth
-      <a href="{{ route('properties.map') }}" class="block px-4 py-2 rounded-full hover:bg-blue-50 hover:text-blue-600">Mapa</a>
-
-      @auth
-        @if(auth()->user()->role === 'agent')
-          <a href="{{ route('agent.home') }}" class="block px-4 py-2 rounded-full hover:bg-blue-50 hover:text-blue-600">Panel de Agente</a>
-        @else
-          <a href="{{ route('agent.view') }}" class="block px-4 py-2 rounded-full hover:bg-blue-50 hover:text-blue-600">Modo vendedor</a>
-        @endif
-        <a href="{{ url('/dashboard') }}" class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 text-center">Perfil</a>
-      @else
-        <a href="{{ route('agent.view') }}" class="block px-4 py-2 rounded-full hover:bg-blue-50 hover:text-blue-600">Modo vendedor</a>
-        <button type="button" onclick="openLoginModal()" class="block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 text-center">Iniciar sesión</button>
-      @endauth
-    </nav>
-  </div>
-</header>
+<x-main-header />
 
 <main class="max-w-4xl mx-auto mt-10 px-6">
   <div class="mb-4">
@@ -280,12 +247,12 @@
 
         @if($property->listing_type == 'sale')
   @auth
-    <a href="{{ route('chat.show', $property) }}" 
+    <a href="{{ route('chat.show', $property) }}"
        class="block w-full text-center border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
       Contactar con el agente
     </a>
   @else
-    <button type="button" onclick="openLoginModal()" 
+    <button type="button" onclick="openLoginModal()"
             class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
       Inicia sesión para contactar
     </button>
