@@ -79,10 +79,33 @@
     .fp-shell .flatpickr-day.disabled,
     .fp-shell .flatpickr-day.disabled:hover{color:#d9d9d9!important;background:none!important;border-color:transparent!important;cursor:default;text-decoration:line-through}
 
+/* ==== Fechas no disponibles (forzado, siempre gris) ==== */
+.fp-shell .flatpickr-day.flatpickr-disabled,
+.fp-shell .flatpickr-day.flatpickr-disabled:hover,
+.fp-shell .flatpickr-day.disabled,
+.fp-shell .flatpickr-day.disabled:hover {
+  background-color: #f3f4f6 !important; /* gris claro */
+  color: #9ca3af !important;            /* texto gris medio */
+  border-color: transparent !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  text-decoration: none !important;
+}
+
+/* Dentro de rangos deshabilitados */
+.fp-shell .flatpickr-day.flatpickr-disabled.inRange,
+.fp-shell .flatpickr-day.disabled.inRange {
+  background-color: #e5e7eb !important; /* gris un poco más oscuro */
+  color: #9ca3af !important;
+}
+
+    
     /* línea divisoria sutil entre meses en desktop */
     @media (min-width:640px){
       .fp-shell .flatpickr-days .dayContainer:nth-child(1){border-right:1px solid #e5e7eb}
     }
+
+    
   </style>
 </head>
 
@@ -155,7 +178,7 @@
         </div>
       @empty
         <p class="text-gray-500">No se especificaron amenidades.</p>
-      @endforelse>
+      @endforelse
 
       {{-- Reseñas --}}
       @if($property->listing_type === 'rent')
