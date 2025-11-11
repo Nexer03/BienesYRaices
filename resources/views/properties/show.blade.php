@@ -99,13 +99,13 @@
   color: #9ca3af !important;
 }
 
-    
+
     /* línea divisoria sutil entre meses en desktop */
     @media (min-width:640px){
       .fp-shell .flatpickr-days .dayContainer:nth-child(1){border-right:1px solid #e5e7eb}
     }
 
-    
+
   </style>
 </head>
 
@@ -120,40 +120,99 @@
   </div>
 
   <div class="mb-6">
-    @if ($property->images->count() > 0)
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 rounded-lg overflow-hidden" style="max-height:500px;">
-        <a href="{{ asset('storage/' . $property->images->first()->image_path) }}" data-lightbox="property-gallery" data-title="{{ $property->title }}" class="col-span-2 row-span-2 relative group">
-          <img src="{{ asset('storage/' . $property->images->first()->image_path) }}" alt="Imagen principal de {{ $property->title }}" class="w-full h-full object-cover hover:opacity-90 transition">
-          <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
+  @php
+    $imgs    = $property->images;
+    $total   = $imgs->count();
+    $hero    = $imgs->first();
+    $tiles4  = $imgs->slice(1)->take(4)->values();      // hasta 4 secundarias visibles
+    while ($tiles4->count() < 4) { $tiles4->push(null); } // placeholders para tamaño consistente
+    $visible = 1 + $imgs->slice(1)->take(4)->count();   // hero + cuántas reales en tiles
+    $rest    = $imgs->slice($visible);                  // SOLO el resto -> anchors ocultos
+  @endphp
+
+  @if ($total > 0)
+    {{-- Contenedor relativo para posicionar el CTA encima del grid --}}
+    <div class="relative">
+      <div class="grid grid-cols-4 gap-2 rounded-2xl overflow-hidden">
+        {{-- HERO 2x2 --}}
+        <a id="open-gallery-anchor"
+           href="{{ asset('storage/'.$hero->image_path) }}"
+           data-lightbox="property-gallery"
+           data-title="{{ $property->title }}"
+           class="col-span-4 md:col-span-2 md:row-span-2 relative group">
+          <div class="w-full h-full aspect-[4/3]">
+            <img src="{{ asset('storage/'.$hero->image_path) }}"
+                 alt="Imagen principal de {{ $property->title }}"
+                 class="w-full h-full object-cover block">
+          </div>
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
         </a>
 
-        @foreach ($property->images->slice(1)->take(3) as $image)
-          <a href="{{ asset('storage/' . $image->image_path) }}" data-lightbox="property-gallery" data-title="{{ $property->title }}" class="relative group">
-            <img src="{{ asset('storage/' . $image->image_path) }}" alt="Imagen de {{ $property->title }}" class="w-full h-full object-cover hover:opacity-90 transition">
-            <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
-          </a>
+        {{-- 4 tiles derecha (con placeholders si faltan) --}}
+        @foreach ($tiles4 as $img)
+          @if ($img)
+            <a href="{{ asset('storage/'.$img->image_path) }}"
+               data-lightbox="property-gallery"
+               data-title="{{ $property->title }}"
+               class="relative hidden md:block">
+              <div class="w-full h-full aspect-[4/3]">
+                <img src="{{ asset('storage/'.$img->image_path) }}"
+                     alt="Imagen de {{ $property->title }}"
+                     class="w-full h-full object-cover block">
+              </div>
+              <div class="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors"></div>
+            </a>
+          @else
+            <div class="relative hidden md:block">
+              <div class="w-full h-full aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                <i class="fa-regular fa-image text-2xl text-gray-400"></i>
+              </div>
+            </div>
+          @endif
         @endforeach
-
-        @if ($property->images->count() >= 5)
-          @php $fifthImage = $property->images->slice(4)->first(); @endphp
-          <div class="relative group cursor-pointer" onclick="document.querySelector('[data-lightbox=\'property-gallery\']').click();">
-            <img src="{{ asset('storage/' . $fifthImage->image_path) }}" alt="Ver más imágenes de {{ $property->title }}" class="w-full h-full object-cover filter grayscale hover:filter-none transition-all duration-300">
-            <div class="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-semibold">+ {{ $property->images->count() - 4 }} fotos</div>
-          </div>
-        @endif
-
-        @if ($property->images->count() > 5)
-          @foreach ($property->images->slice(5) as $image)
-            <a href="{{ asset('storage/' . $image->image_path) }}" data-lightbox="property-gallery" data-title="{{ $property->title }}" class="hidden"></a>
-          @endforeach
-        @endif
       </div>
-    @else
-      <div class="col-span-full bg-gray-200 h-64 flex items-center justify-center rounded-lg">
-        <p class="text-gray-500">No hay imágenes disponibles.</p>
-      </div>
-    @endif
-  </div>
+
+      {{-- CTA ESCRITORIO: siempre visible en esquina inferior derecha del grid --}}
+      <button type="button"
+              onclick="document.getElementById('open-gallery-anchor')?.click()"
+              class="hidden md:inline-flex items-center gap-2 text-sm font-semibold bg-white/90 backdrop-blur px-3 py-2 rounded-full shadow absolute bottom-3 right-3">
+        <i class="fa-solid fa-grip"></i>
+        @if ($total > 5)
+          Mostrar todas las fotos (+{{ $total - 5 }})
+        @else
+          Ver galería
+        @endif
+      </button>
+    </div>
+
+    {{-- CTA MÓVIL: bajo el grid, ocupa el ancho --}}
+    <button type="button"
+            onclick="document.getElementById('open-gallery-anchor')?.click()"
+            class="mt-3 w-full md:hidden inline-flex items-center justify-center gap-2 text-sm font-semibold bg-white border px-4 py-2 rounded-lg">
+      <i class="fa-solid fa-grip"></i>
+      @if ($total > 5)
+        Mostrar todas las fotos (+{{ $total - 5 }})
+      @else
+        Ver galería
+      @endif
+    </button>
+
+    {{-- ANCLAS OCULTAS: SOLO las que NO se mostraron arriba (evita duplicados) --}}
+    @foreach ($rest as $img)
+      <a href="{{ asset('storage/'.$img->image_path) }}"
+         data-lightbox="property-gallery"
+         data-title="{{ $property->title }}"
+         class="hidden"></a>
+    @endforeach
+
+  @else
+    <div class="col-span-full bg-gray-200 h-64 flex items-center justify-center rounded-lg">
+      <p class="text-gray-500">No hay imágenes disponibles.</p>
+    </div>
+  @endif
+</div>
+
+
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
     <div class="md:col-span-2">
