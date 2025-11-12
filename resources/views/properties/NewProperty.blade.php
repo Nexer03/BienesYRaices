@@ -292,50 +292,8 @@
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-gray-900 text-gray-300 mt-12">
-    <div class="max-w-7xl mx-auto px-6 py-10 grid md:grid-cols-4 gap-8">
-      <div class="md:col-span-2">
-        <div class="flex items-center gap-2 text-white font-bold text-xl mb-3">
-          <i class="fa-solid fa-house"></i><span>SIN BECA NO HAY RENTA</span>
-        </div>
-        <p class="text-gray-400">Conectamos propiedades con sus futuros dueños de manera eficiente y profesional.</p>
-        <div class="flex gap-4 mt-4 text-xl">
-          <a href="#" class="hover:text-white"><i class="fa-brands fa-facebook"></i></a>
-          <a href="#" class="hover:text-white"><i class="fa-brands fa-x-twitter"></i></a>
-          <a href="#" class="hover:text-white"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#" class="hover:text-white"><i class="fa-brands fa-linkedin"></i></a>
-        </div>
-      </div>
-      <div>
-        <h4 class="font-semibold text-white mb-3">Navegación</h4>
-        <ul class="space-y-2">
-          <li><a href="{{ route('visits.my') }}" class="hover:text-white">Mis Visitas</a></li>
-          <li><a href="{{ route('properties.map') }}" class="hover:text-white">Mapa</a></li>
-          <li><a href="{{ route('agent.home') }}" class="hover:text-white">Panel de Agente</a></li>
-          <li><a href="{{ route('agent.view') }}" class="hover:text-white">Modo Vendedor</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-semibold text-white mb-3">Contacto</h4>
-        <ul class="space-y-2">
-          <li class="flex items-center gap-2"><i class="fa-solid fa-envelope"></i> soporte@sinbeca.com</li>
-          <li class="flex items-center gap-2"><i class="fa-solid fa-phone"></i> +1 (555) 123-4567</li>
-          <li class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> Ciudad, País</li>
-        </ul>
-      </div>
-    </div>
-    <div class="border-t border-gray-800">
-      <div class="max-w-7xl mx-auto px-6 py-4 text-sm flex flex-col md:flex-row items-center justify-between">
-        <p>© {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.</p>
-        <div class="flex gap-6 mt-2 md:mt-0">
-          <a href="#" class="hover:text-white">Privacidad</a>
-          <a href="#" class="hover:text-white">Términos</a>
-          <a href="#" class="hover:text-white">Cookies</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+    <!-- FOOTER -->
+  <x-main-footer />
 
   <!-- ============== MODAL GENÉRICO ============== -->
   <div id="app-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">

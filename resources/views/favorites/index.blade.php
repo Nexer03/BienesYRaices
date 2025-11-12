@@ -1,218 +1,221 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Mis Favoritos</title>
 
-@section('title','Mis favoritos')
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
 
-@section('content')
-<div class="container py-4">
+<body class="min-h-screen flex flex-col bg-gray-50 text-gray-800">
+  {{-- HEADER --}}
+  <x-main-header />
 
-  {{-- Header + Pills de filtro --}}
-  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-    <div>
-      <h3 class="mb-1">Mis propiedades favoritas</h3>
-      <div class="text-muted">Guarda y organiza tus propiedades de interés</div>
+  <main class="flex-1 max-w-7xl mx-auto px-6 py-12">
+    {{-- Encabezado --}}
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Mis propiedades favoritas</h1>
+        <p class="text-gray-500 text-sm">Guarda y organiza tus propiedades de interés</p>
+      </div>
+
+      {{-- Filtros de tipo --}}
+      <div class="inline-flex bg-white border border-gray-200 rounded-full overflow-hidden shadow-sm">
+        <a href="{{ route('favorites.index') }}"
+           class="px-5 py-2 text-sm font-semibold transition
+           {{ $type === null ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-50' }}">
+           Todos
+        </a>
+        <a href="{{ route('favorites.index', ['type'=>'sale']) }}"
+           class="px-5 py-2 text-sm font-semibold transition
+           {{ $type === 'sale' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-50' }}">
+           Venta
+        </a>
+        <a href="{{ route('favorites.index', ['type'=>'rent']) }}"
+           class="px-5 py-2 text-sm font-semibold transition
+           {{ $type === 'rent' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-50' }}">
+           Renta
+        </a>
+      </div>
     </div>
 
-    <ul class="nav nav-pills bg-light p-1 rounded-3 border">
-      <li class="nav-item">
-        <a class="nav-link {{ $type === null ? 'active' : '' }}"
-           href="{{ route('favorites.index') }}">
-          Todos
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ $type === 'sale' ? 'active' : '' }}"
-           href="{{ route('favorites.index', ['type'=>'sale']) }}">
-          Venta
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ $type === 'rent' ? 'active' : '' }}"
-           href="{{ route('favorites.index', ['type'=>'rent']) }}">
-          Renta
-        </a>
-      </li>
-    </ul>
-  </div>
+    {{-- Mensajes flash --}}
+    @if (session('success'))
+      <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg mb-6 border border-green-300">
+        {{ session('success') }}
+      </div>
+    @endif
 
-  {{-- Mensajes flash --}}
-  @if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-  @endif
+    {{-- Estado vacío --}}
+    @if($props->isEmpty())
+      <div class="text-center bg-white border border-gray-200 rounded-2xl py-16 shadow-sm">
+        <div class="text-5xl text-blue-400 mb-3">☆</div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-1">Aún no tienes favoritos</h2>
+        <p class="text-gray-500 text-sm">Explora propiedades y agrégalas para verlas aquí.</p>
+      </div>
+    @else
+      {{-- Grid de propiedades --}}
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        @foreach($props as $p)
+          @php
+            $img = $p->images->first()->image_path ?? null;
+            $isRent = $p->listing_type === 'rent';
+          @endphp
 
-  {{-- Empty state --}}
-  @if($props->isEmpty())
-    <div class="text-center py-5 my-4 bg-light rounded-4 border">
-      <div class="display-6 mb-2">☆</div>
-      <h5 class="mb-1">Aún no tienes favoritos</h5>
-      <p class="text-muted mb-0">Explora propiedades y agrégalas para verlas aquí.</p>
-    </div>
-  @else
-
-    <div class="row g-4">
-      @foreach($props as $p)
-        @php
-          $img = $p->images->first()->image_path ?? null;
-          $isRent = $p->listing_type === 'rent';
-        @endphp
-
-        <div class="col-12 col-sm-6 col-lg-4" id="fav-card-{{ $p->id }}" data-fav-card>
-          <div class="card h-100 shadow-sm border-0 overflow-hidden position-relative">
-
-            {{-- Imagen / placeholder --}}
-            <div class="ratio ratio-16x9 bg-light">
+          <div id="fav-card-{{ $p->id }}" data-fav-card class="group relative bg-white rounded-2xl overflow-hidden shadow hover:shadow-lg transition">
+            {{-- Imagen --}}
+            <div class="relative h-48 bg-gray-100">
               @if($img)
-                <img src="{{ asset('storage/'.$img) }}" class="object-fit-cover w-100 h-100" alt="Imagen de {{ $p->title }}">
+                <img src="{{ asset('storage/'.$img) }}" alt="{{ $p->title }}"
+                     class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300">
               @else
-                <div class="d-flex align-items-center justify-content-center text-muted">Sin imagen</div>
+                <div class="flex items-center justify-center h-full text-gray-400 text-sm">Sin imagen</div>
               @endif
+
+              {{-- Badge tipo --}}
+              <span class="absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-full
+                {{ $isRent ? 'bg-blue-600/90 text-white' : 'bg-green-600/90 text-white' }}">
+                {{ $isRent ? 'Renta' : 'Venta' }}
+              </span>
+
+              {{-- Botón eliminar --}}
+              <form method="POST" action="{{ route('favorites.destroy', $p) }}"
+                    class="absolute top-3 right-3 fav-remove-form" data-prop-id="{{ $p->id }}">
+                @csrf
+                @method('DELETE')
+                <button type="button" class="bg-white/90 hover:bg-red-500 hover:text-white transition
+                  rounded-full p-2 shadow-sm" title="Quitar de favoritos">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
             </div>
 
-            {{-- Badge tipo (renta/venta) --}}
-            <span class="position-absolute top-0 start-0 m-2 badge {{ $isRent ? 'bg-indigo' : 'bg-success' }} rounded-pill"
-                  style="--bs-bg-opacity: .9;">
-              {{ $isRent ? 'Renta' : 'Venta' }}
-            </span>
-
-            {{-- Botón quitar (abre modal) --}}
-            <form method="POST"
-                action="{{ route('favorites.destroy', $p) }}"
-                class="position-absolute top-0 end-0 m-2 fav-remove-form"
-                data-prop-id="{{ $p->id }}">
-            @csrf
-            @method('DELETE')
-            <button type="button"
-                    class="btn btn-light btn-sm border rounded-circle fav-remove-btn"
-                    title="Quitar de favoritos">
-                <i class="fa-solid fa-trash-can"></i>
-            </button>
-            </form>
-
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title mb-1 text-truncate" title="{{ $p->title }}">{{ $p->title }}</h5>
+            {{-- Info --}}
+            <div class="p-5 flex flex-col h-52">
+              <h3 class="text-lg font-semibold text-gray-800 truncate" title="{{ $p->title }}">
+                {{ $p->title }}
+              </h3>
               @if($p->location)
-                <div class="text-muted small mb-2 text-truncate" title="{{ $p->location }}">
-                  <i class="fa-solid fa-location-dot me-1"></i> {{ $p->location }}
-                </div>
+                <p class="text-gray-500 text-sm mb-2 truncate" title="{{ $p->location }}">
+                  <i class="fa-solid fa-location-dot mr-1"></i> {{ $p->location }}
+                </p>
               @endif
 
-              <div class="d-flex align-items-baseline gap-2 mb-3">
-                <div class="fs-5 fw-bold">
-                  ${{ number_format($p->price,0) }}
-                </div>
+              <div class="flex items-baseline gap-1 mb-3">
+                <span class="text-xl font-bold text-gray-900">${{ number_format($p->price,0) }}</span>
                 @if($isRent)
-                  <div class="text-muted">/día</div>
+                  <span class="text-sm text-gray-500">/día</span>
                 @endif
               </div>
 
-              {{-- Meta rápida (si tienes) --}}
-              <div class="d-flex flex-wrap gap-2 mb-3">
-                @if(!is_null($p->bedrooms))
-                  <span class="badge text-bg-light"><i class="fa-solid fa-bed me-1"></i> {{ $p->bedrooms }}</span>
+              <div class="flex flex-wrap gap-2 mb-4">
+                @if($p->bedrooms)
+                  <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs"><i class="fa-solid fa-bed mr-1"></i>{{ $p->bedrooms }}</span>
                 @endif
-                @if(!is_null($p->bathrooms))
-                  <span class="badge text-bg-light"><i class="fa-solid fa-bath me-1"></i> {{ $p->bathrooms }}</span>
+                @if($p->bathrooms)
+                  <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs"><i class="fa-solid fa-bath mr-1"></i>{{ $p->bathrooms }}</span>
                 @endif
-                @if(!empty($p->city))
-                  <span class="badge text-bg-light"><i class="fa-solid fa-city me-1"></i> {{ $p->city }}</span>
+                @if($p->city)
+                  <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs"><i class="fa-solid fa-city mr-1"></i>{{ $p->city }}</span>
                 @endif
               </div>
 
-              <div class="mt-auto d-flex gap-2">
-                <a href="{{ route('properties.show', $p) }}" class="btn btn-primary w-100">Ver</a>
+              <div class="mt-auto flex gap-2">
+                <a href="{{ route('properties.show', $p) }}"
+                   class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg w-full transition">
+                  Ver
+                </a>
 
                 @can('update', $p)
-                    <a href="{{ route('properties.edit', $p) }}" class="btn btn-outline-secondary" title="Editar">
+                  <a href="{{ route('properties.edit', $p) }}"
+                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm px-3 py-2 rounded-lg transition"
+                     title="Editar">
                     <i class="fa-solid fa-pen"></i>
-                    </a>
+                  </a>
                 @endcan
-                </div>
+              </div>
             </div>
           </div>
-        </div>
-      @endforeach
-    </div>
+        @endforeach
+      </div>
 
-    <div class="mt-4">
-      {{ $props->links() }}
-    </div>
-  @endif
-</div>
+      {{-- Paginación --}}
+      <div class="mt-10">
+        {{ $props->links() }}
+      </div>
+    @endif
+  </main>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  {{-- FOOTER --}}
+  <x-main-footer />
 
-  document.querySelectorAll('.fav-remove-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const form = e.currentTarget.closest('.fav-remove-form');
-      const url  = form.getAttribute('action');
-      const id   = form.dataset.propId;
-      const card = document.getElementById(`fav-card-${id}`);
+  {{-- SCRIPT SweetAlert --}}
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-      const res = await Swal.fire({
-        title: 'Quitar de favoritos',
-        text: 'Esta propiedad se eliminará de tu lista.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, quitar',
-        cancelButtonText: 'Cancelar',
-        reverseButtons: true,
-        buttonsStyling: false,
-        customClass: {
-          confirmButton: 'btn btn-danger me-2',
-          cancelButton: 'btn btn-secondary'
+    document.querySelectorAll('.fav-remove-form button').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        const form = e.currentTarget.closest('.fav-remove-form');
+        const url = form.action;
+        const id = form.dataset.propId;
+        const card = document.getElementById(`fav-card-${id}`);
+
+        const confirm = await Swal.fire({
+          title: 'Quitar de favoritos',
+          text: 'Esta propiedad se eliminará de tu lista.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, quitar',
+          cancelButtonText: 'Cancelar',
+          reverseButtons: true,
+          buttonsStyling: false,
+          customClass: {
+            confirmButton: 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mx-2',
+            cancelButton: 'bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg'
+          }
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': csrf,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json'
+            },
+            body: new URLSearchParams({ _method: 'DELETE' })
+          });
+
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          card.remove();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Eliminada',
+            text: 'Se quitó de tus favoritos.',
+            timer: 1400,
+            showConfirmButton: false
+          });
+
+          if (!document.querySelector('[data-fav-card]')) location.reload();
+        } catch {
+          Swal.fire({
+            icon: 'error',
+            title: 'Ups...',
+            text: 'No pudimos quitarla. Intenta de nuevo.'
+          });
         }
       });
-
-      if (!res.isConfirmed) return;
-
-      try {
-        const resp = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'X-CSRF-TOKEN': csrf,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-          },
-          body: new URLSearchParams({ _method: 'DELETE' })
-        });
-
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-
-        // quitar la card del grid
-        card?.remove();
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Eliminada',
-          text: 'Se quitó de tus favoritos.',
-          timer: 1400,
-          showConfirmButton: false
-        });
-
-        // si ya no quedan cards, muestra empty state
-        if (!document.querySelector('[data-fav-card]')) {
-          const grid = document.querySelector('.row.g-4');
-          if (grid) {
-            grid.innerHTML = `
-              <div class="text-center py-5 my-4 bg-light rounded-4 border w-100">
-                <div class="display-6 mb-2">☆</div>
-                <h5 class="mb-1">Aún no tienes favoritos</h5>
-                <p class="text-muted mb-0">Explora propiedades y agrégalas para verlas aquí.</p>
-              </div>`;
-          }
-        }
-      } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Ups',
-          text: 'No pudimos quitarla. Intenta de nuevo.'
-        });
-      }
     });
   });
-});
-</script>
-
-@endsection
+  </script>
+</body>
+</html>
