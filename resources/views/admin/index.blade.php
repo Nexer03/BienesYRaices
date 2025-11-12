@@ -139,60 +139,8 @@
       </div>
     </section>
   </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-8 mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div class="md:col-span-2">
-          <div class="flex items-center text-white font-bold text-xl mb-4">
-            <i class="fas fa-home mr-2"></i>
-            <span>SIN BECA NO HAY RENTA</span>
-          </div>
-          <p class="text-gray-300 mb-4">
-            Tu plataforma confiable para la gestión inmobiliaria. Conectamos propiedades
-            con sus futuros dueños de manera eficiente y profesional.
-          </p>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200"><i class="fab fa-linkedin-in"></i></a>
-          </div>
-        </div>
-
-        <div>
-          <h3 class="font-semibold text-lg mb-4">Enlaces rápidos</h3>
-          <ul class="space-y-2">
-            <li><a href="{{ route('admin.properties.index') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Propiedades</a></li>
-            <li><a href="{{ route('admin.users.index') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Usuarios</a></li>
-            <li><a href="{{ route('admin.agent-applications.index') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Solicitudes</a></li>
-            <li><a href="{{ route('admin.reports.sales') }}" class="text-gray-300 hover:text-white transition-colors duration-200">Reportes</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 class="font-semibold text-lg mb-4">Contacto</h3>
-          <ul class="space-y-2 text-gray-300">
-            <li class="flex items-center"><i class="fas fa-envelope mr-2"></i> soporte@sinbeca.com</li>
-            <li class="flex items-center"><i class="fas fa-phone mr-2"></i> +1 (555) 123-4567</li>
-            <li class="flex items-center"><i class="fas fa-map-marker-alt mr-2"></i> Ciudad, País</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="border-t border-gray-700 mt-8 pt-6">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-          <p class="text-gray-300 text-sm">&copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.</p>
-          <div class="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Privacidad</a>
-            <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Términos</a>
-            <a href="#" class="text-gray-300 hover:text-white text-sm transition-colors duration-200">Cookies</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </footer>
+  <!-- FOOTER -->
+  <x-main-footer />
 
   <!-- JS: dropdown Perfil -->
   <script>

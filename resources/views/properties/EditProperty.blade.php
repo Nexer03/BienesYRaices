@@ -1,181 +1,270 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Editar Propiedad</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <style>
-        #map { height: 400px; width: 100%; margin-bottom: 20px; }
-        /* mini estética para thumbnails */
-        .thumb { object-fit: cover; width: 150px; height: 150px; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Editar Propiedad</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    #map { height: 380px; width: 100%; border-radius: .75rem; }
+  </style>
 </head>
-<body class="container mt-5">
 
-<h1>Editar Propiedad: {{ $property->title }}</h1>
+<body class="min-h-screen bg-gradient-to-b from-gray-50 via-gray-100 to-gray-200 text-gray-800 flex flex-col">
+  <x-main-header />
 
-@if(session('success'))
-  <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-@if($errors->any())
-  <div class="alert alert-danger">
-    <ul class="mb-0">
-      @foreach($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-    </ul>
-  </div>
-@endif
+  <main class="flex-1 max-w-6xl mx-auto px-6 py-10">
+    <form id="property-edit-form"
+          action="{{ route('properties.update', $property) }}"
+          method="POST" enctype="multipart/form-data"
+          x-data="wizard()">
+      @csrf
+      @method('PUT')
 
-<form id="property-edit-form"
-      action="{{ route('properties.update', $property) }}"
-      method="POST"
-      enctype="multipart/form-data">
-  @csrf
-  @method('PUT')
+      <header class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800">Editar Propiedad</h1>
+        <p class="text-gray-500">Actualiza información, ubicación, imágenes y amenidades en dos pasos.</p>
+      </header>
 
-  {{-- Título --}}
-  <div class="mb-3">
-    <label for="title" class="form-label">Título</label>
-    <input type="text" class="form-control" id="title" name="title"
-           value="{{ old('title', $property->title) }}" required>
-  </div>
-
-  {{-- Descripción --}}
-  <div class="mb-3">
-    <label for="description" class="form-label">Descripción</label>
-    <textarea class="form-control" id="description" name="description" rows="3">{{ old('description', $property->description) }}</textarea>
-  </div>
-
-  {{-- Tipo (si tu BD realmente tiene esta columna "type") --}}
-  <div class="mb-3">
-    <label for="type" class="form-label">Tipo</label>
-    <select class="form-select" id="type" name="type" required>
-      <option value="house"      @selected(old('type', $property->type) == 'house')>Casa</option>
-      <option value="apartment"  @selected(old('type', $property->type) == 'apartment')>Departamento</option>
-      <option value="land"       @selected(old('type', $property->type) == 'land')>Terreno</option>
-      <option value="office"     @selected(old('type', $property->type) == 'office')>Oficina</option>
-    </select>
-  </div>
-
-  {{-- Habitaciones y Baños --}}
-  <div class="row mb-3">
-    <div class="col-md-6">
-      <label for="bedrooms" class="form-label">Habitaciones</label>
-      <input type="number" min="0" class="form-control" id="bedrooms" name="bedrooms"
-             value="{{ old('bedrooms', $property->bedrooms) }}">
-    </div>
-    <div class="col-md-6">
-      <label for="bathrooms" class="form-label">Baños</label>
-      <input type="number" min="0" class="form-control" id="bathrooms" name="bathrooms"
-             value="{{ old('bathrooms', $property->bathrooms) }}">
-    </div>
-  </div>
-
-  {{-- Propósito (Renta/Venta) --}}
-  <div class="mb-3">
-    <label class="form-label">Propósito</label>
-    <div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="listing_type" id="rent" value="rent"
-               @checked(old('listing_type', $property->listing_type) == 'rent')>
-        <label class="form-check-label" for="rent">Renta</label>
+      {{-- STEPPER --}}
+      <div class="flex items-center justify-center mb-8 space-x-8 select-none">
+        <div class="flex flex-col items-center">
+          <div :class="step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
+               class="w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all">1</div>
+          <span class="text-sm mt-2 font-medium text-gray-600">Información</span>
+        </div>
+        <div class="w-24 h-1 bg-gray-300 rounded-full">
+          <div class="h-1 bg-blue-600 rounded-full transition-all duration-500" :style="{ width: step === 2 ? '100%' : '50%' }"></div>
+        </div>
+        <div class="flex flex-col items-center">
+          <div :class="step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
+               class="w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all">2</div>
+          <span class="text-sm mt-2 font-medium text-gray-600">Amenidades</span>
+        </div>
       </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="listing_type" id="sale" value="sale"
-               @checked(old('listing_type', $property->listing_type) == 'sale')>
-        <label class="form-check-label" for="sale">Venta</label>
-      </div>
-    </div>
-  </div>
 
-  {{-- Precio --}}
-  <div class="mb-3">
-    <label for="price" class="form-label" id="price-label">Precio</label>
-    <input type="number" class="form-control" id="price" name="price"
-           value="{{ old('price', $property->price) }}" step="100.00" required max="99999999.99">
-  </div>
+      <div class="relative overflow-hidden">
+        {{-- PASO 1: Info, Comercial, Ubicación, Imágenes --}}
+        <section x-show="step === 1"
+                 x-transition:enter="transition transform duration-500"
+                 x-transition:enter-start="translate-x-full opacity-0"
+                 x-transition:enter-end="translate-x-0 opacity-100"
+                 x-transition:leave="transition transform duration-500"
+                 x-transition:leave-start="translate-x-0 opacity-100"
+                 x-transition:leave-end="-translate-x-full opacity-0"
+                 class="bg-white/80 backdrop-blur-md border border-gray-100 rounded-2xl shadow-lg p-6 md:p-8 space-y-10">
 
-  {{-- Ubicación y Mapa --}}
-  <div class="mb-3">
-    <label for="address-input" class="form-label">Dirección</label>
-    <input type="text" class="form-control" id="address-input" name="location"
-           value="{{ old('location', $property->location) }}" placeholder="Escribe la dirección" required>
-    <label for="city" class="form-label mt-2">Ciudad</label>
-    <input type="text" name="city" id="city" value="{{ old('city', $property->city) }}" class="form-control" readonly>
-  </div>
+          {{-- Información básica --}}
+          <div>
+            <h2 class="text-xl font-semibold mb-5">Información básica</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Título</label>
+                <input type="text" name="title" value="{{ old('title', $property->title) }}"
+                  class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+              </div>
 
-  <div id="map"></div>
-  <input type="hidden" name="latitude"  id="latitude"  value="{{ old('latitude', $property->latitude) }}">
-  <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', $property->longitude) }}">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                <textarea name="description" rows="4"
+                  class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('description', $property->description) }}</textarea>
+              </div>
 
-  {{-- Imágenes actuales --}}
-  <div class="mb-3">
-    <label class="form-label">Imágenes actuales</label>
-    <div id="existing-images-container" class="row g-3">
-      @forelse($property->images as $image)
-        <div class="col-auto" id="image-{{ $image->id }}">
-          <div class="position-relative">
-            <img src="{{ asset('storage/' . $image->image_path) }}" class="img-thumbnail thumb" alt="Imagen">
-            <button type="button"
-                    class="btn btn-danger btn-sm position-absolute top-0 end-0 delete-image-btn"
-                    data-image-id="{{ $image->id }}"
-                    data-delete-url="{{ route('properties.images.destroy', $image) }}">
-              &times;
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                <select name="type"
+                  class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="house"     @selected(old('type', $property->type) == 'house')>Casa</option>
+                  <option value="apartment" @selected(old('type', $property->type) == 'apartment')>Departamento</option>
+                  <option value="land"      @selected(old('type', $property->type) == 'land')>Terreno</option>
+                  <option value="office"    @selected(old('type', $property->type) == 'office')>Oficina</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Habitaciones</label>
+                  <input type="number" name="bedrooms" min="0" value="{{ old('bedrooms', $property->bedrooms) }}"
+                    class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Baños</label>
+                  <input type="number" name="bathrooms" min="0" value="{{ old('bathrooms', $property->bathrooms) }}"
+                    class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Comercial --}}
+          <div>
+            <h2 class="text-xl font-semibold mb-5">Comercial</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+              <div class="md:col-span-2">
+                <span class="block text-sm font-medium text-gray-700 mb-2">Propósito</span>
+                <div class="flex items-center gap-6">
+                  <label class="flex items-center gap-2">
+                    <input type="radio" name="listing_type" value="rent"
+                           @checked(old('listing_type', $property->listing_type) == 'rent')
+                           class="text-blue-600"> Renta
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input type="radio" name="listing_type" value="sale"
+                           @checked(old('listing_type', $property->listing_type) == 'sale')
+                           class="text-blue-600"> Venta
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label id="price-label" class="block text-sm font-medium text-gray-700">
+                  {{-- se ajusta por JS --}}
+                  Precio
+                </label>
+                <div class="relative mt-1">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input type="number" id="price" name="price" step="100.00" max="99999999.99"
+                         value="{{ old('price', $property->price) }}"
+                         class="pl-7 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Ubicación --}}
+          <div>
+            <h2 class="text-xl font-semibold mb-5">Ubicación</h2>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+            <input id="address-input" type="text" name="location" value="{{ old('location', $property->location) }}"
+                   class="w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+            <div class="grid md:grid-cols-3 gap-4 mt-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Ciudad</label>
+                <input id="city" name="city" value="{{ old('city', $property->city) }}"
+                       class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 bg-gray-50" readonly>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Latitud</label>
+                <input id="latitude" name="latitude" value="{{ old('latitude', $property->latitude) }}"
+                       class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 bg-gray-50" readonly>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Longitud</label>
+                <input id="longitude" name="longitude" value="{{ old('longitude', $property->longitude) }}"
+                       class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 bg-gray-50" readonly>
+              </div>
+            </div>
+
+            <div class="mt-4 border border-gray-200 rounded-xl bg-gray-50 p-2">
+              <div id="map" class="bg-gray-100 rounded-lg"></div>
+            </div>
+          </div>
+
+          {{-- Imágenes --}}
+          <div>
+            <h2 class="text-xl font-semibold mb-5">Imágenes</h2>
+
+            {{-- existentes --}}
+            <div id="existing-images-container" class="flex flex-wrap gap-4">
+              @forelse($property->images as $image)
+                <div class="relative" id="image-{{ $image->id }}">
+                  <img src="{{ asset('storage/' . $image->image_path) }}" class="w-36 h-36 object-cover rounded-lg border">
+                  <button type="button"
+                          class="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 grid place-items-center delete-image-btn shadow"
+                          title="Eliminar" data-image-id="{{ $image->id }}"
+                          data-delete-url="{{ route('properties.images.destroy', $image) }}">
+                    &times;
+                  </button>
+                </div>
+              @empty
+                <p id="no-images-message" class="text-gray-500">No hay imágenes actuales.</p>
+              @endforelse
+            </div>
+
+            {{-- nuevas --}}
+            <div class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Añadir más imágenes</label>
+              <label for="images" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-900">
+                <i class="fa-solid fa-image"></i> Seleccionar imágenes
+              </label>
+              <input type="file" id="images" name="images[]" multiple accept="image/*" class="hidden">
+              <div id="new-image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
+            </div>
+          </div>
+
+          {{-- Acciones paso 1 --}}
+          <div class="flex justify-end pt-6 border-t border-gray-100">
+            <button type="button" @click="next()"
+                    class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow">
+              Siguiente <i class="fa-solid fa-arrow-right ml-2"></i>
             </button>
           </div>
-        </div>
-      @empty
-        <p id="no-images-message" class="col-12">No hay imágenes actuales.</p>
-      @endforelse
-    </div>
-  </div>
+        </section>
 
-  {{-- Añadir más imágenes --}}
-  <div class="mb-3">
-    <label class="form-label">Añadir más imágenes</label>
-    <div>
-      <label for="images" class="btn btn-secondary">Seleccionar Imágenes</label>
-      <input type="file" id="images" name="images[]" multiple class="d-none" accept="image/*">
-    </div>
-    <div id="new-image-preview-container" class="mt-3 row g-3"></div>
-  </div>
+        {{-- PASO 2: Amenidades --}}
+        <section x-show="step === 2"
+                 x-transition:enter="transition transform duration-500"
+                 x-transition:enter-start="-translate-x-full opacity-0"
+                 x-transition:enter-end="translate-x-0 opacity-100"
+                 x-transition:leave="transition transform duration-500"
+                 x-transition:leave-start="translate-x-0 opacity-100"
+                 x-transition:leave-end="translate-x-full opacity-0"
+                 class="bg-white/80 backdrop-blur-md border border-gray-100 rounded-2xl shadow-lg p-6 md:p-8">
 
-  {{-- Amenidades --}}
-  <div class="mb-3">
-    <h3>Amenidades</h3>
-    @php $propertyAmenities = $property->amenities->pluck('id')->toArray(); @endphp
-    @foreach($amenityCategories as $category)
-      @php
-        $saleCategories = ['Cocina y Electrodomésticos', 'Exterior y Lote', 'Características Interiores', 'Servicios y Seguridad'];
-        $type = in_array($category->name, $saleCategories) ? 'sale' : 'rent';
-      @endphp
-      <div class="amenity-category mt-3" data-type="{{ $type }}">
-        <h5>{{ $category->name }}</h5>
-        <div class="row mb-2">
-          @foreach($category->amenities as $amenity)
-            <div class="col-md-4">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="amenities[]" value="{{ $amenity->id }}"
-                       id="amenity-{{ $amenity->id }}"
-                       @checked(in_array($amenity->id, $propertyAmenities))>
-                <label class="form-check-label" for="amenity-{{ $amenity->id }}">{{ $amenity->name }}</label>
+          <h2 class="text-xl font-semibold mb-5">Amenidades</h2>
+          @php $propertyAmenities = $property->amenities->pluck('id')->toArray(); @endphp
+          @foreach($amenityCategories as $category)
+            @php
+              $saleCategories = ['Cocina y Electrodomésticos','Exterior y Lote','Características Interiores','Servicios y Seguridad'];
+              $type = in_array($category->name, $saleCategories) ? 'sale' : 'rent';
+            @endphp
+            <div class="mb-6 amenity-category" data-type="{{ $type }}">
+              <h4 class="font-semibold mb-3 text-gray-800">{{ $category->name }}</h4>
+              <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                @foreach($category->amenities as $amenity)
+                  <label class="inline-flex items-center gap-2">
+                    <input class="text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                           type="checkbox" name="amenities[]" value="{{ $amenity->id }}"
+                           @checked(in_array($amenity->id, $propertyAmenities))>
+                    <span class="text-gray-700">{{ $amenity->name }}</span>
+                  </label>
+                @endforeach
               </div>
             </div>
           @endforeach
-        </div>
+
+          <div class="flex justify-between pt-6 border-t border-gray-100">
+            <button type="button" @click="back()"
+                    class="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 shadow">
+              <i class="fa-solid fa-arrow-left mr-2"></i> Volver
+            </button>
+            <button type="submit"
+                    class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow">
+              Guardar cambios
+            </button>
+          </div>
+        </section>
       </div>
-    @endforeach
-  </div>
+    </form>
+  </main>
 
-  <div class="d-flex gap-2 mb-3">
-    <button type="submit" class="btn btn-primary">Guardar cambios</button>
-    <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">Cancelar</a>
-  </div>
-</form>
+  <x-main-footer />
 
-{{-- =================== SCRIPTS =================== --}}
-<script>
-  // PREVIEW de imágenes nuevas
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+  /* ---------- Alpine helper ---------- */
+  function wizard() {
+    return {
+      step: 1,
+      next(){ if(this.step < 2) this.step++ },
+      back(){ if(this.step > 1) this.step-- }
+    }
+  }
+
+  /* ---------- Previews nuevas imágenes ---------- */
   const newImageInput    = document.getElementById('images');
   const previewContainer = document.getElementById('new-image-preview-container');
   const fileStore        = new DataTransfer();
@@ -187,19 +276,18 @@
       renderNewImagePreviews();
     });
   }
-
   function renderNewImagePreviews() {
     previewContainer.innerHTML = '';
     Array.from(fileStore.files).forEach((file, idx) => {
       const reader = new FileReader();
       reader.onload = () => {
         const wrap = document.createElement('div');
-        wrap.className = 'col-auto';
+        wrap.className = 'relative';
         wrap.innerHTML = `
-          <div class="position-relative">
-            <img src="${reader.result}" class="img-thumbnail thumb">
-            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" onclick="removeNewImage(${idx})">&times;</button>
-          </div>`;
+          <img src="${reader.result}" class="w-36 h-36 object-cover rounded-lg border">
+          <button type="button"
+            class="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 grid place-items-center shadow"
+            title="Quitar" onclick="removeNewImage(${idx})">&times;</button>`;
         previewContainer.appendChild(wrap);
       };
       reader.readAsDataURL(file);
@@ -213,22 +301,15 @@
     renderNewImagePreviews();
   }
 
-  // BORRADO AJAX con SweetAlert2 (delegación robusta)
+  /* ---------- Borrado AJAX imágenes existentes (SweetAlert2) ---------- */
   (function () {
     const imageContainer = document.getElementById('existing-images-container');
     if (!imageContainer) return;
 
     imageContainer.addEventListener('click', async (ev) => {
-      // Soporta clic en hijos dentro del botón
       const btn = ev.target.closest('.delete-image-btn');
       if (!btn || !imageContainer.contains(btn)) return;
       ev.preventDefault();
-
-      // Verifica que SweetAlert2 esté disponible
-      if (typeof Swal === 'undefined') {
-        console.error('SweetAlert2 no está cargado en esta vista.');
-        return;
-      }
 
       const imgId     = btn.dataset.imageId;
       const deleteUrl = btn.dataset.deleteUrl;
@@ -236,14 +317,10 @@
       const result = await Swal.fire({
         title: '¿Eliminar imagen?',
         text: 'Esta acción no se puede deshacer.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33', cancelButtonColor: '#6b7280',
       });
-
       if (!result.isConfirmed) return;
 
       try {
@@ -254,50 +331,28 @@
             'Accept': 'application/json'
           }
         });
-
-        // Si la respuesta no es JSON válido, evita fallo silencioso
         let data = {};
-        try { data = await res.json(); } catch (e) {}
+        try { data = await res.json(); } catch {}
+        if (!res.ok || !data.success) throw new Error((data && data.message) || 'No se pudo eliminar la imagen.');
 
-        if (!res.ok || !data.success) {
-          throw new Error((data && data.message) || 'No se pudo eliminar la imagen.');
-        }
-
-        // Quitar del DOM con una micro animación
         const card = document.getElementById(`image-${imgId}`);
-        if (card) {
-          card.style.transition = 'opacity .2s ease';
-          card.style.opacity = '0';
-          setTimeout(() => card.remove(), 200);
-        }
+        if (card) { card.style.opacity = '0'; setTimeout(() => card.remove(), 180); }
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Imagen eliminada',
-          showConfirmButton: false,
-          timer: 1200
-        });
-
+        Swal.fire({ icon: 'success', title: 'Imagen eliminada', timer: 1200, showConfirmButton: false });
       } catch (e) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: e.message || 'Error eliminando imagen.',
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: e.message || 'Error eliminando imagen.' });
       }
     });
   })();
 
-
-  // PREVENIR submit con Enter en Dirección y Precio
+  /* ---------- UX: bloquear Enter en Dirección/Precio ---------- */
   const addressInput = document.getElementById('address-input');
   const priceInput   = document.getElementById('price');
   if (addressInput) addressInput.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
   if (priceInput)   priceInput.addEventListener('keydown',   e => { if (e.key === 'Enter') e.preventDefault(); });
 
-  // Validación previa al submit (requiere coords y ciudad si hay dirección)
-  const form = document.getElementById('property-edit-form');
-  form.addEventListener('submit', (e) => {
+  /* ---------- Validación submit: requiere coords y ciudad si hay dirección ---------- */
+  document.getElementById('property-edit-form').addEventListener('submit', (e) => {
     const lat  = document.getElementById('latitude').value;
     const lng  = document.getElementById('longitude').value;
     const city = document.getElementById('city').value;
@@ -308,7 +363,16 @@
     }
   });
 
-  // Google Maps (Autocomplete + Drag)
+  /* ---------- Google Maps (Autocomplete + drag) ---------- */
+  // También actualiza etiqueta de precio según propósito
+  function updatePriceLabel() {
+    const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
+    document.getElementById('price-label').textContent =
+      selectedType === 'rent' ? 'Precio por día (MXN)' : 'Precio de venta (MXN)';
+  }
+  document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', updatePriceLabel));
+  updatePriceLabel();
+
   fetch('/maps-key')
     .then(res => res.json())
     .then(data => {
@@ -318,19 +382,19 @@
       document.head.appendChild(s);
     });
 
-  function initMap() {
+  window.initMap = function() {
+    const latInput = document.getElementById('latitude');
+    const lonInput = document.getElementById('longitude');
+    const cityInput= document.getElementById('city');
+
     const start = {
-      lat: parseFloat(document.getElementById('latitude').value)  || 20.749757,
-      lng: parseFloat(document.getElementById('longitude').value) || -105.258849
+      lat: parseFloat(latInput.value)  || 20.749757,
+      lng: parseFloat(lonInput.value) || -105.258849
     };
 
     const map = new google.maps.Map(document.getElementById("map"), { center: start, zoom: 16 });
     const marker = new google.maps.Marker({ map, draggable: true, position: start });
     const geocoder = new google.maps.Geocoder();
-
-    const latInput = document.getElementById('latitude');
-    const lonInput = document.getElementById('longitude');
-    const cityInput= document.getElementById('city');
 
     const autocomplete = new google.maps.places.Autocomplete(addressInput);
     autocomplete.bindTo("bounds", map);
@@ -367,38 +431,19 @@
         cityInput.value = city;
       }).catch(console.error);
     });
+  };
 
-    // Label dinámico del precio
-    function updatePriceLabel() {
-      const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
-      document.getElementById('price-label').textContent =
-        selectedType === 'rent' ? 'Precio por día (MXN)' : 'Precio de venta (MXN)';
-    }
-    document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', updatePriceLabel));
-    updatePriceLabel();
+  /* ---------- Mostrar/ocultar amenidades por propósito ---------- */
+  function toggleAmenities() {
+    const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
+    document.querySelectorAll('.amenity-category').forEach(cat => {
+      const show = cat.dataset.type === selectedType;
+      cat.style.display = show ? 'block' : 'none';
+      if (!show) cat.querySelectorAll('input[type="checkbox"]').forEach(ch => ch.checked = false);
+    });
   }
-
-  // Filtrado de amenidades por tipo
-  (function toggleAmenities() {
-    const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
-    document.querySelectorAll('.amenity-category').forEach(cat => {
-      const show = cat.dataset.type === selectedType;
-      cat.style.display = show ? 'block' : 'none';
-      if (!show) cat.querySelectorAll('input[type="checkbox"]').forEach(ch => ch.checked = false);
-    });
-  })();
-  document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', () => {
-    const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
-    document.querySelectorAll('.amenity-category').forEach(cat => {
-      const show = cat.dataset.type === selectedType;
-      cat.style.display = show ? 'block' : 'none';
-      if (!show) cat.querySelectorAll('input[type="checkbox"]').forEach(ch => ch.checked = false);
-    });
-  }));
-
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+  toggleAmenities();
+  document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', toggleAmenities));
+  </script>
 </body>
 </html>
