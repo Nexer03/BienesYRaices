@@ -1,64 +1,111 @@
-<section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {{ __('Profile Information') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
-    </header>
-
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
-        @csrf
-    </form>
-
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
-        @csrf
-        @method('patch')
-
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
-        </div>
-
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
-
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
-                        {{ __('Your email address is unverified.') }}
-
-                        <button form="send-verification" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600 dark:text-green-400">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
+<section class="bg-white shadow-md rounded-xl p-6 border border-gray-200">
+    <header class="flex items-center gap-4 mb-6">
+        {{-- Imagen de perfil --}}
+        <div class="relative">
+            @if ($user->avatar)
+                <img src="{{ asset('storage/' . $user->avatar) }}" alt="Foto de perfil actual"
+                    class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
+            @else
+                <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random"
+                    alt="Avatar por defecto"
+                    class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
             @endif
         </div>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+        {{-- Título e instrucciones --}}
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800">Mi Perfil</h2>
+            <p class="text-gray-600 text-sm">Actualiza tu información personal y la foto de tu cuenta.</p>
+        </div>
+    </header>
+
+    {{-- Formulario --}}
+    <form method="post" action="{{ route('profile.update') }}" class="space-y-5" enctype="multipart/form-data">
+        @csrf
+        @method('patch')
+
+        {{-- Nombre --}}
+        <div>
+            <x-input-label for="name" value="Nombre completo" />
+            <x-text-input id="name" name="name" type="text"
+                class="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-800"
+                value="{{ old('name', $user->name) }}" required autofocus autocomplete="name" />
+            <x-input-error class="mt-2 text-red-600" :messages="$errors->get('name')" />
+        </div>
+
+        {{-- Correo electrónico --}}
+        <div>
+            <x-input-label for="email" value="Correo electrónico" />
+            <x-text-input id="email" name="email" type="email"
+                class="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-800"
+                value="{{ old('email', $user->email) }}" required autocomplete="username" />
+            <x-input-error class="mt-2 text-red-600" :messages="$errors->get('email')" />
+        </div>
+
+        {{-- Teléfono --}}
+        <div>
+            <x-input-label for="phone" value="Teléfono" />
+            <x-text-input id="phone" name="phone" type="text"
+                class="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-800"
+                value="{{ old('phone', $user->phone) }}" autocomplete="tel" />
+            <x-input-error class="mt-2 text-red-600" :messages="$errors->get('phone')" />
+        </div>
+
+        {{-- Biografía --}}
+        <div>
+            <x-input-label for="bio" value="Biografía" />
+            <textarea id="bio" name="bio"
+                class="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-gray-800 resize-none"
+                rows="3">{{ old('bio', $user->bio) }}</textarea>
+            <x-input-error class="mt-2 text-red-600" :messages="$errors->get('bio')" />
+        </div>
+
+        {{-- Avatar --}}
+        <div>
+            <x-input-label for="avatar" value="Cambiar foto de perfil" />
+            <div class="mt-2 flex items-center gap-4">
+                <label for="avatar"
+                    class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition text-sm font-medium">
+                    Seleccionar imagen
+                </label>
+                <x-text-input id="avatar" name="avatar" type="file" accept="image/*" class="hidden"
+                    onchange="previewAvatar(event)" />
+                <span id="avatarFileName" class="text-gray-500 text-sm"></span>
+            </div>
+            <x-input-error class="mt-2 text-red-600" :messages="$errors->get('avatar')" />
+        </div>
+
+        {{-- Botón guardar --}}
+        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+            <x-primary-button class="bg-blue-600 hover:bg-blue-700 text-white">
+                {{ __('Guardar cambios') }}
+            </x-primary-button>
 
             @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600 dark:text-gray-400"
-                >{{ __('Saved.') }}</p>
+                <p x-data="{ show: true }" x-show="show" x-transition
+                   x-init="setTimeout(() => show = false, 2000)"
+                   class="text-sm text-green-600">
+                    {{ __('Cambios guardados correctamente.') }}
+                </p>
             @endif
         </div>
     </form>
 </section>
+
+{{-- Script de vista previa de avatar --}}
+<script>
+function previewAvatar(event) {
+    const input = event.target;
+    const fileName = input.files[0]?.name || "";
+    document.getElementById('avatarFileName').textContent = fileName;
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.querySelector('header img');
+            img.src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
