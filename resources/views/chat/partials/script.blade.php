@@ -1,7 +1,12 @@
 <script>
 (function () {
+  console.log('[CHAT] script cargado');
+
   const messagesEl = document.getElementById('messages');
-  if (!messagesEl) return;
+  if (!messagesEl) {
+    console.warn('[CHAT] No encontré #messages en el DOM');
+    return;
+  }
 
   const form = document.getElementById('chat-form');
   const input = document.getElementById('chat-body');
@@ -39,6 +44,9 @@
   let hasMore = messagesEl.dataset.hasMore === '1';
   let oldestId = Number(messagesEl.dataset.oldestId || 0);
   const csrfToken = '{{ csrf_token() }}';
+
+  console.log('[CHAT] conversationId:', conversationId, 'meId:', meId);
+  console.log('[CHAT] window.Echo al inicio:', window.Echo);
 
   const defaultStatusText = typingText ? typingText.textContent : '';
   let presenceState = defaultStatusText || `${otherName} estuvo en línea recientemente`;
@@ -794,14 +802,31 @@
     );
   };
 
-  if (window.Echo && conversationId) {
+  // === AQUÍ VIENE LA PARTE CLAVE: ESPERAR A QUE EXISTA window.Echo ===
+
+  const setupEcho = () => {
+    if (!conversationId) {
+      console.warn('[CHAT] No hay conversationId, no me puedo suscribir');
+      return;
+    }
+
+    if (!window.Echo) {
+      console.warn('[CHAT] window.Echo aún no está listo, reintento en 500ms');
+      setTimeout(setupEcho, 500);
+      return;
+    }
+
+    console.log('[CHAT] Echo disponible. Me suscribo a: conversation.' + conversationId);
+
     window.chatChannel = window.Echo.private(`conversation.${conversationId}`)
-      .listen('MessageSent', (event) => {
+      .listen('.MessageSent', (event) => {
+        console.log('[CHAT] EVENTO .MessageSent recibido:', event);
         if (event && event.message) {
           appendMessage(event.message);
         }
       })
-      .listen('MessagesRead', (event) => {
+      .listen('.MessagesRead', (event) => {
+        console.log('[CHAT] EVENTO .MessagesRead recibido:', event);
         if (!event || Number(event.reader_id) === meId) return;
         updateMessageStatus(event.message_ids || []);
       });
@@ -812,18 +837,23 @@
       let members = [];
       window.chatPresence = window.Echo.join(`presence.conversation.${conversationId}`)
         .here((users) => {
+          console.log('[CHAT] presence.here:', users);
           members = users || [];
           updatePresenceFromUsers(members);
         })
         .joining((user) => {
-          members = [...members.filter((member) => Number(member.id) !== Number(user.id)), user];
+          console.log('[CHAT] presence.joining:', user);
+          members = [...members.filter((m) => Number(m.id) !== Number(user.id)), user];
           updatePresenceFromUsers(members);
         })
         .leaving((user) => {
-          members = members.filter((member) => Number(member.id) !== Number(user.id));
+          console.log('[CHAT] presence.leaving:', user);
+          members = members.filter((m) => Number(m.id) !== Number(user.id));
           updatePresenceFromUsers(members);
         });
     }
-  }
+  };
+
+  setupEcho();
 })();
 </script>
