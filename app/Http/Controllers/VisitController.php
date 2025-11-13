@@ -161,7 +161,7 @@ class VisitController extends Controller
 
 
         // Anti-solape (60 min por defecto)
-        if ($this->hasOverlap($agentId, $data['visit_date'])) {
+        if (\App\Models\Visit::overlapsForAgent($agentId, $data['visit_date'])) {
             return back()->withInput()->withErrors([
                 'visit_date' => 'Ya existe otra visita del agente que se cruza con este horario.',
             ]);
@@ -229,7 +229,7 @@ class VisitController extends Controller
         abort_unless($owned, 403, 'No puedes reasignar a una propiedad que no sea de venta y tuya.');
 
 
-        if ($this->hasOverlap($agentId, $data['visit_date'], $visit->id)) {
+        if (\App\Models\Visit::overlapsForAgent($agentId, $data['visit_date'], $visit->id)) {
             return back()->withInput()->withErrors([
                 'visit_date' => 'Ya existe otra visita del agente que se cruza con este horario.',
             ]);
@@ -278,25 +278,6 @@ class VisitController extends Controller
         abort_unless($visit->agent_id === $agentId, 403, 'No autorizado para esta visita.');
     }
 
-    /**
-     * Detección de solapes considerando una duración fija (60 min).
-     * Se considera choque si (A.start < B.end) y (B.start < A.end).
-     */
-    protected function hasOverlap(int $agentId, string $visitDate, ?int $ignoreVisitId = null, int $durationMinutes = 60): bool
-    {
-        $start = Carbon::parse($visitDate);
-        $end   = (clone $start)->addMinutes($durationMinutes);
-
-        return Visit::where('agent_id', $agentId)
-            ->when($ignoreVisitId, fn($q) => $q->where('id', '!=', $ignoreVisitId))
-            ->where(function ($q) use ($start, $end, $durationMinutes) {
-                // otra visita con inicio < fin actual
-                $q->where('visit_date', '<', $end)
-                  // y su inicio + duración > inicio actual (aprox.)
-                  ->where('visit_date', '>=', $start->copy()->subMinutes($durationMinutes));
-            })
-            ->exists();
-    }
 }
 
 /**
