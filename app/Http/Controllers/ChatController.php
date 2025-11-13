@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessagesRead;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\Property;
-use App\Models\User;
-use App\Notifications\NewMessageNotification;
+use App\Models\PropertyReservation;
+use App\Models\Visit;
+use App\Services\ConversationMessenger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -53,17 +54,24 @@ class ChatController extends Controller
             'client_id'   => $authId,
         ]);
 
-        // marcar como leídos los del otro
-        $conversation->messages()
-            ->whereNull('read_at')
-            ->where('sender_id', '!=', $authId)
-            ->update(['read_at' => now()]);
+        $this->markConversationMessagesAsRead($conversation, $authId);
 
-        $messages = $conversation->messages()->with('sender:id,name,avatar')->get();
+        $conversation->loadMissing(['property', 'agent', 'client']);
+        [$messages, $hasMoreMessages, $oldestMessageId] = $this->initialMessages($conversation);
+
+        [$propertyDetails, $nextVisit, $activeReservation] = $this->extrasForConversation($conversation);
 
         // 👉 vista por rol (agente ve agent.chats.show; cliente ve chat.show)
         $view = ($user->role === 'agent') ? 'agent.chats.show' : 'chat.show';
-        return view($view, compact('conversation', 'messages', 'property'));
+        return view($view, [
+            'conversation'       => $conversation,
+            'messages'           => $messages,
+            'property'           => $propertyDetails,
+            'nextVisit'          => $nextVisit,
+            'activeReservation'  => $activeReservation,
+            'hasMoreMessages'    => $hasMoreMessages,
+            'oldestMessageId'    => $oldestMessageId,
+        ]);
     }
 
     /** Abrir chat por ID de conversación (agente o cliente) */
@@ -75,23 +83,28 @@ class ChatController extends Controller
         // seguridad: debe pertenecer a la conversación
         abort_unless(in_array($userId, [$conversation->agent_id, $conversation->client_id]), 403);
 
-        // marcar como leídos los del otro
-        $conversation->messages()
-            ->whereNull('read_at')
-            ->where('sender_id', '!=', $userId)
-            ->update(['read_at' => now()]);
+        $this->markConversationMessagesAsRead($conversation, $userId);
 
-        $conversation->load(['property:id,title', 'agent:id,name,avatar', 'client:id,name,avatar']);
-        $messages = $conversation->messages()->with('sender:id,name,avatar')->get();
-        $property = $conversation->property;
+        $conversation->load(['property', 'agent:id,name,avatar', 'client:id,name,avatar']);
+        [$messages, $hasMoreMessages, $oldestMessageId] = $this->initialMessages($conversation);
+
+        [$property, $nextVisit, $activeReservation] = $this->extrasForConversation($conversation);
 
         // 👉 vista por rol
         $view = ($user->role === 'agent') ? 'agent.chats.show' : 'chat.show';
-        return view($view, compact('conversation', 'messages', 'property'));
+        return view($view, [
+            'conversation'      => $conversation,
+            'messages'          => $messages,
+            'property'          => $property,
+            'nextVisit'         => $nextVisit,
+            'activeReservation' => $activeReservation,
+            'hasMoreMessages'   => $hasMoreMessages,
+            'oldestMessageId'   => $oldestMessageId,
+        ]);
     }
 
     /** Enviar mensaje (agente o cliente) */
-    public function send(Request $request, Conversation $conversation)
+    public function send(Request $request, Conversation $conversation, ConversationMessenger $messenger)
     {
         $userId = Auth::id();
 
@@ -99,31 +112,160 @@ class ChatController extends Controller
         abort_unless(in_array($userId, [$conversation->agent_id, $conversation->client_id]), 403);
 
         $data = $request->validate([
-            'body' => 'required|string|max:2000',
+            'body'       => 'nullable|string|max:2000',
+            'attachment' => 'nullable|file|max:20480|mimetypes:' . implode(',', [
+                'image/jpeg', 'image/png', 'image/webp',
+                'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain', 'text/csv',
+                'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/webm',
+                'video/mp4', 'video/webm',
+            ]),
         ]);
 
-        $message = $conversation->messages()->create([
-            'sender_id' => $userId,
-            'body'      => $data['body'],
+        if (!$request->file('attachment') && blank($data['body'])) {
+            return response()->json([
+                'message' => 'Escribe algo o adjunta un archivo.',
+            ], 422);
+        }
+
+        $message = $messenger->send($conversation, $userId, $data['body'] ?? null, $request->file('attachment'));
+
+        return response()->json($message);
+    }
+
+    public function markRead(Request $request, Conversation $conversation)
+    {
+        $user = $request->user();
+        abort_unless(in_array($user->id, [$conversation->agent_id, $conversation->client_id]), 403);
+
+        $ids = collect($request->input('message_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return response()->json(['status' => 'noop']);
+        }
+
+        $readNow = $conversation->messages()
+            ->whereIn('id', $ids)
+            ->where('sender_id', '!=', $user->id)
+            ->whereNull('read_at')
+            ->pluck('id');
+
+        if ($readNow->isEmpty()) {
+            return response()->json(['status' => 'noop']);
+        }
+
+        $conversation->messages()->whereIn('id', $readNow)->update(['read_at' => now()]);
+
+        broadcast(new MessagesRead($conversation->id, $readNow->all(), $user->id))->toOthers();
+
+        return response()->json(['status' => 'ok', 'message_ids' => $readNow]);
+    }
+
+    public function messages(Request $request, Conversation $conversation)
+    {
+        $user = $request->user();
+
+        abort_unless(in_array($user->id, [$conversation->agent_id, $conversation->client_id]), 403);
+
+        $limit = (int) $request->integer('limit', 30);
+        $limit = max(5, min($limit, 100));
+
+        $query = $conversation->messages()->with('sender:id,name,avatar');
+
+        if ($before = (int) $request->input('before')) {
+            $query->where('id', '<', $before);
+        }
+
+        if ($term = trim((string) $request->input('q'))) {
+            $query->where(function ($q) use ($term) {
+                $q->where('body', 'like', '%' . $term . '%')
+                  ->orWhere('attachment_name', 'like', '%' . $term . '%');
+            });
+        }
+
+        $messages = $query->latest('id')->limit($limit + 1)->get();
+
+        $hasMore = $messages->count() > $limit;
+        if ($hasMore) {
+            $messages = $messages->take($limit);
+        }
+
+        $messages = $messages->sortBy('id')->values();
+
+        return response()->json([
+            'messages'    => $messages,
+            'has_more'    => $hasMore,
+            'next_before' => optional($messages->first())->id,
         ]);
+    }
 
-        // actualiza orden en inbox
-        $conversation->touch();
+    protected function extrasForConversation(Conversation $conversation): array
+    {
+        $property = $conversation->property;
+        $nextVisit = null;
+        $activeReservation = null;
 
-        $recipientId = $conversation->agent_id === $userId
-            ? $conversation->client_id
-            : $conversation->agent_id;
+        if ($property) {
+            if ($property->listing_type === 'sale') {
+                $nextVisit = Visit::where('property_id', $property->id)
+                    ->where('agent_id', $conversation->agent_id)
+                    ->where('client_id', $conversation->client_id)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->where('visit_date', '>=', now()->subDay())
+                    ->orderBy('visit_date')
+                    ->first();
+            }
 
-        if ($recipientId && $recipientId !== $userId) {
-            $recipient = User::find($recipientId);
-            if ($recipient) {
-                $recipient->notify(new NewMessageNotification($message));
+            if ($property->listing_type === 'rent') {
+                $activeReservation = PropertyReservation::where('property_id', $property->id)
+                    ->where('user_id', $conversation->client_id)
+                    ->whereNotIn('status', ['cancelled', 'canceled', 'completed'])
+                    ->latest('updated_at')
+                    ->first();
             }
         }
 
-        // broadcast opcional (cuando conectes Pusher/Echo)
-        // broadcast(new \App\Events\MessageSent($conversation, $message))->toOthers();
+        return [$property, $nextVisit, $activeReservation];
+    }
 
-        return response()->json($message->load('sender:id,name,avatar'));
+    protected function markConversationMessagesAsRead(Conversation $conversation, int $userId): void
+    {
+        $ids = $conversation->messages()
+            ->whereNull('read_at')
+            ->where('sender_id', '!=', $userId)
+            ->pluck('id');
+
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        $conversation->messages()->whereIn('id', $ids)->update(['read_at' => now()]);
+
+        broadcast(new MessagesRead($conversation->id, $ids->all(), $userId))->toOthers();
+    }
+
+    protected function initialMessages(Conversation $conversation, int $limit = 40): array
+    {
+        $messages = $conversation->messages()
+            ->with('sender:id,name,avatar')
+            ->latest('id')
+            ->limit($limit + 1)
+            ->get();
+
+        $hasMore = $messages->count() > $limit;
+        if ($hasMore) {
+            $messages = $messages->take($limit);
+        }
+
+        $messages = $messages->sortBy('id')->values();
+
+        return [
+            $messages,
+            $hasMore,
+            optional($messages->first())->id,
+        ];
     }
 }

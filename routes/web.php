@@ -22,6 +22,8 @@ use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\AgentReservationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ChatReservationController;
+use App\Http\Controllers\ChatVisitController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +85,16 @@ Route::middleware('auth')->group(function () {
 
     // Enviar mensaje
     Route::post('/chat/{conversation}/send', [ChatController::class, 'send'])->name('chat.send');
+    Route::post('/chat/{conversation}/read', [ChatController::class, 'markRead'])->name('chat.read');
+    Route::get('/chat/{conversation}/messages', [ChatController::class, 'messages'])->name('chat.messages');
+
+    // Acciones de visitas dentro del chat
+    Route::post('/chat/{conversation}/visits', [ChatVisitController::class, 'store'])->name('chat.visits.store');
+    Route::patch('/chat/{conversation}/visits/{visit}/confirm', [ChatVisitController::class, 'confirm'])->name('chat.visits.confirm');
+    Route::patch('/chat/{conversation}/visits/{visit}/cancel', [ChatVisitController::class, 'cancel'])->name('chat.visits.cancel');
+
+    // Crear reserva desde el chat
+    Route::post('/chat/{conversation}/reservations', [ChatReservationController::class, 'store'])->name('chat.reservations.store');
 
     // Notificaciones
     Route::get('/notifications/{notification}/redirect', [NotificationController::class, 'redirect'])

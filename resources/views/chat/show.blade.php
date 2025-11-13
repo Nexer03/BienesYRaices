@@ -1,108 +1,24 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container" style="position:relative; z-index: 10;">
-  <h4 class="mb-3">
-    Chat — 
-    @php
-      $yo = auth()->id();
-      $otro = $yo === $conversation->agent_id ? $conversation->client : $conversation->agent;
-    @endphp
-    con {{ $otro->name ?? 'Usuario' }}
-    @if(isset($property)) <small class="text-muted"> · {{ $property->title }}</small> @endif
-  </h4>
+@php
+  $yo = auth()->id();
+  $otro = $yo === $conversation->agent_id ? $conversation->client : $conversation->agent;
+@endphp
 
-  <div id="messages"
-       style="height:320px; overflow:auto; border:1px solid #ddd; border-radius:8px; padding:10px; background:#fafafa;">
-    @forelse ($messages as $msg)
-      <div class="mb-2">
-        <strong>{{ $msg->sender->name ?? 'Usuario' }}:</strong> {{ $msg->body }}
-      </div>
-    @empty
-      <div class="text-muted">Aún no hay mensajes.</div>
-    @endforelse
-  </div>
+@include('chat.partials.styles')
 
-  <form id="chat-form"
-        method="POST"
-        action="{{ route('chat.send', $conversation) }}"
-        class="mt-3 d-flex gap-2">
-    @csrf
-    <input id="chat-body" name="body" type="text" class="form-control"
-           placeholder="Escribe un mensaje..." autocomplete="off" required>
-    <button id="chat-send" type="submit" class="btn btn-primary">Enviar</button>
-  </form>
+@include('chat.partials.frame', [
+  'conversation' => $conversation,
+  'messages' => $messages,
+  'property' => $property ?? null,
+  'nextVisit' => $nextVisit ?? null,
+  'activeReservation' => $activeReservation ?? null,
+  'yo' => $yo,
+  'otro' => $otro,
+  'hasMoreMessages' => $hasMoreMessages ?? false,
+  'oldestMessageId' => $oldestMessageId ?? null,
+])
 
-  <div id="chat-error" class="mt-2 text-danger" style="display:none;"></div>
-</div>
-
-<script>
-(function () {
-  const messagesEl = document.getElementById('messages');
-  const form = document.getElementById('chat-form');
-  const input = document.getElementById('chat-body');
-  const sendBtn = document.getElementById('chat-send');
-  const errBox = document.getElementById('chat-error');
-
-  const scrollBottom = () => { messagesEl.scrollTop = messagesEl.scrollHeight; };
-  scrollBottom();
-
-  const setSending = (state) => {
-    sendBtn.disabled = state;
-    sendBtn.textContent = state ? 'Enviando...' : 'Enviar';
-  };
-
-  const appendMessage = (msg) => {
-    const div = document.createElement('div');
-    div.className = 'mb-2';
-    div.innerHTML = `<strong>${(msg.sender && msg.sender.name) ? msg.sender.name : 'Tú'}:</strong> ${msg.body}`;
-    messagesEl.appendChild(div);
-    scrollBottom();
-  };
-
-  const showError = (text) => {
-    errBox.textContent = text;
-    errBox.style.display = 'block';
-    setTimeout(() => { errBox.style.display = 'none'; }, 3500);
-  };
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const body = input.value.trim();
-    if (!body) return;
-
-    setSending(true);
-    errBox.style.display = 'none';
-
-    try {
-      const res = await fetch(form.action, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': '{{ csrf_token() }}',
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ body })
-      });
-
-      if (!res.ok) {
-        showError('Error al enviar (' + res.status + ').');
-        setSending(false);
-        return;
-      }
-
-      const msg = await res.json();
-      appendMessage(msg);
-      input.value = '';
-    } catch (err) {
-      showError('No se pudo conectar con el servidor.');
-      console.error(err);
-    } finally {
-      setSending(false);
-      input.focus();
-    }
-  });
-})();
-</script>
+@include('chat.partials.script', ['conversation' => $conversation])
 @endsection
