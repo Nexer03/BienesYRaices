@@ -27,6 +27,34 @@ Si no se muestran las imagenes usa este comando: php artisan storage:link
 Comando para rellenar las amenidades:  php artisan db:seed
 Añadir en env. esta linea: GOOGLE_MAPS_API_KEY=esta en discord
 
+### Chat en tiempo real
+
+El chat ahora utiliza broadcasting (Pusher compatible) para entregar los mensajes al instante y ofrece una experiencia moderna:
+
+- Indicadores de escritura y recibos de lectura que se reflejan en cada burbuja.
+- Composer enriquecido con emojis, respuestas rápidas y la posibilidad de adjuntar imágenes, documentos ofimáticos, notas de voz o videos (se guardan en `storage/app/public/chat-attachments`).
+- Barra de búsqueda y botón de "Cargar mensajes anteriores" que consultan el nuevo endpoint `chat.messages` para filtrar por palabra clave o paginar el histórico cuando la conversación es muy larga.
+- Botón para habilitar notificaciones del navegador y un canal de presencia que muestra si el otro participante está en línea (y envía avisos aun con la pestaña minimizada, siempre que el usuario conceda el permiso del navegador).
+- Mensajes de sistema automáticos cada vez que se agenda/actualiza una visita o reserva desde el panel lateral, para que todos los cambios queden documentados en el hilo.
+
+> 💡 Para que las notas de voz funcionen se requiere un navegador compatible con `MediaRecorder`. Las notificaciones del navegador también dependen del permiso que otorgue el usuario (el botón 🔔 en la cabecera permite solicitarlas o silenciarlas).
+
+1. Define el driver en tu `.env`:
+
+```
+BROADCAST_DRIVER=pusher
+PUSHER_APP_ID=tu_app_id
+PUSHER_APP_KEY=tu_key
+PUSHER_APP_SECRET=tu_secret
+PUSHER_APP_CLUSTER=mt1
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+```
+
+2. Ejecuta `php artisan storage:link` si aún no publicas el disco `public`, de lo contrario los adjuntos no estarán disponibles.
+3. Arranca `npm run dev` para compilar los assets con Vite.
+4. Si usas un servidor distinto a Pusher, ajusta `PUSHER_HOST`, `PUSHER_PORT` y `PUSHER_SCHEME` en el `.env`.
+
 ### Pruebas automáticas
 Los tests utilizan SQLite en memoria por defecto. Si la extensión `pdo_sqlite` no
 está disponible, define las siguientes variables antes de ejecutar `php artisan test`:
