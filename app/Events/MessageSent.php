@@ -15,10 +15,14 @@ class MessageSent implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * @param  int  $conversationId  ID de la conversación para el canal privado
+     * @param  int    $conversationId  ID de la conversación para el canal privado
+     * @param  Message $message        Mensaje recién creado
      */
-    public function __construct(public int $conversationId, public Message $message)
-    {
+    public function __construct(
+        public int $conversationId,
+        public Message $message,
+    ) {
+        // Cargamos el remitente para usarlo en el front
         $this->message->loadMissing('sender:id,name,avatar');
     }
 
@@ -29,6 +33,18 @@ class MessageSent implements ShouldBroadcastNow
         ];
     }
 
+    /**
+     * 👈 Nombre EXACTO que escucha tu JS:
+     * .listen('MessageSent', ...)
+     */
+    public function broadcastAs(): string
+    {
+        return 'MessageSent';
+    }
+
+    /**
+     * Payload que recibes en JS como "event.message"
+     */
     public function broadcastWith(): array
     {
         $sender = $this->message->sender;

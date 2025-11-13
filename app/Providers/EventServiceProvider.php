@@ -7,20 +7,30 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 class EventServiceProvider extends ServiceProvider
 {
     /**
-     * El arreglo $listen asocia eventos con sus listeners.
+     * Mapping de eventos → listeners
      */
     protected $listen = [
         \App\Events\ReservationPaid::class => [
             \App\Listeners\SetPropertyRentedOnPaid::class,
             \App\Listeners\NotifyAdminsOfReservationPaid::class,
         ],
+
+        // Puedes agregar más eventos si lo necesitas
     ];
 
     /**
-     * Registra cualquier evento para tu aplicación.
+     * Registra eventos
      */
     public function boot(): void
     {
         //
+    }
+
+    /**
+     * Indica si Laravel debe descubrir eventos automáticamente
+     */
+    public function shouldDiscoverEvents(): bool
+    {
+        return false; // conservamos el comportamiento estándar
     }
 }
