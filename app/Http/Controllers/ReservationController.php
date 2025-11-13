@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Property;
 use App\Models\PropertyReservation;
+use App\Models\SystemCommission;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -12,7 +13,6 @@ class ReservationController extends Controller
 {
     /**
      * POST /reservations/preview
-     * Calcula importes, crea/actualiza una reserva pendiente y muestra el checkout.
      */
     public function preview(Request $request)
     {
@@ -22,20 +22,55 @@ class ReservationController extends Controller
             'end_date'    => ['required', 'date', 'after:start_date'],
         ]);
 
-
         $property = Property::with('images')->findOrFail($data['property_id']);
 
         $start  = Carbon::parse($data['start_date'])->startOfDay();
         $end    = Carbon::parse($data['end_date'])->startOfDay();
-        $nights = max(1, $start->diffInDays($end)); // nunca 0
+        $nights = max(1, $start->diffInDays($end));
 
-        $price      = (float) $property->price;              // precio por noche
-        $subtotal   = round($price * $nights, 2);
-        $serviceFee = round($subtotal * 0.05, 2);            // 5% ejemplo
-        $taxes      = round(($subtotal + $serviceFee) * 0.16, 2); // 16% ejemplo
-        $total      = round($subtotal + $serviceFee + $taxes, 2);
+        $price    = (float) $property->price;
+        $subtotal = round($price * $nights, 2);
 
-        // Crea/actualiza una reserva "pendiente" para este usuario y propiedad
+        //  total que paga el cliente SIN cargos extras
+        $total = $subtotal;
+
+        //  tipo de operación
+        $listingType = 'rent';
+
+        //  agente dueño de la propiedad
+        $agentId = $property->user_id;
+
+        //  comisión específica del agente
+        $agentCommissionConf = SystemCommission::query()
+            ->where('user_id', $agentId)
+            ->whereIn('listing_type', [$listingType, 'both'])
+            ->orderByDesc('effective_from')
+            ->first();
+
+        //  comisión general del sistema
+        $globalCommissionConf = SystemCommission::query()
+            ->whereNull('user_id')
+            ->whereIn('listing_type', [$listingType, 'both'])
+            ->orderByDesc('effective_from')
+            ->first();
+
+        //  resultado final
+        $commissionConf = $agentCommissionConf ?? $globalCommissionConf;
+        $commissionPercent = $commissionConf ? (float) $commissionConf->percentage : 0.0;
+
+        //  Cálculo de comisiones
+        $agentCommission = round($subtotal * ($commissionPercent / 100), 2);
+        $agentEarnings   = round($subtotal - $agentCommission, 2);
+        $platformEarnings = $agentCommission;
+        // si el usuario escribió mensaje, se guarda temporalmente
+        if ($request->filled('host_message')) {
+            $reservation->meta = array_merge((array)$reservation->meta, [
+                'host_message' => $request->host_message
+            ]);
+            $reservation->save();
+        }
+
+        // Guardar en DB
         $reservation = PropertyReservation::updateOrCreate(
             [
                 'property_id' => $property->id,
@@ -43,34 +78,38 @@ class ReservationController extends Controller
                 'status'      => 'pending',
             ],
             [
-                'start_date'     => $start->toDateString(),
-                'end_date'       => $end->toDateString(),
-                'total_price'    => $total,          // 👈 OBLIGATORIO
-                'payment_status' => 'unpaid',        // si tienes esta columna
+                'start_date'            => $start->toDateString(),
+                'end_date'              => $end->toDateString(),
+                'total_price'           => $total,
+                'payment_status'        => 'unpaid',
+                'agent_commission'      => $agentCommission,
+                'agent_earnings'        => $agentEarnings,
+                'platform_earnings'     => $platformEarnings,
+                'commission_percentage' => $commissionPercent,
             ]
         );
 
         session(['current_reservation_id' => $reservation->id]);
 
-
-        // Atributos auxiliares solo para la vista
         $reservation->setAttribute('nights', $nights);
-        $reservation->setAttribute('guests', $reservation->guests ?? 1);
 
         return view('reservations.checkout', [
             'property'    => $property,
             'reservation' => $reservation,
             'price'       => $price,
             'subtotal'    => $subtotal,
-            'serviceFee'  => $serviceFee,
-            'taxes'       => $taxes,
             'total'       => $total,
+
+            // Para depuración
+            'agentCommission'  => $agentCommission,
+            'agentEarnings'    => $agentEarnings,
+            'platformEarnings' => $platformEarnings,
+            'commissionPercent'=> $commissionPercent,
         ]);
     }
 
     /**
      * GET /reservations/{reservation}/checkout
-     * Muestra la página tipo Airbnb para una reserva existente.
      */
     public function checkout(PropertyReservation $reservation, Request $request)
     {
@@ -78,22 +117,21 @@ class ReservationController extends Controller
 
         $reservation->load('property.images');
 
-        // No dependemos de una columna nights
-        $nights     = $reservation->nights; // accessor en el modelo
-        $price      = (float) $reservation->property->price;
-        $subtotal   = round($price * $nights, 2);
-        $serviceFee = round($subtotal * 0.05, 2);
-        $taxes      = round(($subtotal + $serviceFee) * 0.16, 2);
-        $total      = round($subtotal + $serviceFee + $taxes, 2);
+        $nights = $reservation->nights;
+        $price  = (float) $reservation->property->price;
+        $subtotal = round($price * $nights, 2);
+        $total = $reservation->total_price ?? $subtotal;
 
         return view('reservations.checkout', [
             'reservation' => $reservation->setAttribute('nights', $nights),
             'property'    => $reservation->property,
             'price'       => $price,
             'subtotal'    => $subtotal,
-            'serviceFee'  => $serviceFee,
-            'taxes'       => $taxes,
             'total'       => $total,
+            'agentCommission'  => $reservation->agent_commission,
+            'agentEarnings'    => $reservation->agent_earnings,
+            'platformEarnings' => $reservation->platform_earnings,
+            'commissionPercent'=> $reservation->commission_percentage,
         ]);
     }
 }

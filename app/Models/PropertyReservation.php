@@ -22,13 +22,23 @@ class PropertyReservation extends Model
         'payment_method',
         'payer_email',
         'meta',
+
+        // 💰 nuevos campos de comisión
+        'agent_commission',
+        'agent_earnings',
+        'platform_earnings',
+        'commission_percentage',
     ];
 
     protected $casts = [
-        'start_date'  => 'date',
-        'end_date'    => 'date',
-        'total_price' => 'float',
-        'meta' => 'array',
+        'start_date'          => 'date',
+        'end_date'            => 'date',
+        'total_price'         => 'float',
+        'meta'                => 'array',
+        'agent_commission'    => 'float',
+        'agent_earnings'      => 'float',
+        'platform_earnings'   => 'float',
+        'commission_percentage' => 'float',
     ];
 
     public function property()

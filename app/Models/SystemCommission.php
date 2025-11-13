@@ -36,4 +36,25 @@ class SystemCommission extends Model
               ->orWhere('listing_type', 'both');
         });
     }
+        public static function getCommissionFor($listingType, $agentId = null)
+    {
+        // 1. Primero buscamos comisión específica del agente
+        $agentCommission = static::query()
+            ->where('user_id', $agentId)
+            ->whereIn('listing_type', [$listingType, 'both'])
+            ->orderByDesc('effective_from')
+            ->first();
+
+        if ($agentCommission) {
+            return $agentCommission;
+        }
+
+        // 2. Si no hay para el agente → usar comisión general del sistema
+        return static::query()
+            ->whereNull('user_id')
+            ->whereIn('listing_type', [$listingType, 'both'])
+            ->orderByDesc('effective_from')
+            ->first();
+    }
+
 }
