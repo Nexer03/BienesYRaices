@@ -284,6 +284,17 @@
   };
 
   const appendMessage = (msg) => {
+    if (!msg) return;
+
+    // 🔒 Defensa anti-duplicado: si ya hay un bubble con este ID, no lo volvemos a agregar
+    if (msg.id) {
+      const existing = messagesEl.querySelector(`[data-message-id="${msg.id}"]`);
+      if (existing) {
+        console.log('[CHAT] Mensaje ya existe en el DOM, no se duplica:', msg.id);
+        return;
+      }
+    }
+
     const node = renderMessage(msg);
     if (!node) return;
     removeEmptyState();
@@ -802,7 +813,7 @@
     );
   };
 
-  // === AQUÍ VIENE LA PARTE CLAVE: ESPERAR A QUE EXISTA window.Echo ===
+  // === SETUP DE ECHO CON FILTRO ANTI-DUPLICADOS ===
 
   const setupEcho = () => {
     if (!conversationId) {
@@ -821,9 +832,18 @@
     window.chatChannel = window.Echo.private(`conversation.${conversationId}`)
       .listen('.MessageSent', (event) => {
         console.log('[CHAT] EVENTO .MessageSent recibido:', event);
-        if (event && event.message) {
-          appendMessage(event.message);
+
+        if (!event || !event.message) return;
+        const msg = event.message;
+        const senderId = Number(msg.sender_id ?? msg.sender?.id ?? 0);
+
+        // 👇 Si el mensaje es mío, lo ignoro: ya lo agregué cuando hice el POST
+        if (senderId === meId) {
+          console.log('[CHAT] Mensaje propio recibido por Echo, se ignora para evitar duplicado:', msg.id);
+          return;
         }
+
+        appendMessage(msg);
       })
       .listen('.MessagesRead', (event) => {
         console.log('[CHAT] EVENTO .MessagesRead recibido:', event);
