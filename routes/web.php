@@ -155,6 +155,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // chat
+    Route::get('/chat/c/{conversation}/visit-panel', [ChatVisitController::class, 'panel'])
+        ->name('chat.visits.panel');
+    Route::get('/chat/{conversation}/side-panel', [ChatVisitController::class, 'panel'])
+        ->name('chat.side-panel');
 
     // Preferencias del usuario
     Route::get('/preferences/edit', [UserPreferenceController::class, 'edit'])

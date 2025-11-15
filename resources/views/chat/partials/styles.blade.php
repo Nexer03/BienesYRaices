@@ -8,13 +8,25 @@
     --chat-muted: #94a3b8;
   }
 
-  .chat-app { 
+  /* IMPORTANTE: que todo pueda usar 100vh correctamente */
+  html,
+  body {
+    height: 100%;
+  }
+
+  .chat-app {
     background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 45%),
                 radial-gradient(circle at 80% 0%, rgba(16, 185, 129, 0.08), transparent 40%),
                 var(--chat-bg);
     border-radius: 32px;
     padding: clamp(1rem, 2vw, 2rem);
     margin-bottom: 2rem;
+
+    /* contenedor a pantalla completa */
+    height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   .visually-hidden {
@@ -30,6 +42,7 @@
   }
 
   .chat-app__surface {
+    /* grid para main + aside, pero ocupando toda la altura disponible */
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
     gap: clamp(1.5rem, 3vw, 2.5rem);
@@ -38,12 +51,17 @@
     border: 1px solid var(--chat-border);
     box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
     padding: clamp(1.25rem, 3vw, 2rem);
+
+    flex: 1 1 auto;
+    min-height: 0;   /* clave para que hijos puedan usar overflow */
   }
 
   .chat-app__main {
     display: flex;
     flex-direction: column;
-    min-height: 500px;
+    /* antes tenías min-height: 500px; eso hacía crecer la página */
+    flex: 1 1 auto;
+    min-height: 0;   /* permite que .chat-thread scrollee */
   }
 
   .chat-app__header {
@@ -53,6 +71,7 @@
     gap: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--chat-border);
+    flex: 0 0 auto;
   }
 
   .chat-partner {
@@ -120,6 +139,7 @@
   .chat-toolbar {
     padding: 1rem 0;
     border-bottom: 1px solid var(--chat-border);
+    flex: 0 0 auto;
   }
 
   .chat-search {
@@ -223,12 +243,14 @@
   }
 
   .chat-thread {
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;           /* para que pueda hacer overflow en el contenedor */
     padding: 1.25rem 0;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    background-color: #f9fafb;
   }
 
   .chat-thread__empty {
@@ -339,6 +361,8 @@
   .chat-composer {
     border-top: 1px solid var(--chat-border);
     padding-top: 1rem;
+    flex: 0 0 auto;
+    background-color: #ffffff;
   }
 
   .chat-composer form {
@@ -420,6 +444,12 @@
 
   .chat-app__aside {
     position: relative;
+    /* que el panel lateral también tenga su propio scroll */
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
   }
 
   .chat-app__aside .card {
@@ -438,20 +468,28 @@
     .chat-app {
       border-radius: 0;
       padding: 1rem 0;
+
+      /* en móvil dejamos que el contenido crezca normal */
+      height: auto;
+      max-height: none;
     }
 
     .chat-app__surface {
       grid-template-columns: 1fr;
+      min-height: auto;
     }
 
     .chat-app__aside {
       order: -1;
+      max-height: none;
+      overflow: visible;
     }
 
     .message-bubble {
       max-width: 90%;
     }
   }
+
   .emoji-picker {
     display: flex;
     flex-wrap: wrap;

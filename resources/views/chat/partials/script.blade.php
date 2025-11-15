@@ -8,6 +8,13 @@
     return;
   }
 
+  // === Panel lateral de visita (HTML parcial) ===
+  // Asegúrate de tener un contenedor con id="chat-visit-panel"
+  // y en el div de #messages algo como:
+  // data-visit-panel-url="{{ route('chat.side-panel', $conversation) }}"
+  const visitPanelEl  = document.getElementById('chat-visit-panel');
+  const visitPanelUrl = messagesEl.dataset.visitPanelUrl || '';
+
   const form = document.getElementById('chat-form');
   const input = document.getElementById('chat-body');
   const sendBtn = document.getElementById('chat-send');
@@ -286,7 +293,7 @@
   const appendMessage = (msg) => {
     if (!msg) return;
 
-    // 🔒 Defensa anti-duplicado: si ya hay un bubble con este ID, no lo volvemos a agregar
+    // 🔒 Defensa anti-duplicado
     if (msg.id) {
       const existing = messagesEl.querySelector(`[data-message-id="${msg.id}"]`);
       if (existing) {
@@ -813,8 +820,26 @@
     );
   };
 
-  // === SETUP DE ECHO CON FILTRO ANTI-DUPLICADOS ===
+  // === Helper para refrescar el panel lateral de visita ===
+  const refreshVisitPanel = async () => {
+    if (!visitPanelEl || !visitPanelUrl) return;
+    try {
+      const res = await fetch(visitPanelUrl, {
+        headers: {
+          'Accept': 'text/html',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin',
+      });
+      if (!res.ok) throw new Error('Error al recargar panel de visita');
+      const html = await res.text();
+      visitPanelEl.innerHTML = html;
+    } catch (error) {
+      console.error('[CHAT] No se pudo actualizar el panel de visita', error);
+    }
+  };
 
+  // === SETUP DE ECHO (chat + visitas en tiempo real) ===
   const setupEcho = () => {
     if (!conversationId) {
       console.warn('[CHAT] No hay conversationId, no me puedo suscribir');
@@ -836,10 +861,25 @@
         if (!event || !event.message) return;
         const msg = event.message;
         const senderId = Number(msg.sender_id ?? msg.sender?.id ?? 0);
+        const body = msg.body || '';
 
-        // 👇 Si el mensaje es mío, lo ignoro: ya lo agregué cuando hice el POST
+        // 🗓️ Detectar mensajes de sistema sobre visitas
+        const isVisitSystemMessage =
+          body.startsWith('🗓️') ||
+          body.includes('agendó una visita') ||
+          body.includes('actualizó la cita') ||
+          body.includes('Confirmé la visita') ||
+          body.includes('Cancelé la visita');
+
+        if (isVisitSystemMessage) {
+          console.log('[CHAT] Mensaje de visita detectado, refrescando panel de visita...');
+          refreshVisitPanel();
+        }
+
+        // Si el mensaje es mío, no lo vuelvo a pintar en la lista (anti-duplicado),
+        // pero OJO: el panel de visita ya se refrescó arriba.
         if (senderId === meId) {
-          console.log('[CHAT] Mensaje propio recibido por Echo, se ignora para evitar duplicado:', msg.id);
+          console.log('[CHAT] Mensaje propio recibido por Echo, se ignora en la lista para evitar duplicado:', msg.id);
           return;
         }
 
