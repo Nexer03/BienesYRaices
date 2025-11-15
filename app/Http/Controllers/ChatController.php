@@ -268,4 +268,30 @@ class ChatController extends Controller
             optional($messages->first())->id,
         ];
     }
+
+    // Actualizar estado en tiempo real de la cita
+    public function sidePanel(\App\Models\Conversation $conversation)
+    {
+        $authUser = auth()->user();
+        $property = $conversation->property;
+
+        $nextVisit = $conversation->visits()
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->orderBy('visit_date')
+            ->first();
+
+        $activeReservation = $conversation->reservations()
+            ->whereNotIn('status', ['cancelled'])
+            ->latest()
+            ->first();
+
+        return view('chat.partials.side-panel', compact(
+            'conversation',
+            'property',
+            'nextVisit',
+            'activeReservation',
+            'authUser',
+        ));
+    }
+
 }
