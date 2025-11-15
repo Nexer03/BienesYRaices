@@ -1,12 +1,35 @@
 @php
-  $quickReplies = [
-    'Confirmo la cita ✅',
-    'Me interesa reservar esta propiedad. 📌',
-    '¿Puedes compartir más fotos? 📷',
-    'Gracias por la información. 🙏',
-  ];
+  $authUser = auth()->user();
+  $isAgent  = $authUser && $conversation->agent_id === $authUser->id;
+  $isClient = $authUser && $conversation->client_id === $authUser->id;
 
-  $hasMore = $hasMoreMessages ?? false;
+  if ($isAgent) {
+      // Quick replies pensados para el AGENTE
+      $quickReplies = [
+          'Puedo agendarte una visita 🗓️',
+          '¿Qué día y horario te acomoda mejor para la visita? ⏰',
+          'Te explico cómo funciona el proceso de compra. 📝',
+          'Puedo enviarte más fotos o un video de la propiedad. 📷',
+          'Te ayudo a resolver cualquier duda que tengas. 🙂',
+      ];
+  } elseif ($isClient) {
+      // Quick replies pensados para el CLIENTE
+      $quickReplies = [
+          'Me interesa agendar una visita ✅',
+          '¿Está disponible en estas fechas? 📅',
+          '¿Puedes compartir más fotos o video? 📷',
+          'Gracias por la información, lo revisaré. 🙏',
+          '¿Hay algún costo extra que deba considerar? 💸',
+      ];
+  } else {
+      // Fallback por si en algún momento entra alguien que no es ni agente ni cliente
+      $quickReplies = [
+          'Gracias por la información. 🙏',
+          '¿Puedes compartir más detalles? 📝',
+      ];
+  }
+
+  $hasMore  = $hasMoreMessages ?? false;
   $oldestId = $oldestMessageId ?? null;
 @endphp
 
@@ -92,6 +115,7 @@
         data-messages-url="{{ route('chat.messages', $conversation) }}"
         data-has-more="{{ $hasMore ? '1' : '0' }}"
         data-oldest-id="{{ $oldestId ?? '' }}"
+        data-visit-panel-url="{{ route('chat.side-panel', $conversation) }}"
       >
         <button
           type="button"
@@ -104,11 +128,11 @@
 
         @forelse ($messages as $msg)
           @php
-            $isMine       = $msg->sender_id === $yo;
-            $type         = $msg->attachment_type;
-            $isImage      = $type && str_starts_with($type, 'image/');
-            $isAudio      = $type && str_starts_with($type, 'audio/');
-            $isVideo      = $type && str_starts_with($type, 'video/');
+            $isMine        = $msg->sender_id === $yo;
+            $type          = $msg->attachment_type;
+            $isImage       = $type && str_starts_with($type, 'image/');
+            $isAudio       = $type && str_starts_with($type, 'audio/');
+            $isVideo       = $type && str_starts_with($type, 'video/');
             $hasAttachment = !empty($msg->attachment_url);
           @endphp
 
@@ -287,14 +311,18 @@
     </div>
 
     {{-- PANEL LATERAL --}}
-    <aside class="chat-app__aside">
+    <aside
+      id="chat-visit-panel"
+      class="chat-app__aside"
+    >
       @include('chat.partials.side-panel', [
-        'conversation'       => $conversation,
-        'property'           => $property ?? null,
-        'nextVisit'          => $nextVisit ?? null,
-        'activeReservation'  => $activeReservation ?? null,
-        'authUser'           => auth()->user(),
+          'conversation'      => $conversation,
+          'property'          => $property ?? null,
+          'nextVisit'         => $nextVisit ?? null,
+          'activeReservation' => $activeReservation ?? null,
+          'authUser'          => auth()->user(),
       ])
     </aside>
+
   </div>
 </div>
