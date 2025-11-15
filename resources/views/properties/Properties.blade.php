@@ -32,13 +32,52 @@
             display: none !important;
         }
 
-        /* Estilos del modal (del old, adaptados a Tailwind) */
-        .modal { display: flex; justify-content:center; align-items:center; position:fixed; inset:0; background:rgba(0,0,0,0.6); transition: opacity 0.25s ease; }
+        /* ===== MODAL REDISEÑADO ===== */
+        .modal {
+            display: flex;
+            justify-content:center;
+            align-items:center;
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.55);
+            transition: opacity 0.22s ease;
+            z-index: 60;
+        }
         .modal.hidden { opacity: 0; pointer-events: none; }
-        .modal-content { background:white; padding:1.5rem; border-radius:0.75rem; max-width:800px; width:100%; transform: scale(0.95); transition: transform 0.25s ease; }
-        .modal:not(.hidden) .modal-content { transform: scale(1); } /* Animación al abrir */
-        .carousel-container { display:flex; gap:0.75rem; overflow-x:auto; scroll-behavior:smooth; }
-        .carousel-item { min-width:160px; height:110px; object-fit:cover; border-radius:0.5rem; }
+
+        .modal-content {
+            position: relative;
+            background:white;
+            padding:1.5rem 1.75rem;
+            border-radius:1.25rem;
+            max-width:720px;
+            width:100%;
+            transform: translateY(8px) scale(0.97);
+            transition: transform 0.22s ease;
+            box-shadow: 0 20px 45px rgba(15,23,42,0.30);
+        }
+        .modal:not(.hidden) .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Contenedor de imagen principal */
+        .carousel-container {
+            overflow:hidden;
+            border-radius:1rem;
+            background:#f3f4f6;
+            aspect-ratio: 4 / 3; /* relación 4:3 */
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        /* Imagen dentro del modal */
+        .carousel-item {
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:inherit;
+        }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
 </head>
@@ -52,7 +91,7 @@
     <div class="flex items-center space-x-3">
       <a href="{{ url('/') }}" class="text-2xl font-bold text-blue-600 flex items-center">
         <i class="fas fa-home mr-2"></i>
-        Sin beca <span class="text-gray-700"> no hay renta </span>
+        Sin beca&nbsp;<span class="text-gray-700">no hay renta</span>
       </a>
     </div>
 
@@ -74,7 +113,7 @@
           class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
           <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
 
-          <div id="price-slider" class="mb-4"></div>
+          <div id="price-slider" class="mb-4 mx-3"></div>
 
           <div class="flex justify-between items-center text-sm text-gray-700">
             <div class="flex items-center gap-1 border rounded-md p-2">
@@ -120,8 +159,8 @@
         Perfil
       </a>
       @else
-      <button type="button" onclick="openLoginModal()"
-        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
+      <button type="button" onclick="openLoginModal()
+        " class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
         Iniciar sesión
       </button>
       @endauth
@@ -138,17 +177,27 @@
         </section>
     </main>
 
-    {{-- Modal de Propiedad --}}
+    {{-- Modal de Propiedad (rediseñado) --}}
     <div id="propertyModal" class="modal hidden">
         <div class="modal-content">
-            <button onclick="closePropertyModal()" class="absolute right-3 top-3 text-gray-500 hover:text-gray-800">
-                <i class="fas fa-times"></i>
+            {{-- Botón cerrar --}}
+            <button onclick="closePropertyModal()"
+                    class="absolute right-3 top-3 text-gray-400 hover:text-gray-700">
+                <i class="fas fa-times text-sm"></i>
             </button>
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
+
+            {{-- Corazón flotante (solo diseño, sin lógica) --}}
+            <button type="button"
+                    class="absolute right-12 top-3 bg-white/95 rounded-full p-2 shadow hover:bg-gray-100">
+                <i class="fa-regular fa-heart text-gray-700 text-sm"></i>
+            </button>
+
+            <div class="flex flex-col md:flex-row gap-6 mt-4 md:mt-2">
+                <div class="w-full md:w-1/2">
                     <div id="propertyCarousel" class="carousel-container"></div>
                 </div>
-                <div id="modalInfo" class="space-y-2"></div>
+
+                <div id="modalInfo" class="w-full md:w-1/2 flex flex-col justify-between"></div>
             </div>
         </div>
     </div>
@@ -244,51 +293,81 @@
 
         // Función para filtrar marcadores según precio y tipo
         function filterMarkers() {
-    let minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
-    let maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
+            let minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+            let maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
 
-    // Evitar precios negativos
-    minPrice = Math.max(0, minPrice);
-    maxPrice = Math.max(0, maxPrice);
+            // Evitar precios negativos
+            minPrice = Math.max(0, minPrice);
+            maxPrice = Math.max(0, maxPrice);
 
-    const listingType = document.getElementById('listingType').value;
+            const listingType = document.getElementById('listingType').value;
 
-    markers.forEach(marker => {
-        const matchPrice = marker.price >= minPrice && marker.price <= maxPrice;
-        const matchType = listingType === '' || marker.listingType === listingType;
-        marker.setMap(matchPrice && matchType ? map : null);
-    });
-}
+            markers.forEach(marker => {
+                const matchPrice = marker.price >= minPrice && marker.price <= maxPrice;
+                const matchType = listingType === '' || marker.listingType === listingType;
+                marker.setMap(matchPrice && matchType ? map : null);
+            });
+        }
 
-
-        // Función para abrir modal con info y carrusel de imágenes
+        // Función para abrir modal con info y diseño mejorado
         function openPropertyModal(prop) {
+            if (!modal || !carousel || !modalInfo) return;
+
             carousel.innerHTML = '';
             modalInfo.innerHTML = '';
 
+            const typeLabel    = prop.listing_type === 'sale' ? 'En venta' : 'En renta';
+            const locationText = prop.location ?? '';
+
+            // ---- LADO DERECHO: TEXTO ----
             modalInfo.innerHTML = `
-                <h3 class="font-semibold text-lg truncate mb-1">${prop.title}</h3>
-                <p class="text-sm text-gray-600 truncate mb-2">${prop.location ?? ''}</p>
-                <p class="text-lg font-bold text-blue-600">$${Number(prop.price).toLocaleString('es-MX')}</p>
-                <a href="/properties/${prop.id}" class="text-blue-500 hover:underline text-sm mt-2 inline-block">Ver detalles</a>
+                <div class="space-y-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700">
+                        ${typeLabel}
+                    </span>
+                    <h3 class="text-xl font-semibold text-gray-900 leading-snug line-clamp-2">
+                        ${prop.title}
+                    </h3>
+                    <p class="text-sm text-gray-600 line-clamp-2">
+                        ${locationText}
+                    </p>
+                </div>
+                <div class="mt-4 space-y-3">
+                    <p class="text-2xl font-bold text-blue-600">
+                        $${Number(prop.price).toLocaleString('es-MX')}
+                    </p>
+                    <a href="/properties/${prop.id}"
+                       class="inline-flex items-center px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                        Ver detalles
+                        <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </a>
+                </div>
             `;
 
+            // ---- LADO IZQUIERDO: IMAGEN ----
             const images = prop.images && prop.images.length ? prop.images : [];
-            if(images.length > 0) {
-                images.forEach(imgData => {
-                    const imgEl = document.createElement('img');
-                    imgEl.src = `{{ asset('storage') }}/${imgData.image_path}`;
-                    imgEl.alt = prop.title;
-                    imgEl.className = 'carousel-item';
-                    carousel.appendChild(imgEl);
-                });
+            let mainSrc;
+
+            if (images.length > 0) {
+                mainSrc = `{{ asset('storage') }}/${images[0].image_path}`;
             } else {
-                const imgEl = document.createElement('img');
-                imgEl.src = 'https://via.placeholder.com/400x200?text=Sin+Imagen';
-                imgEl.alt = 'Sin imagen';
-                imgEl.className = 'carousel-item';
-                carousel.appendChild(imgEl);
+                mainSrc = 'https://via.placeholder.com/400x300?text=Sin+Imagen';
             }
+
+            const extraCount = Math.max(0, images.length - 1);
+
+            carousel.innerHTML = `
+                <div class="relative w-full h-full">
+                    <img src="${mainSrc}" alt="${prop.title}" class="carousel-item" />
+                    ${
+                        extraCount > 0
+                        ? `<span class="absolute bottom-3 right-3 bg-black/60 text-white text-[11px] px-2 py-1 rounded-full">
+                               +${extraCount} fotos
+                           </span>`
+                        : ''
+                    }
+                </div>
+            `;
 
             modal.classList.remove('hidden');
         }
@@ -375,15 +454,15 @@
             // Slider events
             priceSlider.noUiSlider.off && priceSlider.noUiSlider.off('update'); // ensure single binding if supported
             priceSlider.noUiSlider.on('update', function(values) {
-                const vMin = Math.round(values[0]);
-                const vMax = Math.round(values[1]);
-                minDisplay.textContent = formatter.format(vMin);
-                maxDisplay.textContent = formatter.format(vMax);
-                minInput.value = vMin;
-                maxInput.value = vMax;
-                minPriceCompat.value = vMin;
-                maxPriceCompat.value = vMax;
-                updateButtonText(vMin, vMax, cfg);
+                const minValue = Math.round(values[0]);
+                const maxValue = Math.round(values[1]);
+                minDisplay.textContent = formatter.format(minValue);
+                maxDisplay.textContent = formatter.format(maxValue);
+                minInput.value = minValue;
+                maxInput.value = maxValue;
+                minPriceCompat.value = minValue;
+                maxPriceCompat.value = maxValue;
+                updateButtonText(minValue, maxValue, cfg);
             });
         }
 
@@ -406,14 +485,12 @@
             typeSelect.addEventListener('change', () => {
                 const cfg = getRangeByType();
 
-                // 1) sincroniza inputs que usa filterMarkers()
+                // sincroniza inputs que usa filterMarkers()
                 minPriceCompat.value = cfg.min;
                 maxPriceCompat.value = cfg.max;
 
-                // 2) reconfigura el slider a los nuevos límites
                 initSlider();
 
-                // 3) aplica el filtro inmediatamente
                 if (typeof filterMarkers === 'function') filterMarkers();
             });
         }

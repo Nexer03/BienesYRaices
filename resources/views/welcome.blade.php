@@ -90,16 +90,16 @@
                 </div>
 
                 {{-- Filtro de precio --}}
-                <div class="relative w-full md:w-64">
+                <div class="relative w-full md:w-72">
                     <button type="button" id="price-filter-button"
                             class="w-full text-left border-gray-300 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
                         <span>Precio</span>
                     </button>
 
                     <div id="price-dropdown"
-                         class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
+                         class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
                         <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
-                        <div id="price-slider" class="mb-4"></div>
+                        <div id="price-slider" class="mb-4 mx-3"></div>
                         <div class="flex justify-between items-center text-sm text-gray-700">
                             <div class="flex items-center gap-1 border rounded-md p-2">
                                 $ <span id="slider-min-value"></span>
@@ -138,7 +138,7 @@
         @auth
             @if ($recommendedProperties->isNotEmpty())
                 <section>
-                    <h2 class="text-2xl font-semibold mb-4">Recomendado para Tí según tus preferencias.</h2>
+                    <h2 class="text-2xl font-semibold mb-4">Recomendado para Ti según tus preferencias.</h2>
                     <div class="relative group">
                         <button
                             class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
@@ -148,14 +148,21 @@
                             @foreach ($recommendedProperties as $property)
                                 <a href="{{ route('properties.show', $property) }}"
                                    class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
-                                    @if ($property->images->isNotEmpty())
-                                        <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                                             alt="Imagen de {{ $property->title }}"
-                                             class="w-full h-48 object-cover rounded-t-xl">
-                                    @else
-                                        <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
-                                             class="w-full h-48 object-cover rounded-t-xl">
-                                    @endif
+                                    <div class="relative">
+                                        @if ($property->images->isNotEmpty())
+                                            <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                                 alt="Imagen de {{ $property->title }}"
+                                                 class="w-full h-48 object-cover rounded-t-xl">
+                                        @else
+                                            <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
+                                                 class="w-full h-48 object-cover rounded-t-xl">
+                                        @endif
+
+                                        <div class="absolute top-2 right-2 bg-white/80 rounded-full p-2 shadow-sm">
+                                            <i class="fa-regular fa-heart text-gray-600 text-lg"></i>
+                                        </div>
+                                    </div>
+
                                     <div class="p-3">
                                         <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
                                         <p class="text-sm text-gray-500 truncate mt-1">
@@ -190,15 +197,22 @@
                         @foreach($cityProperties as $property)
                             <a href="{{ route('properties.show', $property) }}"
                                class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
-                                @if($property->images->isNotEmpty())
-                                    <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                                         alt="Imagen de {{ $property->title }}"
-                                         class="w-full h-48 object-cover rounded-t-xl">
-                                @else
-                                    <img src="https://via.placeholder.com/300x200?text=Sin+Imagen"
-                                         alt="Sin imagen disponible"
-                                         class="w-full h-48 object-cover rounded-t-xl">
-                                @endif
+                                <div class="relative">
+                                    @if($property->images->isNotEmpty())
+                                        <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                             alt="Imagen de {{ $property->title }}"
+                                             class="w-full h-48 object-cover rounded-t-xl">
+                                    @else
+                                        <img src="https://via.placeholder.com/300x200?text=Sin+Imagen"
+                                             alt="Sin imagen disponible"
+                                             class="w-full h-48 object-cover rounded-t-xl">
+                                    @endif
+
+                                    <div class="absolute top-2 right-2 bg-white/80 rounded-full p-2 shadow-sm">
+                                        <i class="fa-regular fa-heart text-gray-600 text-lg"></i>
+                                    </div>
+                                </div>
+
                                 <div class="p-3">
                                     <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
                                     <p class="text-sm text-gray-500 truncate mt-1">
@@ -231,14 +245,21 @@
                     @forelse ($properties as $property)
                         <a href="{{ route('properties.show', $property) }}"
                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0">
-                            @if ($property->images->isNotEmpty())
-                                <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
-                                     alt="Imagen de {{ $property->title }}"
-                                     class="w-full h-48 object-cover rounded-t-xl">
-                            @else
-                                <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
-                                     class="w-full h-48 object-cover rounded-t-xl">
-                            @endif
+                            <div class="relative">
+                                @if ($property->images->isNotEmpty())
+                                    <img src="{{ asset('storage/' . $property->images->first()->image_path) }}"
+                                         alt="Imagen de {{ $property->title }}"
+                                         class="w-full h-48 object-cover rounded-t-xl">
+                                @else
+                                    <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible"
+                                         class="w-full h-48 object-cover rounded-t-xl">
+                                @endif
+
+                                <div class="absolute top-2 right-2 bg-white/80 rounded-full p-2 shadow-sm">
+                                    <i class="fa-regular fa-heart text-gray-600 text-lg"></i>
+                                </div>
+                            </div>
+
                             <div class="p-3">
                                 <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
                                 <p class="text-sm text-gray-500 truncate mt-1">
@@ -324,10 +345,10 @@
                 return;
             }
 
-            const minDisplay      = document.getElementById('slider-min-value');
-            const maxDisplay      = document.getElementById('slider-max-value');
-            const priceButton     = document.getElementById('price-filter-button');
-            const priceDropdown   = document.getElementById('price-dropdown');
+            const minDisplay       = document.getElementById('slider-min-value');
+            const maxDisplay       = document.getElementById('slider-max-value');
+            const priceButton      = document.getElementById('price-filter-button');
+            const priceDropdown    = document.getElementById('price-dropdown');
             const applyPriceButton = document.getElementById('apply-price-button');
 
             const currentType = '{{ $typeFilter }}';
@@ -346,8 +367,8 @@
             const currentMinFromRequest = {{ request('min_price', 'null') }};
             const currentMaxFromRequest = {{ request('max_price', 'null') }};
 
-            const currentMin = currentMinFromRequest !== null ? currentMinFromRequest : minRange;
-            const currentMax = currentMaxFromRequest !== null ? currentMaxFromRequest : maxRange;
+            const currentMin = currentMinFromRequest !== null ? Number(currentMinFromRequest) : minRange;
+            const currentMax = currentMaxFromRequest !== null ? Number(currentMaxFromRequest) : maxRange;
 
             const formatter = new Intl.NumberFormat('es-MX', { style: 'decimal', maximumFractionDigits: 0 });
 
