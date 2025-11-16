@@ -10,7 +10,7 @@
         /* Mantenemos #map al 80vh para que ocupe gran parte de la pantalla */
         #map { height: 80vh; width: 100%; }
 
-        /* Estilos para el marcador de precio (del old) */
+        /* Estilos para el marcador de precio */
         .price-marker {
             background-color: white;
             color: #222;
@@ -25,7 +25,7 @@
         }
         .price-marker:hover { transform: scale(1.1); }
 
-        /* Ocultar POIs (del old) */
+        /* Ocultar POIs */
         .gm-style .gm-style-iw,
         .gm-style img[src*="spotlight-poi"],
         .gm-style div[style*="background-image"] {
@@ -83,98 +83,91 @@
 </head>
 
 <body class="min-h-screen flex flex-col bg-gray-50">
-    {{-- Encabezado --}}
-    <header class="sticky top-0 bg-white shadow-sm z-50">
-  <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-
-    <!-- Logo -->
-    <div class="flex items-center space-x-3">
-      <a href="{{ url('/') }}" class="text-2xl font-bold text-blue-600 flex items-center">
-        <i class="fas fa-home mr-2"></i>
-        Sin beca&nbsp;<span class="text-gray-700">no hay renta</span>
-      </a>
-    </div>
-
-    <!-- Filtros en el medio -->
-    <div class="hidden md:flex items-center space-x-4 flex-1 justify-center max-w-2xl mx-8">
-
-      <!-- Inputs ocultos (compatibilidad con filterMarkers) -->
-      <input type="number" id="minPrice" class="hidden" />
-      <input type="number" id="maxPrice" class="hidden" />
-
-      <!-- Precio -->
-      <div class="relative w-full max-w-md">
-        <button type="button" id="price-filter-button"
-          class="w-full text-left border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
-          <span>Precio</span>
-        </button>
-
-        <div id="price-dropdown"
-          class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-10 p-4">
-          <p class="font-semibold text-gray-800 mb-4">Rango de Precio</p>
-
-          <div id="price-slider" class="mb-4 mx-3"></div>
-
-          <div class="flex justify-between items-center text-sm text-gray-700">
-            <div class="flex items-center gap-1 border rounded-md p-2">
-              $ <span id="slider-min-value"></span>
-            </div>
-            <div class="text-gray-400">-</div>
-            <div class="flex items-center gap-1 border rounded-md p-2">
-              $ <span id="slider-max-value"></span>
-            </div>
-          </div>
-
-          <input type="hidden" id="slider-min-input">
-          <input type="hidden" id="slider-max-input">
-
-          <div class="mt-4 text-right">
-            <button type="button" id="apply-price-button"
-              class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-blue-600 transition">
-              Aplicar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tipo de propiedad -->
-      <select id="listingType"
-        class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
-        <option value="rent">Renta</option>
-        <option value="sale">Venta</option>
-      </select>
-
-      <!-- Botón filtrar -->
-      <button id="filterBtn"
-        class="bg-blue-500 text-white px-5 py-2 rounded-full hover:bg-blue-600 transition font-medium">
-        Filtrar
-      </button>
-    </div>
-
-    <!-- Navegación -->
-    <nav class="flex items-center space-x-6 text-sm text-gray-700">
-      @auth
-      <a href="{{ url('/dashboard') }}"
-        class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition text-center">
-        Perfil
-      </a>
-      @else
-      <button type="button" onclick="openLoginModal()
-        " class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
-        Iniciar sesión
-      </button>
-      @endauth
-    </nav>
-  </div>
-</header>
-
+    {{-- Encabezado global --}}
+    <x-main-header />
 
     {{-- Contenido Principal --}}
-    <main class="flex-grow">
-        {{-- Mapa (ocupa todo el espacio disponible) --}}
-        <section class="w-full h-full">
-            <div id="map"></div>
-        </section>
+    <main class="relative flex-grow">
+        {{-- Filtros flotantes a la izquierda --}}
+        <aside id="map-filter-panel"
+        class="fixed top-24 left-[8rem] z-40 w-72 max-w-[90vw]">
+            <div class="bg-white/95 backdrop-blur-sm shadow-xl rounded-2xl p-4 space-y-4 border border-gray-100">
+
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-filter text-blue-500"></i>
+                        <span>Filtros del mapa</span>
+                    </h2>
+                </div>
+
+                {{-- Inputs ocultos (compatibilidad con filterMarkers) --}}
+                <input type="number" id="minPrice" class="hidden" />
+                <input type="number" id="maxPrice" class="hidden" />
+
+                {{-- Filtro de precio --}}
+                <div class="space-y-2">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio</span>
+
+                    <div class="relative w-full">
+                        <button type="button" id="price-filter-button"
+                                class="w-full text-left border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
+                            <span>Precio</span>
+                        </button>
+
+                        <div id="price-dropdown"
+                             class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
+                            <p class="font-semibold text-gray-800 mb-3 text-sm">Rango de Precio</p>
+
+                            <div id="price-slider" class="mb-4 mx-1"></div>
+
+                            <div class="flex justify-between items-center text-xs text-gray-700">
+                                <div class="flex items-center gap-1 border rounded-md px-2 py-1 bg-gray-50">
+                                    $ <span id="slider-min-value"></span>
+                                </div>
+                                <div class="text-gray-400">-</div>
+                                <div class="flex items-center gap-1 border rounded-md px-2 py-1 bg-gray-50">
+                                    $ <span id="slider-max-value"></span>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="slider-min-input">
+                            <input type="hidden" id="slider-max-input">
+
+                            <div class="mt-4 text-right">
+                                <button type="button" id="apply-price-button"
+                                        class="bg-blue-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-blue-600 transition">
+                                    Aplicar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Tipo de propiedad --}}
+                <div class="space-y-1">
+                    <label for="listingType" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Tipo de propiedad
+                    </label>
+                    <select id="listingType"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400">
+                        <option value="rent">Renta</option>
+                        <option value="sale">Venta</option>
+                    </select>
+                </div>
+
+                {{-- Botón filtrar --}}
+                <button id="filterBtn"
+                        class="w-full bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition text-sm font-medium flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Aplicar filtros</span>
+                </button>
+            </div>
+        </aside>
+
+       {{-- Mapa con margen/padding lateral --}}
+    <section class="w-full h-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-8">
+        <div id="map" class="rounded-2xl overflow-hidden shadow-md"></div>
+    </section>
     </main>
 
     {{-- Modal de Propiedad (rediseñado) --}}
@@ -401,7 +394,7 @@
         function getRangeByType() {
             const t = getType();
             if (t === 'sale') return RANGES.sale;
-            // default rent when "Todos" or "rent"
+            // default rent when "Todos" o "rent"
             return RANGES.rent;
         }
 
@@ -498,8 +491,37 @@
         initSlider();
     });
     </script>
-      <!-- FOOTER -->
-  <x-main-footer />
+<script>
+  (function () {
+    const searchToggle = document.getElementById('search-toggle');
+    const filterPanel  = document.getElementById('map-filter-panel');
+    if (!searchToggle || !filterPanel) return;
+
+    function syncByWidth() {
+      // Desktop: siempre visible
+      if (window.innerWidth >= 768) {
+        filterPanel.classList.remove('hidden');
+      } else {
+        // Móvil: se esconde por defecto
+        filterPanel.classList.add('hidden');
+      }
+    }
+
+    syncByWidth();
+
+    // Click en la lupa → mostrar/ocultar filtros en móvil
+    searchToggle.addEventListener('click', () => {
+      if (window.innerWidth < 768) {
+        filterPanel.classList.toggle('hidden');
+      }
+    });
+
+    window.addEventListener('resize', syncByWidth);
+  })();
+</script>
+
+    <!-- FOOTER -->
+    <x-main-footer />
 
 </body>
 </html>
