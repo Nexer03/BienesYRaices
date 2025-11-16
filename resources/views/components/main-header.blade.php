@@ -142,6 +142,7 @@
         @if(!in_array($role, ['agent','admin']))
           <a href="{{ route('visits.my') }}" class="hover:text-blue-600 transition">Mis Reservas</a>
           <a href="{{ route('favorites.index') }}" class="hover:text-blue-600 transition">Favoritos</a>
+          <a href="{{ route('chat.index') }}" class="hover:text-blue-600 transition">Mis Mensajes</a>
           <a href="{{ route('properties.map') }}" class="hover:text-blue-600 transition">Mapa</a>
           <a href="{{ route('agent.view') }}" class="hover:text-blue-600 transition">Vuélvete Agente</a>
         @endif
@@ -167,7 +168,8 @@
           </button>
           <div id="profileMenu"
                class="hidden absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1">
-            <a href="{{route('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Ver perfil</a>
+            <a href="{{route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Ver Perfil</a>
+            <a href="{{route('preferences.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Editar Preferencias</a>
             <form method="POST" action="{{ route('logout') }}">
               @csrf
               <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Cerrar sesión</button>
