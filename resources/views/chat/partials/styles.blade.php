@@ -8,6 +8,181 @@
     --chat-muted: #94a3b8;
   }
 
+    /* ================== Calendario de reservas (Flatpickr) ================== */
+    /* Ocultamos el input “host” de flatpickr (el que se ve arriba en el chat) */
+    .fp-hidden-input{
+    position:absolute !important;
+    width:1px !important;
+    height:1px !important;
+    padding:0 !important;
+    margin:-1px !important;
+    border:0 !important;
+    clip:rect(0 0 0 0) !important;
+    overflow:hidden !important;
+    white-space:nowrap !important;
+    }
+
+    /* Calendario embebido en el shell */
+    .fp-shell .flatpickr-calendar{
+    position:static !important;
+    border:0 !important;
+    box-shadow:none !important;
+    width:100% !important;
+    max-width:100%;
+    background:#fff;
+    }
+
+    /* ====== LOOK tipo Airbnb ====== */
+    .fp-shell .flatpickr-months{
+    display:flex;
+    background:#fff;
+    padding:10px 0 0;
+    }
+    .fp-shell .flatpickr-months .flatpickr-month{
+    flex:1;
+    color:#222;
+    height:50px;
+    line-height:50px;
+    text-align:center;
+    position:relative;
+    }
+    .fp-shell .flatpickr-months .flatpickr-prev-month,
+    .fp-shell .flatpickr-months .flatpickr-next-month{
+    position:absolute;
+    top:50%;
+    width:20px;
+    height:20px;
+    margin-top:-10px;
+    border-radius:9999px;
+    color:#717171;
+    fill:#717171;
+    cursor:pointer;
+    }
+    .fp-shell .flatpickr-months .flatpickr-prev-month{ left:3px; }
+    .fp-shell .flatpickr-months .flatpickr-next-month{ right:3px; }
+    .fp-shell .flatpickr-months .flatpickr-prev-month:hover,
+    .fp-shell .flatpickr-months .flatpickr-next-month:hover{
+    color:#222;
+    fill:#222;
+    }
+    .fp-shell .flatpickr-months .flatpickr-current-month{
+    font-size:110%;
+    }
+    .fp-shell .flatpickr-months .flatpickr-current-month .cur-month{
+    font-weight:700;
+    color:#222;
+    }
+    .fp-shell .flatpickr-months .flatpickr-current-month .cur-year{
+    font-weight:400;
+    color:#717171;
+    background:transparent;
+    }
+
+    .fp-shell .flatpickr-weekdays{
+    display:flex;
+    align-items:center;
+    height:28px;
+    margin-bottom:5px;
+    }
+    .fp-shell .flatpickr-weekdays .flatpickr-weekdaycontainer{
+    flex:1;
+    display:flex;
+    }
+    .fp-shell span.flatpickr-weekday{
+    flex:1;
+    text-align:center;
+    font-size:11px;
+    color:#717171!important;
+    font-weight:600;
+    text-transform:uppercase;
+    }
+
+    .fp-shell .flatpickr-days{
+    width:100%;
+    }
+    .fp-shell .dayContainer{
+    padding:1px 0 10px;
+    min-width:315px;
+    }
+    .fp-shell .flatpickr-day{
+    color:#222;
+    border:1px solid transparent;
+    background:none;
+    border-radius:50%;
+    height:38px;
+    line-height:38px;
+    max-width:38px;
+    flex:0 0 14.2857143%;
+    text-align:center;
+    cursor:pointer;
+    }
+    .fp-shell .flatpickr-day:hover,
+    .fp-shell .flatpickr-day:focus{
+    background:#f7f7f7;
+    border-color:#f7f7f7;
+    outline:0;
+    }
+    .fp-shell .flatpickr-day.today{
+    border-color:#222;
+    color:#222;
+    }
+    .fp-shell .flatpickr-day.today:hover{
+    background:#222;
+    border-color:#222;
+    color:#fff;
+    }
+
+    .fp-shell .flatpickr-day.selected,
+    .fp-shell .flatpickr-day.startRange,
+    .fp-shell .flatpickr-day.endRange{
+    background:#222!important;
+    color:#fff!important;
+    border-color:#222!important;
+    }
+    .fp-shell .flatpickr-day.inRange{
+    background:#f7f7f7!important;
+    border-color:#f7f7f7!important;
+    box-shadow:-5px 0 0 #f7f7f7,5px 0 0 #f7f7f7;
+    }
+    .fp-shell .flatpickr-day.startRange{
+    border-radius:50% 0 0 50%;
+    }
+    .fp-shell .flatpickr-day.endRange{
+    border-radius:0 50% 50% 0;
+    }
+    .fp-shell .flatpickr-day.startRange.endRange{
+    border-radius:50%;
+    }
+
+    /* ==== Fechas no disponibles (forzado, siempre gris) ==== */
+    .fp-shell .flatpickr-day.flatpickr-disabled,
+    .fp-shell .flatpickr-day.flatpickr-disabled:hover,
+    .fp-shell .flatpickr-day.disabled,
+    .fp-shell .flatpickr-day.disabled:hover{
+    background-color:#f3f4f6 !important; /* gris claro */
+    color:#9ca3af !important;            /* texto gris medio */
+    border-color:transparent !important;
+    cursor:not-allowed !important;
+    opacity:1 !important;
+    text-decoration:none !important;
+    }
+
+    /* Dentro de rangos deshabilitados */
+    .fp-shell .flatpickr-day.flatpickr-disabled.inRange,
+    .fp-shell .flatpickr-day.disabled.inRange{
+    background-color:#e5e7eb !important; /* gris un poco más oscuro */
+    color:#9ca3af !important;
+    }
+
+    /* Línea divisoria sutil entre meses en desktop */
+    @media (min-width:640px){
+    .fp-shell .flatpickr-days .dayContainer:nth-child(1){
+        border-right:1px solid #e5e7eb;
+    }
+    }
+
+    /* ==================Aqui termina Calendario de reservas (Flatpickr) ================== */
+
   /* IMPORTANTE: que todo pueda usar 100vh correctamente */
   html,
   body {
