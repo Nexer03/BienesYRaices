@@ -71,30 +71,101 @@
 
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-300">
 
-  {{-- Prompt de preferencias --}}
-  @auth
-    @if (is_null($userPreferences))
-      <div class="fixed inset-0 bg-gray-800/75 dark:bg-black/70 flex items-center justify-center z-50 p-4" id="preferences-prompt">
-        <div class="bg-white dark:bg-gray-900 dark:text-gray-100 rounded-lg shadow-xl p-6 max-w-md text-center">
-          <h3 class="text-xl font-semibold mb-3">¡Personaliza tu búsqueda!</h3>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
-            Aún no has guardado tus preferencias. Añádelas para que podamos mostrarte las propiedades que más te interesan.
-          </p>
-          <div class="mb-4 text-left">
-            <input type="checkbox" id="dont-show-again" class="mr-2" />
-            <label for="dont-show-again" class="text-sm text-gray-600 dark:text-gray-300">No volver a mostrar este mensaje</label>
-          </div>
-          <div class="flex justify-center gap-4">
-            <a href="{{ route('preferences.edit') }}" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition">Añadir Preferencias</a>
-            <button type="button" onclick="dismissPrompt()"
-              class="bg-gray-300 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-400 transition dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">
-              Ahora No
+    {{-- Prompt de preferencias --}}
+    @auth
+        @if (is_null($userPreferences))
+            <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-4"
+                 id="preferences-prompt">
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-md text-center">
+                    <h3 class="text-xl font-semibold mb-3">¡Personaliza tu búsqueda!</h3>
+                    <p class="text-gray-600 mb-4">
+                        Aún no has guardado tus preferencias. Añádelas para que podamos mostrarte las propiedades que más te interesan.
+                    </p>
+                    <div class="mb-4 text-left">
+                        <input type="checkbox" id="dont-show-again" class="mr-2">
+                        <label for="dont-show-again" class="text-sm text-gray-600">No volver a mostrar este mensaje</label>
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <a href="{{ route('preferences.edit') }}"
+                           class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition">
+                            Añadir Preferencias
+                        </a>
+                        <button type="button" onclick="dismissPrompt()"
+                                class="bg-gray-300 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-400 transition">
+                            Ahora No
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endauth
+
+        {{-- Modal de vista rápida de propiedad --}}
+    <div id="property-modal"
+         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 relative">
+            <button id="property-modal-close"
+                    class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black">
+                &times;
             </button>
-          </div>
+
+            <div class="md:flex">
+                <div class="md:w-1/2">
+                    <img id="property-modal-image"
+                         src=""
+                         alt="Vista rápida propiedad"
+                         class="w-full h-64 md:h-full object-cover rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none">
+                </div>
+
+                <div class="md:w-1/2 p-6 space-y-3">
+                    <p id="property-modal-type"
+                       class="text-xs font-semibold uppercase tracking-wide text-blue-500"></p>
+
+                    <h3 id="property-modal-title"
+                        class="text-2xl font-semibold text-gray-900"></h3>
+
+                    <p id="property-modal-location"
+                       class="text-sm text-gray-500 flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span></span>
+                    </p>
+
+                    <p id="property-modal-price"
+                       class="text-xl font-bold text-blue-600 mt-2"></p>
+
+                    <div id="property-modal-meta"
+                         class="flex flex-wrap gap-3 text-sm text-gray-600">
+                        <span id="property-modal-bedrooms"
+                              class="inline-flex items-center gap-1">
+                            <i class="fa-solid fa-bed"></i>
+                            <span></span>
+                        </span>
+                        <span id="property-modal-bathrooms"
+                              class="inline-flex items-center gap-1">
+                            <i class="fa-solid fa-bath"></i>
+                            <span></span>
+                        </span>
+                    </div>
+
+                    <p id="property-modal-description"
+                       class="text-sm text-gray-600 leading-relaxed"></p>
+
+                    <div class="pt-4 flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+                        <button type="button"
+                                class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                data-close-modal>
+                            Seguir explorando
+                        </button>
+                        <a id="property-modal-link"
+                           href="#"
+                           class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">
+                            Ver detalles completos
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    @endif
-  @endauth
+    </div>
 
   {{-- HEADER --}}
   <x-main-header />
@@ -168,127 +239,268 @@
     </div>
   </section>
 
-  {{-- Contenido Principal --}}
-  <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
-    {{-- Recomendaciones --}}
-    @auth
-      @if ($recommendedProperties->isNotEmpty())
-        <section>
-          <h2 class="text-2xl font-semibold mb-4">Recomendado para Ti según tus preferencias.</h2>
-          <div class="relative group">
-            <button
-              class="carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
-              <i class="fas fa-chevron-left text-gray-700 dark:text-gray-200 text-lg"></i>
-            </button>
-            <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-              @foreach ($recommendedProperties as $property)
-                <a href="{{ route('properties.show', $property) }}"
-                  class="block w-64 bg-white dark:bg-gray-900 rounded-xl border border-transparent dark:border-gray-800 shadow hover:shadow-lg transition flex-shrink-0">
-                  <div class="relative">
-                    @if ($property->images->isNotEmpty())
-                      <img src="{{ asset('storage/' . $property->images->first()->image_path) }}" alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl" />
-                    @else
-                      <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible" class="w-full h-48 object-cover rounded-t-xl" />
-                    @endif
-                    <div class="absolute top-2 right-2 bg-white/80 dark:bg-gray-800/80 rounded-full p-2 shadow-sm">
-                      <i class="fa-regular fa-heart text-gray-600 dark:text-gray-200 text-lg"></i>
+    {{-- Contenido Principal --}}
+    <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
+
+        {{-- Recomendaciones --}}
+        @auth
+            @if ($recommendedProperties->isNotEmpty())
+                <section>
+                    <h2 class="text-2xl font-semibold mb-4">Recomendado para Ti según tus preferencias.</h2>
+                    <div class="relative group">
+                        <button
+                            class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                            <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
+                        </button>
+                        <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
+                            @foreach ($recommendedProperties as $property)
+                            @php
+                                $favoriteIds = $favoriteIds ?? [];
+                                $isFav = in_array($property->id, $favoriteIds);
+                                $firstImage = $property->images->first();
+                                $imageUrl = $firstImage
+                                    ? asset('storage/' . $firstImage->image_path)
+                                    : 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+                            @endphp
+
+                            <a href="{{ route('properties.show', $property) }}"
+                            class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0 js-open-property-modal"
+                            data-title="{{ $property->title }}"
+                            data-location="{{ $property->location ?? 'Ubicación no especificada' }}"
+                            data-price="${{ number_format($property->price, 2) }}"
+                            data-type="{{ $property->listing_type === 'rent' ? 'Renta' : 'Venta' }}"
+                            data-url="{{ route('properties.show', $property) }}"
+                            data-image="{{ $imageUrl }}"
+                            data-bedrooms="{{ $property->bedrooms ?? '' }}"
+                            data-bathrooms="{{ $property->bathrooms ?? '' }}"
+                            data-description="{{ \Illuminate\Support\Str::limit($property->description, 150) }}"
+                            >
+                                <div class="relative">
+                                    <img src="{{ $imageUrl }}"
+                                        alt="Imagen de {{ $property->title }}"
+                                        class="w-full h-48 object-cover rounded-t-xl">
+
+                                    {{-- Botón favoritos --}}
+                                    <div class="absolute top-2 right-2 bg-white/80 rounded-full p-2 shadow-sm">
+                                        @auth
+                                            <form method="POST"
+                                                action="{{ $isFav ? route('favorites.destroy', $property) : route('favorites.store', $property) }}"
+                                                id="fav-form-{{ $property->id }}-rec"
+                                                class="hidden">
+                                                @csrf
+                                                @if($isFav) @method('DELETE') @endif
+                                            </form>
+                                            <button type="button"
+                                                    class="favorite-btn"
+                                                    data-favorite-toggle="1"
+                                                    data-toggle-url="{{ route('favorites.toggle', $property) }}"
+                                                    data-state="{{ $isFav ? 'on' : 'off' }}"
+                                                    data-fallback-form-id="fav-form-{{ $property->id }}-rec">
+                                                <i class="{{ $isFav ? 'fa-solid text-red-500' : 'fa-regular text-gray-600' }} fa-heart text-lg"></i>
+                                            </button>
+                                        @else
+                                            <button type="button"
+                                                    class="favorite-btn"
+                                                    data-login-url="{{ route('login') }}">
+                                                <i class="fa-regular fa-heart text-gray-600 text-lg"></i>
+                                            </button>
+                                        @endauth
+                                    </div>
+                                </div>
+
+                                <div class="p-3">
+                                    <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                    <p class="text-sm text-gray-500 truncate mt-1">
+                                        {{ $property->location ?? 'Ubicación no especificada' }}
+                                    </p>
+                                    <p class="mt-2 font-semibold text-blue-600">
+                                        ${{ number_format($property->price, 2) }}
+                                    </p>
+                                </div>
+                            </a>
+                        @endforeach
+
+                        </div>
+                        <button
+                            class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                            <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
+                        </button>
                     </div>
-                  </div>
-                  <div class="p-3">
-                    <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-300 truncate mt-1">{{ $property->location ?? 'Ubicación no especificada' }}</p>
-                    <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
-                  </div>
-                </a>
-              @endforeach
+                </section>
+            @endif
+        @endauth
+
+        {{-- Propiedades por ciudad --}}
+        @foreach($propertiesByCity as $city => $cityProperties)
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Propiedades en {{ $city }}</h2>
+                <div class="relative group">
+                    <button
+                        class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
+                    </button>
+                    <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
+                        @foreach($cityProperties as $property)
+                        @php
+                            $favoriteIds = $favoriteIds ?? [];
+                            $isFav = in_array($property->id, $favoriteIds);
+                            $firstImage = $property->images->first();
+                            $imageUrl = $firstImage
+                                ? asset('storage/' . $firstImage->image_path)
+                                : 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+                        @endphp
+
+                        <a href="{{ route('properties.show', $property) }}"
+                        class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0 js-open-property-modal"
+                        data-title="{{ $property->title }}"
+                        data-location="{{ $property->location ?? 'Ubicación no especificada' }}"
+                        data-price="${{ number_format($property->price, 2) }}"
+                        data-type="{{ $property->listing_type === 'rent' ? 'Renta' : 'Venta' }}"
+                        data-url="{{ route('properties.show', $property) }}"
+                        data-image="{{ $imageUrl }}"
+                        data-bedrooms="{{ $property->bedrooms ?? '' }}"
+                        data-bathrooms="{{ $property->bathrooms ?? '' }}"
+                        data-description="{{ \Illuminate\Support\Str::limit($property->description, 150) }}"
+                        >
+                            <div class="relative">
+                                <img src="{{ $imageUrl }}"
+                                    alt="Imagen de {{ $property->title }}"
+                                    class="w-full h-48 object-cover rounded-t-xl">
+
+                                <div class="absolute top-2 right-2 bg-white/80 rounded-full p-2 shadow-sm">
+                                    @auth
+                                        <form method="POST"
+                                            action="{{ $isFav ? route('favorites.destroy', $property) : route('favorites.store', $property) }}"
+                                            id="fav-form-{{ $property->id }}-city-{{ $city }}"
+                                            class="hidden">
+                                            @csrf
+                                            @if($isFav) @method('DELETE') @endif
+                                        </form>
+                                        <button type="button"
+                                                class="favorite-btn"
+                                                data-favorite-toggle="1"
+                                                data-toggle-url="{{ route('favorites.toggle', $property) }}"
+                                                data-state="{{ $isFav ? 'on' : 'off' }}"
+                                                data-fallback-form-id="fav-form-{{ $property->id }}-city-{{ $city }}">
+                                            <i class="{{ $isFav ? 'fa-solid text-red-500' : 'fa-regular text-gray-600' }} fa-heart text-lg"></i>
+                                        </button>
+                                    @else
+                                        <button type="button"
+                                                class="favorite-btn"
+                                                data-login-url="{{ route('login') }}">
+                                            <i class="fa-regular fa-heart text-gray-600 text-lg"></i>
+                                        </button>
+                                    @endauth
+                                </div>
+                            </div>
+
+                            <div class="p-3">
+                                <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                <p class="text-sm text-gray-500 truncate mt-1">
+                                    {{ $property->location ?? 'Ubicación no especificada' }}
+                                </p>
+                                <p class="mt-2 font-semibold text-blue-600">
+                                    ${{ number_format($property->price, 2) }}
+                                </p>
+                            </div>
+                        </a>
+                    @endforeach
+
+                    </div>
+                    <button
+                        class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                        <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
+                    </button>
+                </div>
+            </section>
+        @endforeach
+
+        {{-- Propiedades recientes --}}
+        <section>
+            <h2 class="text-2xl font-semibold mb-4">Propiedades Recientes</h2>
+            <div class="relative group">
+                <button
+                    class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                    <i class="fas fa-chevron-left text-gray-700 text-lg"></i>
+                </button>
+                <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
+                    @forelse ($properties as $property)
+                        @php
+                            $favoriteIds = $favoriteIds ?? [];
+                            $isFav = in_array($property->id, $favoriteIds);
+                            $firstImage = $property->images->first();
+                            $imageUrl = $firstImage
+                                ? asset('storage/' . $firstImage->image_path)
+                                : 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+                        @endphp
+
+                        <a href="{{ route('properties.show', $property) }}"
+                        class="block w-64 bg-white rounded-xl shadow hover:shadow-lg transition flex-shrink-0 js-open-property-modal"
+                        data-title="{{ $property->title }}"
+                        data-location="{{ $property->location ?? 'Ubicación no especificada' }}"
+                        data-price="${{ number_format($property->price, 2) }}"
+                        data-type="{{ $property->listing_type === 'rent' ? 'Renta' : 'Venta' }}"
+                        data-url="{{ route('properties.show', $property) }}"
+                        data-image="{{ $imageUrl }}"
+                        data-bedrooms="{{ $property->bedrooms ?? '' }}"
+                        data-bathrooms="{{ $property->bathrooms ?? '' }}"
+                        data-description="{{ \Illuminate\Support\Str::limit($property->description, 150) }}"
+                        >
+                            <div class="relative">
+                                <img src="{{ $imageUrl }}"
+                                    alt="Imagen de {{ $property->title }}"
+                                    class="w-full h-48 object-cover rounded-t-xl">
+
+                                <div class="absolute top-2 right-2 bg-white/80 rounded-full p-2 shadow-sm">
+                                    @auth
+                                        <form method="POST"
+                                            action="{{ $isFav ? route('favorites.destroy', $property) : route('favorites.store', $property) }}"
+                                            id="fav-form-{{ $property->id }}-recent"
+                                            class="hidden">
+                                            @csrf
+                                            @if($isFav) @method('DELETE') @endif
+                                        </form>
+                                        <button type="button"
+                                                class="favorite-btn"
+                                                data-favorite-toggle="1"
+                                                data-toggle-url="{{ route('favorites.toggle', $property) }}"
+                                                data-state="{{ $isFav ? 'on' : 'off' }}"
+                                                data-fallback-form-id="fav-form-{{ $property->id }}-recent">
+                                            <i class="{{ $isFav ? 'fa-solid text-red-500' : 'fa-regular text-gray-600' }} fa-heart text-lg"></i>
+                                        </button>
+                                    @else
+                                        <button type="button"
+                                                class="favorite-btn"
+                                                data-login-url="{{ route('login') }}">
+                                            <i class="fa-regular fa-heart text-gray-600 text-lg"></i>
+                                        </button>
+                                    @endauth
+                                </div>
+                            </div>
+
+                            <div class="p-3">
+                                <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
+                                <p class="text-sm text-gray-500 truncate mt-1">
+                                    {{ $property->location ?? 'Ubicación no especificada' }}
+                                </p>
+                                <p class="mt-2 font-semibold text-blue-600">
+                                    ${{ number_format($property->price, 2) }}
+                                </p>
+                            </div>
+                        </a>
+                    @empty
+                        <p class="text-gray-500">Aún no hay propiedades para mostrar.</p>
+                    @endforelse
+
+                </div>
+                <button
+                    class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200">
+                    <i class="fas fa-chevron-right text-gray-700 text-lg"></i>
+                </button>
             </div>
-            <button
-              class="carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
-              <i class="fas fa-chevron-right text-gray-700 dark:text-gray-200 text-lg"></i>
-            </button>
-          </div>
         </section>
-      @endif
-    @endauth
 
-    {{-- Propiedades por ciudad --}}
-    @foreach($propertiesByCity as $city => $cityProperties)
-      <section>
-        <h2 class="text-2xl font-semibold mb-4">Propiedades en {{ $city }}</h2>
-        <div class="relative group">
-          <button
-            class="carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
-            <i class="fas fa-chevron-left text-gray-700 dark:text-gray-200 text-lg"></i>
-          </button>
-          <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-            @foreach($cityProperties as $property)
-              <a href="{{ route('properties.show', $property) }}"
-                class="block w-64 bg-white dark:bg-gray-900 rounded-xl border border-transparent dark:border-gray-800 shadow hover:shadow-lg transition flex-shrink-0">
-                <div class="relative">
-                  @if($property->images->isNotEmpty())
-                    <img src="{{ asset('storage/' . $property->images->first()->image_path) }}" alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl" />
-                  @else
-                    <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible" class="w-full h-48 object-cover rounded-t-xl" />
-                  @endif
-                  <div class="absolute top-2 right-2 bg-white/80 dark:bg-gray-800/80 rounded-full p-2 shadow-sm">
-                    <i class="fa-regular fa-heart text-gray-600 dark:text-gray-200 text-lg"></i>
-                  </div>
-                </div>
-                <div class="p-3">
-                  <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-300 truncate mt-1">{{ $property->location ?? 'Ubicación no especificada' }}</p>
-                  <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
-                </div>
-              </a>
-            @endforeach
-          </div>
-          <button
-            class="carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
-            <i class="fas fa-chevron-right text-gray-700 dark:text-gray-200 text-lg"></i>
-          </button>
-        </div>
-      </section>
-    @endforeach
-
-    {{-- Propiedades recientes --}}
-    <section>
-      <h2 class="text-2xl font-semibold mb-4">Propiedades Recientes</h2>
-      <div class="relative group">
-        <button
-          class="carousel-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
-          <i class="fas fa-chevron-left text-gray-700 dark:text-gray-200 text-lg"></i>
-        </button>
-        <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-          @forelse ($properties as $property)
-            <a href="{{ route('properties.show', $property) }}"
-              class="block w-64 bg-white dark:bg-gray-900 rounded-xl border border-transparent dark:border-gray-800 shadow hover:shadow-lg transition flex-shrink-0">
-              <div class="relative">
-                @if ($property->images->isNotEmpty())
-                  <img src="{{ asset('storage/' . $property->images->first()->image_path) }}" alt="Imagen de {{ $property->title }}" class="w-full h-48 object-cover rounded-t-xl" />
-                @else
-                  <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" alt="Sin imagen disponible" class="w-full h-48 object-cover rounded-t-xl" />
-                @endif
-                <div class="absolute top-2 right-2 bg-white/80 dark:bg-gray-800/80 rounded-full p-2 shadow-sm">
-                  <i class="fa-regular fa-heart text-gray-600 dark:text-gray-200 text-lg"></i>
-                </div>
-              </div>
-              <div class="p-3">
-                <h3 class="font-semibold text-lg truncate">{{ $property->title }}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-300 truncate mt-1">{{ $property->location ?? 'Ubicación no especificada' }}</p>
-                <p class="mt-2 font-semibold text-blue-600">${{ number_format($property->price, 2) }}</p>
-              </div>
-            </a>
-          @empty
-            <p class="text-gray-500 dark:text-gray-300">Aún no hay propiedades para mostrar.</p>
-          @endforelse
-        </div>
-        <button
-          class="carousel-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
-          <i class="fas fa-chevron-right text-gray-700 dark:text-gray-200 text-lg"></i>
-        </button>
-      </div>
-    </section>
-  </main>
+    </main>
 
   {{-- Footer --}}
   <x-main-footer />
@@ -449,8 +661,233 @@
         }
       });
 
-      updateButtonText(currentMin, currentMax);
-    });
-  </script>
+            updateButtonText(currentMin, currentMax);
+        });
+
+        // Filtro en móvil (search toggle)
+        (function () {
+            const searchToggle = document.getElementById('search-toggle');
+            const filterPanel  = document.getElementById('filter-panel');
+            if (!searchToggle || !filterPanel) return;
+
+            let isFilterVisible = false;
+
+            function toggleFilter() {
+                if (window.innerWidth < 768) {
+                    isFilterVisible = !isFilterVisible;
+                    filterPanel.style.transform = isFilterVisible ? 'translateY(0)' : 'translateY(-100%)';
+                }
+            }
+
+            searchToggle.addEventListener('click', toggleFilter);
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    filterPanel.style.transform = 'translateY(0)';
+                } else if (!isFilterVisible) {
+                    filterPanel.style.transform = 'translateY(-100%)';
+                }
+            });
+        })();
+
+        // Tema oscuro
+        (function () {
+            const themeToggle = document.getElementById('theme-toggle');
+            if (!themeToggle) return;
+            const html = document.documentElement;
+            const icon = themeToggle.querySelector('i');
+
+            if (localStorage.theme === 'dark') {
+                html.classList.add('dark');
+                icon.classList.replace('fa-moon', 'fa-sun');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                const isDark = html.classList.contains('dark');
+                icon.classList.toggle('fa-moon', !isDark);
+                icon.classList.toggle('fa-sun', isDark);
+                localStorage.theme = isDark ? 'dark' : 'light';
+            });
+        })();
+    </script>
+
+        <script>
+        // ==== Modal de vista rápida de propiedad ====
+        (function () {
+            const modal = document.getElementById('property-modal');
+            if (!modal) return;
+
+            const imgEl = document.getElementById('property-modal-image');
+            const titleEl = document.getElementById('property-modal-title');
+            const typeEl = document.getElementById('property-modal-type');
+            const locationContainer = document.getElementById('property-modal-location');
+            const locationText = locationContainer ? locationContainer.querySelector('span') : null;
+            const priceEl = document.getElementById('property-modal-price');
+            const descEl = document.getElementById('property-modal-description');
+            const linkEl = document.getElementById('property-modal-link');
+
+            const bedroomsWrap = document.getElementById('property-modal-bedrooms');
+            const bedroomsText = bedroomsWrap ? bedroomsWrap.querySelector('span') : null;
+            const bathroomsWrap = document.getElementById('property-modal-bathrooms');
+            const bathroomsText = bathroomsWrap ? bathroomsWrap.querySelector('span') : null;
+
+            const closeBtn = document.getElementById('property-modal-close');
+
+            function openModalFromCard(card) {
+                if (!card) return;
+
+                const title = card.dataset.title || '';
+                const location = card.dataset.location || '';
+                const price = card.dataset.price || '';
+                const type = card.dataset.type || '';
+                const url = card.dataset.url || '#';
+                const img = card.dataset.image || '';
+                const bedrooms = card.dataset.bedrooms || '';
+                const bathrooms = card.dataset.bathrooms || '';
+                const desc = card.dataset.description || '';
+
+                if (imgEl && img) imgEl.src = img;
+                if (titleEl) titleEl.textContent = title;
+                if (typeEl) typeEl.textContent = type;
+                if (locationText) locationText.textContent = location;
+                if (priceEl) priceEl.textContent = price;
+                if (descEl) descEl.textContent = desc;
+                if (linkEl) linkEl.href = url;
+
+                if (bedroomsWrap) {
+                    if (bedrooms) {
+                        bedroomsWrap.classList.remove('hidden');
+                        if (bedroomsText) bedroomsText.textContent = bedrooms + ' hab.';
+                    } else {
+                        bedroomsWrap.classList.add('hidden');
+                    }
+                }
+
+                if (bathroomsWrap) {
+                    if (bathrooms) {
+                        bathroomsWrap.classList.remove('hidden');
+                        if (bathroomsText) bathroomsText.textContent = bathrooms + ' baños';
+                    } else {
+                        bathroomsWrap.classList.add('hidden');
+                    }
+                }
+
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            // Abrir modal al hacer click en una tarjeta de propiedad
+            document.querySelectorAll('.js-open-property-modal').forEach(card => {
+                card.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    openModalFromCard(this);
+                });
+            });
+
+            // Cerrar modal
+            closeBtn?.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', function (ev) {
+                if (ev.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.querySelectorAll('[data-close-modal]').forEach(btn => {
+                btn.addEventListener('click', closeModal);
+            });
+
+            document.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        })();
+
+        // ==== Botones de favoritos en las tarjetas de la home ====
+        (function () {
+            const csrf = '{{ csrf_token() }}';
+
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', async function (ev) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+
+                    const loginUrl = this.dataset.loginUrl;
+                    const toggleUrl = this.dataset.toggleUrl;
+                    const fallbackFormId = this.dataset.fallbackFormId;
+
+                    // Si hay loginUrl, el usuario no está logueado
+                    if (loginUrl && !toggleUrl) {
+                        window.location.href = loginUrl;
+                        return;
+                    }
+
+                    // Si no hay fetch, usa el formulario como fallback
+                    if (!window.fetch) {
+                        if (fallbackFormId) {
+                            const form = document.getElementById(fallbackFormId);
+                            if (form) form.submit();
+                        }
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(toggleUrl, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrf,
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (!res.ok) {
+                            // Si por alguna razón nos manda a login
+                            if (loginUrl) {
+                                window.location.href = loginUrl;
+                            }
+                            return;
+                        }
+
+                        const data = await res.json();
+                        if (!data || !data.ok) {
+                            if (loginUrl) {
+                                window.location.href = loginUrl;
+                            }
+                            return;
+                        }
+
+                        const on = data.favorited === true;
+                        this.dataset.state = on ? 'on' : 'off';
+
+                        const icon = this.querySelector('i');
+                        if (icon) {
+                            if (on) {
+                                icon.classList.remove('fa-regular', 'text-gray-600');
+                                icon.classList.add('fa-solid', 'text-red-500');
+                            } else {
+                                icon.classList.remove('fa-solid', 'text-red-500');
+                                icon.classList.add('fa-regular', 'text-gray-600');
+                            }
+                        }
+                    } catch (e) {
+                        // En caso de error, usa el fallback form si existe
+                        if (fallbackFormId) {
+                            const form = document.getElementById(fallbackFormId);
+                            if (form) form.submit();
+                        } else if (loginUrl) {
+                            window.location.href = loginUrl;
+                        }
+                    }
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -8,6 +8,10 @@
 
 @include('chat.partials.styles')
 
+{{-- Flatpickr para calendario de reservas en el chat --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 @include('chat.partials.frame', [
   'conversation' => $conversation,
   'messages' => $messages,
