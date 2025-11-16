@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{{ $property->title }}</title>
 
+  {{-- Estilos externos --}}
   <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -13,6 +14,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <style>
+
+    /* Lightbox: flechas siempre visibles y bien posicionadas */
+.lb-nav a.lb-prev,
+.lb-nav a.lb-next {
+  opacity: 1 !important;
+}
+
+.lb-nav a.lb-prev {
+  left: 15px !important;
+}
+
+.lb-nav a.lb-next {
+  right: 15px !important;
+}
+
     /* ===== Modal y mapa ===== */
     #reservationModal > div{
       max-width: 720px;
@@ -22,7 +38,7 @@
       border-radius:16px;
       padding:24px;
     }
-    #map{ height:400px; width:100%; border-radius:8px; }
+    #map{ height:400px; width:100%; border-radius:12px; }
 
     /* Ocultamos el input “host” de flatpickr */
     .fp-hidden-input{
@@ -79,310 +95,464 @@
     .fp-shell .flatpickr-day.disabled,
     .fp-shell .flatpickr-day.disabled:hover{color:#d9d9d9!important;background:none!important;border-color:transparent!important;cursor:default;text-decoration:line-through}
 
-/* ==== Fechas no disponibles (forzado, siempre gris) ==== */
-.fp-shell .flatpickr-day.flatpickr-disabled,
-.fp-shell .flatpickr-day.flatpickr-disabled:hover,
-.fp-shell .flatpickr-day.disabled,
-.fp-shell .flatpickr-day.disabled:hover {
-  background-color: #f3f4f6 !important; /* gris claro */
-  color: #9ca3af !important;            /* texto gris medio */
-  border-color: transparent !important;
-  cursor: not-allowed !important;
-  opacity: 1 !important;
-  text-decoration: none !important;
-}
+    /* ==== Fechas no disponibles (forzado, siempre gris) ==== */
+    .fp-shell .flatpickr-day.flatpickr-disabled,
+    .fp-shell .flatpickr-day.flatpickr-disabled:hover,
+    .fp-shell .flatpickr-day.disabled,
+    .fp-shell .flatpickr-day.disabled:hover {
+      background-color: #f3f4f6 !important; /* gris claro */
+      color: #9ca3af !important;            /* texto gris medio */
+      border-color: transparent !important;
+      cursor: not-allowed !important;
+      opacity: 1 !important;
+      text-decoration: none !important;
+    }
 
-/* Dentro de rangos deshabilitados */
-.fp-shell .flatpickr-day.flatpickr-disabled.inRange,
-.fp-shell .flatpickr-day.disabled.inRange {
-  background-color: #e5e7eb !important; /* gris un poco más oscuro */
-  color: #9ca3af !important;
-}
-
+    .fp-shell .flatpickr-day.flatpickr-disabled.inRange,
+    .fp-shell .flatpickr-day.disabled.inRange {
+      background-color: #e5e7eb !important;
+      color: #9ca3af !important;
+    }
 
     /* línea divisoria sutil entre meses en desktop */
     @media (min-width:640px){
       .fp-shell .flatpickr-days .dayContainer:nth-child(1){border-right:1px solid #e5e7eb}
     }
 
+    /* Quitar animaciones de aparición del lightbox */
+#lightbox,
+#lightbox .lb-outerContainer,
+#lightbox .lb-container {
+  -webkit-transition: none !important;
+  transition: none !important;
+}
+/* Botones de anterior/siguiente fijos a los lados (no en la imagen) */
+#lightbox .lb-nav a.lb-prev,
+#lightbox .lb-nav a.lb-next {
+  position: fixed;               /* relativo a la ventana */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  margin: 0;
+  padding: 0;
+  opacity: 1 !important;
+  background: rgba(15, 23, 42, 0.9);  /* circulito oscuro */
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-image: none !important;  /* quita la imagen por defecto de lightbox */
+  z-index: 10002;
+}
 
+/* Lado izquierdo / derecho */
+#lightbox .lb-nav a.lb-prev { left: 1.5rem; }
+#lightbox .lb-nav a.lb-next { right: 1.5rem; }
+
+/* Iconos de flecha con bordes */
+#lightbox .lb-nav a.lb-prev::before,
+#lightbox .lb-nav a.lb-next::before {
+  content: '';
+  display: block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-top: 2px solid #fff;
+  border-right: 2px solid #fff;
+}
+
+#lightbox .lb-nav a.lb-prev::before {
+  transform: rotate(-135deg);
+  margin-left: 0.1rem;
+}
+
+#lightbox .lb-nav a.lb-next::before {
+  transform: rotate(45deg);
+  margin-right: 0.1rem;
+}
+
+/* Un poco más compacto en móvil */
+@media (max-width: 640px) {
+  #lightbox .lb-nav a.lb-prev,
+  #lightbox .lb-nav a.lb-next {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  #lightbox .lb-nav a.lb-prev { left: 0.75rem; }
+  #lightbox .lb-nav a.lb-next { right: 0.75rem; }
+}
   </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-slate-50 dark:bg-slate-950 text-gray-800 dark:text-gray-100">
 
 <x-main-header />
 
-<main class="max-w-4xl mx-auto mt-10 px-6">
-  <div class="mb-4">
-    <h1 class="text-3xl font-bold">{{ $property->title }}</h1>
-    <p class="text-md text-gray-600 mt-1">{{ $property->location }}</p>
-  </div>
+@php
+  $isRent = $property->listing_type === 'rent';
+@endphp
 
-  <div class="mb-6">
-  @php
-    $imgs    = $property->images;
-    $total   = $imgs->count();
-    $hero    = $imgs->first();
-    $tiles4  = $imgs->slice(1)->take(4)->values();      // hasta 4 secundarias visibles
-    while ($tiles4->count() < 4) { $tiles4->push(null); } // placeholders para tamaño consistente
-    $visible = 1 + $imgs->slice(1)->take(4)->count();   // hero + cuántas reales en tiles
-    $rest    = $imgs->slice($visible);                  // SOLO el resto -> anchors ocultos
-  @endphp
+<main class="max-w-6xl mx-auto mt-8 md:mt-10 px-4 lg:px-0 space-y-8 md:space-y-10 mb-10">
 
-  @if ($total > 0)
-    {{-- Contenedor relativo para posicionar el CTA encima del grid --}}
-    <div class="relative">
-      <div class="grid grid-cols-4 gap-2 rounded-2xl overflow-hidden">
-        {{-- HERO 2x2 --}}
-        <a id="open-gallery-anchor"
-           href="{{ asset('storage/'.$hero->image_path) }}"
-           data-lightbox="property-gallery"
-           data-title="{{ $property->title }}"
-           class="col-span-4 md:col-span-2 md:row-span-2 relative group">
-          <div class="w-full h-full aspect-[4/3]">
-            <img src="{{ asset('storage/'.$hero->image_path) }}"
-                 alt="Imagen principal de {{ $property->title }}"
-                 class="w-full h-full object-cover block">
-          </div>
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
-        </a>
-
-        {{-- 4 tiles derecha (con placeholders si faltan) --}}
-        @foreach ($tiles4 as $img)
-          @if ($img)
-            <a href="{{ asset('storage/'.$img->image_path) }}"
-               data-lightbox="property-gallery"
-               data-title="{{ $property->title }}"
-               class="relative hidden md:block">
-              <div class="w-full h-full aspect-[4/3]">
-                <img src="{{ asset('storage/'.$img->image_path) }}"
-                     alt="Imagen de {{ $property->title }}"
-                     class="w-full h-full object-cover block">
-              </div>
-              <div class="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors"></div>
-            </a>
+  {{-- Bloque superior: título + ubicación + galería --}}
+  <section class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 md:p-6">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          @if($isRent)
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+              <i class="fa-solid fa-key text-[11px]"></i>
+              En renta
+            </span>
           @else
-            <div class="relative hidden md:block">
-              <div class="w-full h-full aspect-[4/3] bg-gray-100 flex items-center justify-center">
-                <i class="fa-regular fa-image text-2xl text-gray-400"></i>
-              </div>
-            </div>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+              <i class="fa-solid fa-tags text-[11px]"></i>
+              En venta
+            </span>
           @endif
-        @endforeach
+        </div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+          {{ $property->title }}
+        </h1>
+        <p class="mt-1 flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+          <i class="fa-solid fa-location-dot text-xs text-blue-500"></i>
+          <span>{{ $property->location }}</span>
+        </p>
       </div>
 
-      {{-- CTA ESCRITORIO: siempre visible en esquina inferior derecha del grid --}}
-      <button type="button"
-              onclick="document.getElementById('open-gallery-anchor')?.click()"
-              class="hidden md:inline-flex items-center gap-2 text-sm font-semibold bg-white/90 backdrop-blur px-3 py-2 rounded-full shadow absolute bottom-3 right-3">
-        <i class="fa-solid fa-grip"></i>
-        @if ($total > 5)
-          Mostrar todas las fotos (+{{ $total - 5 }})
-        @else
-          Ver galería
+        @if($isRent && $property->reviews->count())
+          @php
+            $count = $property->reviews->count();
+            $avg   = round($property->reviews->avg('overall'), 2);
+          @endphp
+          <div class="flex items-center gap-1 text-xs md:text-sm">
+            <span class="text-yellow-500"><i class="fa-solid fa-star"></i></span>
+            <span class="font-semibold">{{ $avg }}</span>
+            <span class="text-gray-500 dark:text-gray-400">· {{ $count }} reseña{{ $count>1?'s':'' }}</span>
+          </div>
         @endif
-      </button>
+      </div>
     </div>
 
-    {{-- CTA MÓVIL: bajo el grid, ocupa el ancho --}}
-    <button type="button"
-            onclick="document.getElementById('open-gallery-anchor')?.click()"
-            class="mt-3 w-full md:hidden inline-flex items-center justify-center gap-2 text-sm font-semibold bg-white border px-4 py-2 rounded-lg">
-      <i class="fa-solid fa-grip"></i>
-      @if ($total > 5)
-        Mostrar todas las fotos (+{{ $total - 5 }})
+    {{-- Galería --}}
+    <div class="mt-3 md:mt-4">
+      @php
+        $imgs    = $property->images;
+        $total   = $imgs->count();
+        $hero    = $imgs->first();
+        $tiles4  = $imgs->slice(1)->take(4)->values();
+        while ($tiles4->count() < 4) { $tiles4->push(null); }
+        $visible = 1 + $imgs->slice(1)->take(4)->count();
+        $rest    = $imgs->slice($visible);
+      @endphp
+
+      @if ($total > 0)
+        <div class="relative">
+          <div class="grid grid-cols-4 gap-2 md:gap-3 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+            {{-- HERO 2x2 --}}
+            <a id="open-gallery-anchor"
+               href="{{ asset('storage/'.$hero->image_path) }}"
+               data-lightbox="property-gallery"
+               data-title="{{ $property->title }}"
+               class="col-span-4 md:col-span-2 md:row-span-2 relative group">
+              <div class="w-full h-full aspect-[4/3]">
+                <img src="{{ asset('storage/'.$hero->image_path) }}"
+                     alt="Imagen principal de {{ $property->title }}"
+                     class="w-full h-full object-cover block">
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </a>
+
+            {{-- 4 tiles derecha --}}
+            @foreach ($tiles4 as $img)
+              @if ($img)
+                <a href="{{ asset('storage/'.$img->image_path) }}"
+                   data-lightbox="property-gallery"
+                   data-title="{{ $property->title }}"
+                   class="relative hidden md:block">
+                  <div class="w-full h-full aspect-[4/3]">
+                    <img src="{{ asset('storage/'.$img->image_path) }}"
+                         alt="Imagen de {{ $property->title }}"
+                         class="w-full h-full object-cover block">
+                  </div>
+                  <div class="absolute inset-0 bg-black/0 hover:bg-black/15 transition-colors"></div>
+                </a>
+              @else
+                <div class="relative hidden md:block">
+                  <div class="w-full h-full aspect-[4/3] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <i class="fa-regular fa-image text-2xl text-gray-400 dark:text-gray-500"></i>
+                  </div>
+                </div>
+              @endif
+            @endforeach
+          </div>
+
+          {{-- CTA escritorio --}}
+          <button type="button"
+                  onclick="document.getElementById('open-gallery-anchor')?.click()"
+                  class="hidden md:inline-flex items-center gap-2 text-xs md:text-sm font-semibold bg-white/95 dark:bg-gray-900/95 backdrop-blur px-3 py-2 rounded-full shadow-md border border-gray-200 dark:border-gray-700 absolute bottom-3 right-3">
+            <i class="fa-solid fa-grip text-xs"></i>
+            @if ($total > 5)
+              Mostrar todas las fotos (+{{ $total - 5 }})
+            @else
+              Ver galería
+            @endif
+          </button>
+        </div>
+
+        {{-- CTA móvil --}}
+        <button type="button"
+                onclick="document.getElementById('open-gallery-anchor')?.click()"
+                class="mt-3 w-full md:hidden inline-flex items-center justify-center gap-2 text-sm font-semibold bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl">
+          <i class="fa-solid fa-grip"></i>
+          @if ($total > 5)
+            Mostrar todas las fotos (+{{ $total - 5 }})
+          @else
+            Ver galería
+          @endif
+        </button>
+
+        {{-- Anclas ocultas restantes --}}
+        @foreach ($rest as $img)
+          <a href="{{ asset('storage/'.$img->image_path) }}"
+             data-lightbox="property-gallery"
+             data-title="{{ $property->title }}"
+             class="hidden"></a>
+        @endforeach
       @else
-        Ver galería
+        <div class="bg-gray-100 dark:bg-gray-800 h-64 flex items-center justify-center rounded-2xl">
+          <p class="text-gray-500 dark:text-gray-400">No hay imágenes disponibles.</p>
+        </div>
       @endif
-    </button>
-
-    {{-- ANCLAS OCULTAS: SOLO las que NO se mostraron arriba (evita duplicados) --}}
-    @foreach ($rest as $img)
-      <a href="{{ asset('storage/'.$img->image_path) }}"
-         data-lightbox="property-gallery"
-         data-title="{{ $property->title }}"
-         class="hidden"></a>
-    @endforeach
-
-  @else
-    <div class="col-span-full bg-gray-200 h-64 flex items-center justify-center rounded-lg">
-      <p class="text-gray-500">No hay imágenes disponibles.</p>
     </div>
-  @endif
-</div>
+  </section>
 
+  {{-- Contenido principal: info + card lateral --}}
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+    {{-- Columna izquierda --}}
+    <div class="md:col-span-2 space-y-6">
 
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <div class="md:col-span-2">
-      <div class="flex flex-wrap gap-4 text-sm text-gray-700 border-t border-b py-3 mb-4">
+      {{-- Card de features --}}
+      <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 px-5 py-4 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-200">
         @if($property->bedrooms)
-            <span class="inline-flex items-center gap-1">
-                <i class="fa-solid fa-bed"></i>
-                {{ $property->bedrooms }} hab.
-            </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800">
+            <i class="fa-solid fa-bed text-gray-500 dark:text-gray-400"></i>
+            <span class="font-medium">{{ $property->bedrooms }} hab.</span>
+          </span>
         @endif
 
         @if($property->bathrooms)
-            <span class="inline-flex items-center gap-1">
-                <i class="fa-solid fa-bath"></i>
-                {{ $property->bathrooms }} baños
-            </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800">
+            <i class="fa-solid fa-bath text-gray-500 dark:text-gray-400"></i>
+            <span class="font-medium">{{ $property->bathrooms }} baños</span>
+          </span>
         @endif
+      </div>
+
+      {{-- Descripción + amenidades + reseñas en una card --}}
+      <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 md:p-6 space-y-6">
+        {{-- Descripción --}}
+        <section>
+          <h2 class="text-xl md:text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-50">Descripción</h2>
+          <p class="text-gray-700 dark:text-gray-200 leading-relaxed">
+            {{ $property->description ?? 'No hay descripción disponible.' }}
+          </p>
+        </section>
+
+        {{-- Amenidades --}}
+        <section>
+          <h2 class="text-xl md:text-2xl font-semibold border-b border-gray-100 dark:border-gray-800 pb-2 mb-3 text-gray-900 dark:text-gray-50">
+            Lo que ofrece este lugar
+          </h2>
+          @php $groupedAmenities = $property->amenities->groupBy('category.name'); @endphp
+          @forelse ($groupedAmenities as $categoryName => $amenities)
+            <div class="mt-3">
+              <h4 class="font-semibold text-base mb-1.5 text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <span class="w-1 h-4 rounded-full bg-blue-500"></span>
+                {{ $categoryName }}
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
+                @foreach ($amenities as $amenity)
+                  <div class="text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                    {{ $amenity->name }}
+                  </div>
+                @endforeach
+              </div>
+            </div>
+          @empty
+            <p class="text-gray-500 dark:text-gray-400">No se especificaron amenidades.</p>
+          @endforelse
+        </section>
+
+        {{-- Reseñas (solo renta) --}}
+        @if($isRent)
+          <section>
+            <h2 class="text-xl md:text-2xl font-semibold border-b border-gray-100 dark:border-gray-800 pb-2 mb-3 text-gray-900 dark:text-gray-50">
+              Reseñas
+            </h2>
+
+            @if(session('success'))
+              <div class="mb-3 p-3 rounded-xl bg-green-50 text-green-700 border border-green-200 text-sm">
+                {{ session('success') }}
+              </div>
+            @endif
+            @if(session('error'))
+              <div class="mb-3 p-3 rounded-xl bg-red-50 text-red-700 border border-red-200 text-sm">
+                {{ session('error') }}
+              </div>
+            @endif
+            @if ($errors->any())
+              <div class="mb-3 p-3 rounded-xl bg-yellow-50 text-yellow-800 border border-yellow-200 text-sm">
+                <ul class="list-disc ml-5 space-y-0.5">
+                  @foreach ($errors->all() as $err) <li>{{ $err }}</li> @endforeach
+                </ul>
+              </div>
+            @endif
+
+            @php
+              $count = $property->reviews->count();
+              $avg   = $count ? round($property->reviews->avg('overall'), 2) : null;
+            @endphp
+
+            <div class="mb-3">
+              @if($count)
+                <div class="inline-flex items-center gap-2 text-sm font-semibold px-3 py-1.5 rounded-full bg-gray-50 dark:bg-gray-800">
+                  <span class="text-yellow-500"><i class="fa-solid fa-star"></i></span>
+                  <span>{{ $avg }} / 5</span>
+                  <span class="text-gray-500 dark:text-gray-400">· {{ $count }} reseña{{ $count>1?'s':'' }}</span>
+                </div>
+              @else
+                <div class="text-gray-500 dark:text-gray-400 text-sm">Aún no hay reseñas.</div>
+              @endif
+            </div>
+
+            <div class="space-y-3">
+              @foreach($property->reviews->take(5) as $rev)
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="font-semibold text-sm text-gray-900 dark:text-gray-50">
+                      {{ $rev->author->name ?? 'Usuario' }}
+                    </div>
+                    <div class="text-sm text-yellow-500 font-semibold">
+                      ⭐ {{ number_format($rev->overall,1) }}
+                    </div>
+                  </div>
+                  @if($rev->comment)
+                    <p class="text-sm text-gray-700 dark:text-gray-200 mt-1.5">{{ $rev->comment }}</p>
+                  @endif
+                  <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                    {{ \Carbon\Carbon::parse($rev->published_at ?? $rev->created_at)->diffForHumans() }}
+                  </div>
+                </div>
+              @endforeach
+            </div>
+
+            @auth
+              @php
+                $eligibleReservation = \App\Models\PropertyReservation::where('property_id',$property->id)
+                  ->where('user_id',auth()->id())
+                  ->where('end_date','<',now())
+                  ->whereNotIn('id',\App\Models\Review::select('reservation_id'))
+                  ->latest()->first();
+              @endphp
+
+              @if($eligibleReservation)
+                <h3 class="text-lg font-semibold mt-5 mb-2 text-gray-900 dark:text-gray-50">Escribe tu reseña</h3>
+                <form method="POST" action="{{ route('reviews.store',$property) }}" class="space-y-3">
+                  @csrf
+                  <input type="hidden" name="reservation_id" value="{{ $eligibleReservation->id }}">
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    @foreach (['cleanliness'=>'Limpieza','accuracy'=>'Precisión','communication'=>'Comunicación','location'=>'Ubicación','value'=>'Valor','checkin'=>'Check-in'] as $key=>$label)
+                      <label class="block">
+                        <span class="text-gray-700 dark:text-gray-200">{{ $label }}</span>
+                        <select name="{{ $key }}"
+                                class="mt-1 block w-full border rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                                required>
+                          @for($i=5;$i>=1;$i--) <option value="{{ $i }}">{{ $i }}</option> @endfor
+                        </select>
+                      </label>
+                    @endforeach
+                  </div>
+                  <label class="block text-sm">
+                    <span class="text-gray-700 dark:text-gray-200">Comentario (opcional)</span>
+                    <textarea name="comment"
+                              class="mt-1 block w-full border rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                              rows="3"></textarea>
+                  </label>
+                  <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold">
+                    Enviar reseña
+                  </button>
+                </form>
+              @endif
+            @endauth
+          </section>
+        @endif
+      </div>
+
     </div>
 
-
-      <h2 class="text-2xl font-semibold border-b pb-2 mb-4">Descripción</h2>
-      <p class="text-gray-700 leading-relaxed">{{ $property->description ?? 'No hay descripción disponible.' }}</p>
-
-      <h2 class="text-2xl font-semibold border-b pb-2 mt-8 mb-4">Lo que ofrece este lugar</h2>
-      @php $groupedAmenities = $property->amenities->groupBy('category.name'); @endphp
-      @forelse ($groupedAmenities as $categoryName => $amenities)
-        <div class="mt-4">
-          <h4 class="font-semibold text-lg mb-2">{{ $categoryName }}</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-            @foreach ($amenities as $amenity)
-              <div class="text-gray-700">{{ $amenity->name }}</div>
-            @endforeach
-          </div>
-        </div>
-      @empty
-        <p class="text-gray-500">No se especificaron amenidades.</p>
-      @endforelse
-
-      {{-- Reseñas --}}
-      @if($property->listing_type === 'rent')
-        <h2 class="text-2xl font-semibold border-b pb-2 mt-8 mb-4">Reseñas</h2>
-
-        @if(session('success'))
-          <div class="mb-3 p-3 rounded bg-green-50 text-green-700 border border-green-200">{{ session('success') }}</div>
-        @endif
-        @if(session('error'))
-          <div class="mb-3 p-3 rounded bg-red-50 text-red-700 border border-red-200">{{ session('error') }}</div>
-        @endif
-        @if ($errors->any())
-          <div class="mb-3 p-3 rounded bg-yellow-50 text-yellow-800 border border-yellow-200">
-            <ul class="list-disc ml-5">
-              @foreach ($errors->all() as $err) <li>{{ $err }}</li> @endforeach
-            </ul>
-          </div>
-        @endif
-
-        @php
-          $count = $property->reviews->count();
-          $avg   = $count ? round($property->reviews->avg('overall'), 2) : null;
-        @endphp
-
-        <div class="mb-4">
-          @if($count)
-            <div class="text-lg font-semibold">⭐ {{ $avg }} / 5 · {{ $count }} reseña{{ $count>1?'s':'' }}</div>
-          @else
-            <div class="text-gray-500">Aún no hay reseñas.</div>
+    {{-- Columna derecha: card de reserva/contacto --}}
+    <div class="md:col-span-1">
+      <div class="bg-white dark:bg-gray-900 p-5 md:p-6 rounded-2xl shadow-md border border-gray-100 dark:border-gray-800 sticky top-24 space-y-4">
+        <div>
+          <p class="text-2xl font-bold text-gray-900 dark:text-gray-50">
+            ${{ number_format($property->price, 2) }}
+          </p>
+          @if($property->listing_type == 'rent')
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Precio de renta</p>
+          @elseif($property->listing_type == 'sale')
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Precio de venta</p>
           @endif
         </div>
 
-        <div class="space-y-4">
-          @foreach($property->reviews->take(5) as $rev)
-            <div class="p-4 bg-white rounded-lg shadow border">
-              <div class="flex items-center justify-between">
-                <div class="font-semibold">{{ $rev->author->name ?? 'Usuario' }}</div>
-                <div>⭐ {{ number_format($rev->overall,1) }}</div>
-              </div>
-              @if($rev->comment)<p class="text-gray-700 mt-2">{{ $rev->comment }}</p>@endif
-              <div class="text-xs text-gray-500 mt-1">{{ \Carbon\Carbon::parse($rev->published_at ?? $rev->created_at)->diffForHumans() }}</div>
-            </div>
-          @endforeach
-        </div>
+        @if($property->listing_type == 'sale')
+          {{-- Venta: solo contacto/chat --}}
+          @auth
+            <a href="{{ route('chat.show', $property) }}"
+               class="block w-full text-center border border-blue-500 text-blue-600 dark:text-blue-400 py-3 rounded-xl mt-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 font-semibold text-sm">
+              Contactar con el agente
+            </a>
+          @else
+            <button type="button" onclick="openLoginModal()"
+                    class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 py-3 rounded-xl mt-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 font-semibold text-sm">
+              Inicia sesión para contactar
+            </button>
+          @endauth
+
+        @elseif($property->listing_type == 'rent')
+          {{-- Renta: reservar + chat --}}
+          <button id="reserveButton"
+                  class="w-full bg-blue-600 text-white py-3 rounded-xl mt-1 hover:bg-blue-700 font-semibold text-sm flex items-center justify-center gap-2">
+            <i class="fa-solid fa-calendar-check text-sm"></i>
+            <span>Reservar</span>
+          </button>
+
+          @auth
+            <a href="{{ route('chat.show', $property) }}"
+               class="block w-full text-center border border-blue-500 text-blue-600 dark:text-blue-400 py-3 rounded-xl mt-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 font-semibold text-sm">
+              Contactar para reservar
+            </a>
+          @else
+            <button type="button" onclick="openLoginModal()"
+                    class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 py-3 rounded-xl mt-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 font-semibold text-sm">
+              Inicia sesión para contactar
+            </button>
+          @endauth
+        @endif
 
         @auth
           @php
-            $eligibleReservation = \App\Models\PropertyReservation::where('property_id',$property->id)
-              ->where('user_id',auth()->id())
-              ->where('end_date','<',now())
-              ->whereNotIn('id',\App\Models\Review::select('reservation_id'))
-              ->latest()->first();
+            $isFav = auth()->user()->favoriteProperties()->where('properties.id',$property->id)->exists();
           @endphp
-
-          @if($eligibleReservation)
-            <h3 class="text-xl font-semibold mt-6 mb-2">Escribe tu reseña</h3>
-            <form method="POST" action="{{ route('reviews.store',$property) }}" class="space-y-3">
-              @csrf
-              <input type="hidden" name="reservation_id" value="{{ $eligibleReservation->id }}">
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                @foreach (['cleanliness'=>'Limpieza','accuracy'=>'Precisión','communication'=>'Comunicación','location'=>'Ubicación','value'=>'Valor','checkin'=>'Check-in'] as $key=>$label)
-                  <label class="block">
-                    <span class="text-gray-700">{{ $label }}</span>
-                    <select name="{{ $key }}" class="mt-1 block w-full border rounded p-2" required>
-                      @for($i=5;$i>=1;$i--) <option value="{{ $i }}">{{ $i }}</option> @endfor
-                    </select>
-                  </label>
-                @endforeach
-              </div>
-              <label class="block">
-                <span class="text-gray-700">Comentario (opcional)</span>
-                <textarea name="comment" class="mt-1 block w-full border rounded p-2" rows="3"></textarea>
-              </label>
-              <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Enviar reseña</button>
-            </form>
-          @endif
-        @endauth
-      @endif
-    </div>
-
-    <div class="md:col-span-1">
-      <div class="bg-white p-6 rounded-lg shadow-md border sticky top-28">
-        <p class="text-2xl font-bold">${{ number_format($property->price, 2) }}</p>
-        @if($property->listing_type == 'rent')
-          <p class="text-gray-500">Precio de renta</p>
-        @elseif($property->listing_type == 'sale')
-          <p class="text-gray-500">Precio de venta</p>
-        @endif
-
-        @if($property->listing_type == 'sale')
-        {{-- Venta: solo contacto/chat --}}
-        @auth
-            <a href="{{ route('chat.show', $property) }}"
-            class="block w-full text-center border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
-                Contactar con el agente
-            </a>
-        @else
-            <button type="button" onclick="openLoginModal()"
-                    class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
-                Inicia sesión para contactar
-            </button>
-        @endauth
-
-    @elseif($property->listing_type == 'rent')
-        {{-- Renta: contacto/chat + botón de reservar desde la ficha --}}
-        <button id="reserveButton"
-                class="w-full bg-blue-500 text-white py-3 rounded-lg mt-3 hover:bg-blue-600 font-semibold">
-            Reservar
-        </button>
-        @auth
-            <a href="{{ route('chat.show', $property) }}"
-            class="block w-full text-center border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
-                Contactar para reservar
-            </a>
-        @else
-            <button type="button" onclick="openLoginModal()"
-                    class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg mt-3 hover:bg-blue-50 font-semibold">
-                Inicia sesión para contactar
-            </button>
-        @endauth
-
-
-    @endif
-
-
-        @auth
-          @php $isFav = auth()->user()->favoriteProperties()->where('properties.id',$property->id)->exists(); @endphp
-          <div class="mt-4">
-            <form method="POST" action="{{ $isFav ? route('favorites.destroy',$property) : route('favorites.store',$property) }}" id="fav-fallback-form" class="hidden">
+          <div class="pt-2 border-t border-gray-100 dark:border-gray-800">
+            <form method="POST" action="{{ $isFav ? route('favorites.destroy',$property) : route('favorites.store',$property) }}"
+                  id="fav-fallback-form" class="hidden">
               @csrf @if($isFav) @method('DELETE') @endif
             </form>
             <button id="fav-btn"
-                    class="w-full border border-blue-500 text-blue-600 py-3 rounded-lg hover:bg-blue-50 font-semibold"
+                    class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 py-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 font-semibold text-sm flex items-center justify-center gap-2"
                     data-toggle-url="{{ route('favorites.toggle',$property) }}"
                     data-state="{{ $isFav ? 'on' : 'off' }}"
                     onclick="if(!window.toggleFavorite){ document.getElementById('fav-fallback-form').submit(); }">
@@ -393,32 +563,48 @@
         @endauth
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="mt-8">
-    <h2 class="text-2xl font-semibold border-b pb-2 mb-4">Ubicación</h2>
-    <div id="map"></div>
-  </div>
+  {{-- Mapa / ubicación --}}
+  <section class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 md:p-6">
+    <h2 class="text-xl md:text-2xl font-semibold border-b border-gray-100 dark:border-gray-800 pb-2 mb-4 text-gray-900 dark:text-gray-50 flex items-center gap-2">
+      <i class="fa-solid fa-map-location-dot text-blue-500"></i>
+      <span>Ubicación</span>
+    </h2>
+    <div id="map" class="overflow-hidden"></div>
+  </section>
 </main>
 
-<!-- Modal visita -->
-<div id="visitModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;">
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;min-width:300px;">
-    <h3 class="text-lg font-semibold mb-4">Selecciona fecha y hora para tu visita</h3>
-    <input type="datetime-local" id="visitDateTime" class="w-full p-2 border rounded mb-4">
-    <div class="flex gap-2">
-      <button onclick="scheduleVisit()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Agendar Visita</button>
-      <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancelar</button>
+{{-- Modal visita (mantiene IDs y lógica) --}}
+<div id="visitModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.65);z-index:1000;">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:16px;min-width:320px;max-width:420px;padding:20px;"
+       class="shadow-xl">
+    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+      <i class="fa-solid fa-calendar-day text-blue-500"></i>
+      <span>Selecciona fecha y hora para tu visita</span>
+    </h3>
+    <input type="datetime-local" id="visitDateTime" class="w-full p-2 border rounded-lg mb-4 text-sm">
+    <div class="flex gap-2 justify-end">
+      <button onclick="closeModal()"
+              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm">
+        Cancelar
+      </button>
+      <button onclick="scheduleVisit()"
+              class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm">
+        Agendar visita
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Modal reserva -->
-<div id="reservationModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;overflow-y:auto;">
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;">
-    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
-      <div class="mb-4 sm:mb-0">
-        <h2 id="modalNightCount" class="text-2xl font-bold">Selecciona fechas</h2>
+{{-- Modal reserva --}}
+<div id="reservationModal"
+     style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.65);z-index:1000;overflow-y:auto;">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;"
+       class="shadow-2xl">
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3">
+      <div class="mb-2 sm:mb-0">
+        <h2 id="modalNightCount" class="text-2xl font-bold text-gray-900">Selecciona fechas</h2>
         <p id="modalDateHint" class="text-gray-500 text-sm">Agrega tus fechas de viaje</p>
       </div>
       <div class="flex space-x-2 flex-shrink-0">
@@ -437,8 +623,8 @@
       <input id="dateRange" class="fp-hidden-input" aria-hidden="true" tabindex="-1"/>
     </div>
 
-    <div id="priceSummary" class="mt-4 p-3 bg-gray-50 rounded border hidden">
-      <p class="font-semibold">Resumen de reserva:</p>
+    <div id="priceSummary" class="mt-4 p-3 bg-gray-50 rounded-lg border text-sm hidden">
+      <p class="font-semibold mb-1">Resumen de reserva:</p>
       <p id="nightsCount">Noches: 0</p>
       <p id="totalPrice">Total: $0.00 MXN</p>
     </div>
@@ -446,15 +632,18 @@
     <div class="text-xs text-gray-500 mt-2">*Los días no disponibles aparecen deshabilitados.</div>
 
     <div class="flex justify-between items-center mt-6 pt-4 border-t">
-      <button id="clearDatesBtn" type="button" class="font-semibold underline text-sm hover:bg-gray-100 p-2 rounded">
+      <button id="clearDatesBtn" type="button"
+              class="font-semibold underline text-sm hover:bg-gray-100 px-2 py-1 rounded">
         Borrar fechas
       </button>
       <div class="flex gap-2">
-        <button type="button" onclick="closeReservationModal()" class="font-semibold px-5 py-2 rounded-lg hover:bg-gray-100 text-sm">
+        <button type="button" onclick="closeReservationModal()"
+                class="font-semibold px-4 py-2 rounded-lg hover:bg-gray-100 text-sm">
           Cancelar
         </button>
-        <button type="button" id="confirmReservationBtn" class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 text-sm disabled:opacity-50">
-          Confirmar Reserva
+        <button type="button" id="confirmReservationBtn"
+                class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 text-sm disabled:opacity-50">
+          Confirmar reserva
         </button>
       </div>
     </div>
@@ -468,8 +657,8 @@
   <input type="hidden" name="end_date" id="checkout_end_date">
 </form>
 
-  <!-- FOOTER -->
-  <x-main-footer />
+{{-- FOOTER --}}
+<x-main-footer />
 
 @php
   /* ===== Rangos NO disponibles (checkout libre) ===== */
@@ -478,7 +667,7 @@
   if ($property->status === 'rented' && $property->rented_until) {
       $blocked[] = [
           'from' => now()->format('Y-m-d'),
-          'to'   => $property->rented_until->copy()->subDay()->format('Y-m-d'),  // <-- FIX: Y-m-d
+          'to'   => $property->rented_until->copy()->subDay()->format('Y-m-d'),
       ];
   }
 
@@ -499,7 +688,6 @@
   const propertyLocation = { lat: {{ $property->latitude }}, lng: {{ $property->longitude }} };
   const propertyId    = {{ $property->id }};
   const propertyPrice = {{ $property->price }};
-
   const blockedRanges = @json($blocked);
 
   // ================== Google Maps ==================
@@ -513,7 +701,7 @@
     new google.maps.Marker({map,position:propertyLocation,title:"{{ $property->title }}"});
   }
 
-  // ================== VISITAS (oculto en UI) ==================
+  // ================== VISITAS ==================
   function openVisitCalendar(){
     const now=new Date();
     const defaultDate=new Date(); defaultDate.setDate(now.getDate()+2); defaultDate.setHours(10,0,0,0);
@@ -636,7 +824,7 @@
     }
     const fmt=d=>d.toISOString().split('T')[0];
     document.getElementById('checkout_start_date').value=fmt(selectedRange.start);
-    document.getElementById('checkout_end_date').value=fmt(selectedRange.end); // <-- FIX
+    document.getElementById('checkout_end_date').value=fmt(selectedRange.end);
     document.getElementById('reservationPreviewForm').submit();
   };
 
@@ -667,6 +855,17 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+
+<script>
+  // Config del lightbox: sin animaciones y con navegación cómoda
+  lightbox.option({
+    resizeDuration: 0,
+    fadeDuration: 0,
+    imageFadeDuration: 0,
+    wrapAround: true,                 // volver al inicio al llegar a la última
+    alwaysShowNavOnTouchDevices: true // flechas visibles en móvil
+  });
+</script>
 
 <script>
   window.toggleFavorite = async function(){
