@@ -68,12 +68,14 @@
         @endif
       @endauth
 
-      {{-- Lupa móvil --}}
-      <button id="search-toggle"
-              class="text-gray-700 dark:text-gray-100 text-xl focus:outline-none"
-              aria-label="Abrir filtros">
-        <i class="fas fa-search"></i>
-      </button>
+      {{-- Lupa móvil: Home y Mapa --}}
+      @if(request()->routeIs('home') || request()->routeIs('properties.map'))
+        <button id="search-toggle"
+                class="text-gray-700 dark:text-gray-100 text-xl focus:outline-none"
+                aria-label="Abrir filtros">
+          <i class="fas fa-search"></i>
+        </button>
+      @endif
 
       {{-- Hamburguesa móvil --}}
       <button id="menu-toggle"
@@ -255,49 +257,66 @@
   </nav>
 
   @guest
-  {{-- Modal de login (fallback) --}}
-  <div id="header-login-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white dark:bg-gray-900 dark:text-gray-100 rounded-xl shadow-xl w-full max-w-md p-6 relative">
-      <button type="button"
-              class="absolute top-3 right-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+  {{-- Modal de login (fallback) REDISEÑADO + DARK MODE --}}
+  <div id="header-login-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-900 dark:text-gray-100 rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
+      {{-- Cerrar --}}
+      <button type="button" class="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               onclick="window.handleHeaderCloseLogin && window.handleHeaderCloseLogin()">
-        <i class="fa-solid fa-xmark"></i>
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
-      <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100 flex items-center gap-2">
-        <i class="fa-regular fa-user"></i><span>Iniciar sesión</span>
-      </h2>
+
+      {{-- Título --}}
+      <div class="mb-6 text-center">
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2">
+          <i class="fa-regular fa-user text-blue-500"></i>
+          <span>Iniciar sesión</span>
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-300 mt-1">
+          Accede para guardar favoritos, ver tus reservas y chatear con agentes.
+        </p>
+      </div>
+
+      {{-- Formulario --}}
       <form method="POST" action="{{ route('login') }}" class="space-y-4">
         @csrf
         <div>
-          <label for="header-login-email" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
+          <label for="header-login-email" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Correo electrónico
+          </label>
           <input id="header-login-email" type="email" name="email" required autocomplete="username"
-                 class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                 class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-3 text-sm sm:text-base shadow-sm
+                        focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
-          <label for="header-login-password" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Contraseña</label>
+          <label for="header-login-password" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Contraseña
+          </label>
           <input id="header-login-password" type="password" name="password" required autocomplete="current-password"
-                 class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                 class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-3 text-sm sm:text-base shadow-sm
+                        focus:ring-blue-500 focus:border-blue-500">
         </div>
-        <div class="flex items-center justify-between text-sm">
+        <div class="flex items-center justify-between text-sm mt-1">
           <label class="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-            <input type="checkbox" name="remember" value="1" class="rounded border-gray-300 dark:border-gray-600">
+            <input type="checkbox" name="remember" value="1" class="rounded border-gray-300 dark:border-gray-600 text-blue-600">
             <span>Recuérdame</span>
           </label>
           @if (Route::has('password.request'))
-            <a href="{{ route('password.request') }}"
-               class="text-blue-600 dark:text-blue-400 hover:underline">
+            <a href="{{ route('password.request') }}" class="text-blue-600 dark:text-blue-400 hover:underline">
               ¿Olvidaste tu contraseña?
             </a>
           @endif
         </div>
         <button type="submit"
-                class="w-full inline-flex justify-center items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                class="w-full inline-flex justify-center items-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 transition text-sm sm:text-base font-semibold">
           Entrar
         </button>
         @if (Route::has('register'))
-          <p class="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
+          <p class="mt-4 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             ¿Aún no tienes cuenta?
-            <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Regístrate</a>
+            <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+              Regístrate
+            </a>
           </p>
         @endif
       </form>
