@@ -76,7 +76,6 @@
             <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
             <div class="text-blue-500 text-3xl mb-4 relative inline-block">
                 <i class="fas fa-chart-line"></i>
-                <span class="absolute -top-2 -right-3 text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Nuevo</span>
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Estadísticas</h3>
             <p class="text-gray-600 mb-4">Resumen de propiedades y visitas en el tiempo</p>

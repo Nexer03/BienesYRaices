@@ -14,20 +14,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <style>
-
     /* Lightbox: flechas siempre visibles y bien posicionadas */
-.lb-nav a.lb-prev,
-.lb-nav a.lb-next {
-  opacity: 1 !important;
-}
+    .lb-nav a.lb-prev,
+    .lb-nav a.lb-next {
+      opacity: 1 !important;
+    }
 
-.lb-nav a.lb-prev {
-  left: 15px !important;
-}
-
-.lb-nav a.lb-next {
-  right: 15px !important;
-}
+    .lb-nav a.lb-prev { left: 15px !important; }
+    .lb-nav a.lb-next { right: 15px !important; }
 
     /* ===== Modal y mapa ===== */
     #reservationModal > div{
@@ -100,8 +94,8 @@
     .fp-shell .flatpickr-day.flatpickr-disabled:hover,
     .fp-shell .flatpickr-day.disabled,
     .fp-shell .flatpickr-day.disabled:hover {
-      background-color: #f3f4f6 !important; /* gris claro */
-      color: #9ca3af !important;            /* texto gris medio */
+      background-color: #f3f4f6 !important;
+      color: #9ca3af !important;
       border-color: transparent !important;
       cursor: not-allowed !important;
       opacity: 1 !important;
@@ -114,74 +108,71 @@
       color: #9ca3af !important;
     }
 
-    /* línea divisoria sutil entre meses en desktop */
     @media (min-width:640px){
       .fp-shell .flatpickr-days .dayContainer:nth-child(1){border-right:1px solid #e5e7eb}
     }
 
     /* Quitar animaciones de aparición del lightbox */
-#lightbox,
-#lightbox .lb-outerContainer,
-#lightbox .lb-container {
-  -webkit-transition: none !important;
-  transition: none !important;
-}
-/* Botones de anterior/siguiente fijos a los lados (no en la imagen) */
-#lightbox .lb-nav a.lb-prev,
-#lightbox .lb-nav a.lb-next {
-  position: fixed;               /* relativo a la ventana */
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3rem;
-  height: 3rem;
-  margin: 0;
-  padding: 0;
-  opacity: 1 !important;
-  background: rgba(15, 23, 42, 0.9);  /* circulito oscuro */
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-image: none !important;  /* quita la imagen por defecto de lightbox */
-  z-index: 10002;
-}
+    #lightbox,
+    #lightbox .lb-outerContainer,
+    #lightbox .lb-container {
+      -webkit-transition: none !important;
+      transition: none !important;
+    }
 
-/* Lado izquierdo / derecho */
-#lightbox .lb-nav a.lb-prev { left: 1.5rem; }
-#lightbox .lb-nav a.lb-next { right: 1.5rem; }
+    /* Botones de anterior/siguiente fijos a los lados (no en la imagen) */
+    #lightbox .lb-nav a.lb-prev,
+    #lightbox .lb-nav a.lb-next {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3rem;
+      height: 3rem;
+      margin: 0;
+      padding: 0;
+      opacity: 1 !important;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background-image: none !important;
+      z-index: 10002;
+    }
 
-/* Iconos de flecha con bordes */
-#lightbox .lb-nav a.lb-prev::before,
-#lightbox .lb-nav a.lb-next::before {
-  content: '';
-  display: block;
-  width: 0.75rem;
-  height: 0.75rem;
-  border-top: 2px solid #fff;
-  border-right: 2px solid #fff;
-}
+    #lightbox .lb-nav a.lb-prev { left: 1.5rem; }
+    #lightbox .lb-nav a.lb-next { right: 1.5rem; }
 
-#lightbox .lb-nav a.lb-prev::before {
-  transform: rotate(-135deg);
-  margin-left: 0.1rem;
-}
+    #lightbox .lb-nav a.lb-prev::before,
+    #lightbox .lb-nav a.lb-next::before {
+      content: '';
+      display: block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-top: 2px solid #fff;
+      border-right: 2px solid #fff;
+    }
 
-#lightbox .lb-nav a.lb-next::before {
-  transform: rotate(45deg);
-  margin-right: 0.1rem;
-}
+    #lightbox .lb-nav a.lb-prev::before {
+      transform: rotate(-135deg);
+      margin-left: 0.1rem;
+    }
 
-/* Un poco más compacto en móvil */
-@media (max-width: 640px) {
-  #lightbox .lb-nav a.lb-prev,
-  #lightbox .lb-nav a.lb-next {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-  #lightbox .lb-nav a.lb-prev { left: 0.75rem; }
-  #lightbox .lb-nav a.lb-next { right: 0.75rem; }
-}
+    #lightbox .lb-nav a.lb-next::before {
+      transform: rotate(45deg);
+      margin-right: 0.1rem;
+    }
+
+    @media (max-width: 640px) {
+      #lightbox .lb-nav a.lb-prev,
+      #lightbox .lb-nav a.lb-next {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+      #lightbox .lb-nav a.lb-prev { left: 0.75rem; }
+      #lightbox .lb-nav a.lb-next { right: 0.75rem; }
+    }
   </style>
 </head>
 
@@ -197,6 +188,7 @@
 
   {{-- Bloque superior: título + ubicación + galería --}}
   <section class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 md:p-6">
+    {{-- HEADER: título + rating + favorito --}}
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
@@ -221,6 +213,8 @@
         </p>
       </div>
 
+      <div class="flex items-center gap-3 mt-1 md:mt-0">
+        {{-- Rating si es renta --}}
         @if($isRent && $property->reviews->count())
           @php
             $count = $property->reviews->count();
@@ -232,6 +226,36 @@
             <span class="text-gray-500 dark:text-gray-400">· {{ $count }} reseña{{ $count>1?'s':'' }}</span>
           </div>
         @endif
+
+        {{-- Botón de favoritos al nivel del título --}}
+        @auth
+          @php
+            $isFav = auth()->user()->favoriteProperties()->where('properties.id',$property->id)->exists();
+          @endphp
+
+          <form method="POST"
+                action="{{ $isFav ? route('favorites.destroy',$property) : route('favorites.store',$property) }}"
+                id="fav-fallback-form"
+                class="hidden">
+            @csrf
+            @if($isFav) @method('DELETE') @endif
+          </form>
+
+          <button id="fav-btn"
+                  class="inline-flex items-center justify-center w-10 h-10 rounded-full
+                         bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700
+                         shadow-sm hover:bg-pink-50 dark:hover:bg-pink-900/30 transition
+                         text-gray-400"
+                  data-toggle-url="{{ route('favorites.toggle',$property) }}"
+                  data-state="{{ $isFav ? 'on' : 'off' }}"
+                  onclick="if(!window.toggleFavorite){ document.getElementById('fav-fallback-form').submit(); }">
+            <i id="fav-icon"
+               class="fa-heart {{ $isFav ? 'fa-solid text-pink-500' : 'fa-regular' }}"></i>
+            <span id="fav-text" class="sr-only">
+              {{ $isFav ? 'Quitar de favoritos' : 'Agregar a favoritos' }}
+            </span>
+          </button>
+        @endauth
       </div>
     </div>
 
@@ -332,7 +356,6 @@
   <section class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
     {{-- Columna izquierda --}}
     <div class="md:col-span-2 space-y-6">
-
       {{-- Card de features --}}
       <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 px-5 py-4 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-200">
         @if($property->bedrooms)
@@ -350,7 +373,7 @@
         @endif
       </div>
 
-      {{-- Descripción + amenidades + reseñas en una card --}}
+      {{-- Descripción + amenidades + reseñas --}}
       <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 md:p-6 space-y-6">
         {{-- Descripción --}}
         <section>
@@ -490,7 +513,6 @@
           </section>
         @endif
       </div>
-
     </div>
 
     {{-- Columna derecha: card de reserva/contacto --}}
@@ -541,26 +563,6 @@
             </button>
           @endauth
         @endif
-
-        @auth
-          @php
-            $isFav = auth()->user()->favoriteProperties()->where('properties.id',$property->id)->exists();
-          @endphp
-          <div class="pt-2 border-t border-gray-100 dark:border-gray-800">
-            <form method="POST" action="{{ $isFav ? route('favorites.destroy',$property) : route('favorites.store',$property) }}"
-                  id="fav-fallback-form" class="hidden">
-              @csrf @if($isFav) @method('DELETE') @endif
-            </form>
-            <button id="fav-btn"
-                    class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 py-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 font-semibold text-sm flex items-center justify-center gap-2"
-                    data-toggle-url="{{ route('favorites.toggle',$property) }}"
-                    data-state="{{ $isFav ? 'on' : 'off' }}"
-                    onclick="if(!window.toggleFavorite){ document.getElementById('fav-fallback-form').submit(); }">
-              <span id="fav-icon">{{ $isFav ? '★' : '☆' }}</span>
-              <span id="fav-text">{{ $isFav ? 'Quitar de favoritos' : 'Agregar a favoritos' }}</span>
-            </button>
-          </div>
-        @endauth
       </div>
     </div>
   </section>
@@ -575,7 +577,7 @@
   </section>
 </main>
 
-{{-- Modal visita (mantiene IDs y lógica) --}}
+{{-- Modal visita --}}
 <div id="visitModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.65);z-index:1000;">
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:16px;min-width:320px;max-width:420px;padding:20px;"
        class="shadow-xl">
@@ -862,8 +864,8 @@
     resizeDuration: 0,
     fadeDuration: 0,
     imageFadeDuration: 0,
-    wrapAround: true,                 // volver al inicio al llegar a la última
-    alwaysShowNavOnTouchDevices: true // flechas visibles en móvil
+    wrapAround: true,
+    alwaysShowNavOnTouchDevices: true
   });
 </script>
 
@@ -876,7 +878,12 @@
       const data=await res.json();
       if(data.ok){
         const on=data.favorited===true; btn.dataset.state=on?'on':'off';
-        icon.textContent=on?'★':'☆'; text.textContent=on?'Quitar de favoritos':'Agregar a favoritos';
+        // Cambiamos estilo del ícono y texto accesible
+        icon.classList.toggle('fa-solid', on);
+        icon.classList.toggle('fa-regular', !on);
+        icon.classList.toggle('text-pink-500', on);
+        icon.classList.toggle('text-gray-400', !on);
+        text.textContent = on ? 'Quitar de favoritos' : 'Agregar a favoritos';
       }
     }catch(e){}
   };
