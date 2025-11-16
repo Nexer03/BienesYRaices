@@ -147,7 +147,12 @@ class PropertyController extends Controller
                 ->pluck('id')   // <-- CORREGIDO: antes 'properties.id'
                 ->toArray();
         }
-
+        $noResults = $request->filled('city')
+            || $request->filled('min_price')
+            || $request->filled('max_price')
+            || $request->filled('type');
+        $noResults = $noResults && $filteredProperties->isEmpty();
+        
         // --- 6. Enviar datos a la vista ---
         return view('welcome', [
             'properties' => $properties,
@@ -162,7 +167,8 @@ class PropertyController extends Controller
             'saleMaxRange' => $saleMaxRange,
             'headerNotifications' => $headerNotifications,
             'unreadNotificationCount' => $unreadNotificationCount,
-            'favoriteIds' => $favoriteIds, // <-- AÑADIDO
+            'favoriteIds' => $favoriteIds, 
+            'noResults' => $noResults,
         ]);
     }
 
