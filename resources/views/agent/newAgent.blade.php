@@ -9,18 +9,18 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+<body class="min-h-screen flex flex-col bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
 
   {{-- HEADER --}}
   <x-main-header />
 
   {{-- CONTENIDO PRINCIPAL --}}
   <main class="flex-1 flex items-center justify-center mt-24 px-4">
-    <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg">
+    <div class="bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-8 w-full max-w-lg border border-gray-200 dark:border-gray-700">
       <div class="text-center mb-6">
         <i class="fas fa-user-tie text-4xl text-blue-600 mb-2"></i>
-        <h1 class="text-3xl font-bold text-gray-800">Registro como Agente</h1>
-        <p class="text-gray-500 mt-2">Completa los siguientes campos para enviar tu solicitud</p>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Registro como Agente</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-2">Completa los siguientes campos para enviar tu solicitud</p>
       </div>
 
       <form action="{{ route('agent.register.store') }}" method="POST" id="agentForm" class="space-y-6" enctype="multipart/form-data">
@@ -28,39 +28,76 @@
 
         {{-- RFC --}}
         <div>
-          <label for="rfc" class="block font-medium text-gray-700 mb-1">
+          <label for="rfc" class="block font-medium text-gray-700 dark:text-gray-200 mb-1">
             <i class="fa-solid fa-id-card mr-2 text-blue-500"></i>RFC
           </label>
-          <input type="text" name="rfc" id="rfc" placeholder="AAA000000AAA"
-            pattern="[A-Z&Ñ]{3,4}[0-9]{6}[A-Z0-9]{3}" required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 uppercase">
-          <small class="text-gray-500 text-sm">Formato: 3–4 letras, 6 números, 3 caracteres</small>
+          <input
+            type="text"
+            name="rfc"
+            id="rfc"
+            placeholder="AAA000000AAA"
+            pattern="[A-Z&Ñ]{3,4}[0-9]{6}[A-Z0-9]{3}"
+            required
+            class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 uppercase"
+          >
+          <small class="text-gray-500 dark:text-gray-400 text-sm">
+            Formato: 3–4 letras, 6 números, 3 caracteres
+          </small>
         </div>
 
         {{-- CURP --}}
         <div>
-          <label for="curp" class="block font-medium text-gray-700 mb-1">
+          <label for="curp" class="block font-medium text-gray-700 dark:text-gray-200 mb-1">
             <i class="fa-solid fa-user-check mr-2 text-blue-500"></i>CURP
           </label>
-          <input type="text" name="curp" id="curp" placeholder="AAAA000000HAAAAAA00"
-            pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}" required
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 uppercase">
-          <small class="text-gray-500 text-sm">Formato: 4 letras, 6 números, 1 letra (H/M), 5 letras, 2 caracteres</small>
+          <input
+            type="text"
+            name="curp"
+            id="curp"
+            placeholder="AAAA000000HAAAAAA00"
+            pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}"
+            required
+            class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 uppercase"
+          >
+          <small class="text-gray-500 dark:text-gray-400 text-sm">
+            Formato: 4 letras, 6 números, 1 letra (H/M), 5 letras, 2 caracteres
+          </small>
         </div>
+
+        {{-- INE frontal --}}
         <div class="mb-4">
-        <label for="ine_front" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Foto INE (frontal)</label>
-        <input type="file" name="ine_front" id="ine_front" accept="image/*" required
-              class="mt-1 block w-full text-sm text-gray-900 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
-      </div>
+          <label for="ine_front" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Foto INE (frontal)
+          </label>
+          <input
+            type="file"
+            name="ine_front"
+            id="ine_front"
+            accept="image/*"
+            required
+            class="mt-1 block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800"
+          >
+        </div>
 
-      <div class="mb-4">
-        <label for="ine_back" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Foto INE (reverso)</label>
-        <input type="file" name="ine_back" id="ine_back" accept="image/*" required
-              class="mt-1 block w-full text-sm text-gray-900 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600">
-      </div>
+        {{-- INE reverso --}}
+        <div class="mb-4">
+          <label for="ine_back" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Foto INE (reverso)
+          </label>
+          <input
+            type="file"
+            name="ine_back"
+            id="ine_back"
+            accept="image/*"
+            required
+            class="mt-1 block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800"
+          >
+        </div>
 
-        <button type="submit"
-          class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+        <button
+          type="submit"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition"
+        >
           <i class="fa-solid fa-paper-plane mr-2"></i>Enviar Solicitud
         </button>
       </form>
@@ -68,9 +105,11 @@
   </main>
 
   {{-- FOOTER --}}
-  <footer class="bg-gray-800 text-white py-6 mt-auto">
+  <footer class="bg-gray-800 dark:bg-gray-950 text-white py-6 mt-auto">
     <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
-      <p class="text-sm text-gray-300">&copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.</p>
+      <p class="text-sm text-gray-300">
+        &copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.
+      </p>
       <div class="flex space-x-4 mt-3 md:mt-0">
         <a href="#" class="hover:text-blue-400"><i class="fab fa-facebook-f"></i></a>
         <a href="#" class="hover:text-blue-400"><i class="fab fa-twitter"></i></a>
@@ -81,7 +120,7 @@
 
   {{-- VALIDACIONES --}}
   <script>
-    const rfcInput = document.getElementById('rfc');
+    const rfcInput  = document.getElementById('rfc');
     const curpInput = document.getElementById('curp');
 
     rfcInput.addEventListener('input', e => {

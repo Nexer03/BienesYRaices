@@ -5,16 +5,49 @@
   <title>Editar Propiedad</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  {{-- Anti-flash: aplica el tema guardado ANTES de cargar Tailwind --}}
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
   <style>
     #map { height: 380px; width: 100%; border-radius: .75rem; }
+    .dark footer { background-color: #111827 !important; }
   </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-b from-gray-50 via-gray-100 to-gray-200 text-gray-800 flex flex-col">
+<body class="min-h-screen bg-gradient-to-b from-gray-50 via-gray-100 to-gray-200 text-gray-800 flex flex-col
+             dark:from-gray-950 dark:via-gray-900 dark:to-gray-900 dark:text-gray-100 transition-colors duration-300">
   <x-main-header />
+
+  {{-- Botón Tema --}}
+  <button id="theme-toggle"
+          class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg
+                 bg-white text-gray-800 hover:bg-gray-100
+                 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          aria-label="Cambiar tema">
+    <i class="fa-solid"></i>
+    <span class="text-sm font-medium"></span>
+  </button>
 
   <main class="flex-1 max-w-6xl mx-auto px-6 py-10">
     <form id="property-edit-form"
@@ -25,24 +58,31 @@
       @method('PUT')
 
       <header class="mb-8">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800">Editar Propiedad</h1>
-        <p class="text-gray-500">Actualiza información, ubicación, imágenes y amenidades en dos pasos.</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-gray-100">Editar Propiedad</h1>
+        <p class="text-gray-500 dark:text-gray-300">Actualiza información, ubicación, imágenes y amenidades en dos pasos.</p>
       </header>
 
       {{-- STEPPER --}}
       <div class="flex items-center justify-center mb-8 space-x-8 select-none">
         <div class="flex flex-col items-center">
-          <div :class="step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
-               class="w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all">1</div>
-          <span class="text-sm mt-2 font-medium text-gray-600">Información</span>
+          <div
+            :class="step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-gray-300'"
+            class="w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all">
+            1
+          </div>
+          <span class="text-sm mt-2 font-medium text-gray-600 dark:text-gray-300">Información</span>
         </div>
-        <div class="w-24 h-1 bg-gray-300 rounded-full">
-          <div class="h-1 bg-blue-600 rounded-full transition-all duration-500" :style="{ width: step === 2 ? '100%' : '50%' }"></div>
+        <div class="w-24 h-1 bg-gray-300 dark:bg-gray-700 rounded-full">
+          <div class="h-1 bg-blue-600 rounded-full transition-all duration-500"
+               :style="{ width: step === 2 ? '100%' : '50%' }"></div>
         </div>
         <div class="flex flex-col items-center">
-          <div :class="step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
-               class="w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all">2</div>
-          <span class="text-sm mt-2 font-medium text-gray-600">Amenidades</span>
+          <div
+            :class="step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-gray-300'"
+            class="w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all">
+            2
+          </div>
+          <span class="text-sm mt-2 font-medium text-gray-600 dark:text-gray-300">Amenidades</span>
         </div>
       </div>
 
@@ -55,28 +95,34 @@
                  x-transition:leave="transition transform duration-500"
                  x-transition:leave-start="translate-x-0 opacity-100"
                  x-transition:leave-end="-translate-x-full opacity-0"
-                 class="bg-white/80 backdrop-blur-md border border-gray-100 rounded-2xl shadow-lg p-6 md:p-8 space-y-10">
+                 class="bg-white/80 dark:bg-gray-900/90 backdrop-blur-md border border-gray-100 dark:border-gray-700 rounded-2xl shadow-lg p-6 md:p-8 space-y-10 transition-colors duration-300">
 
           {{-- Información básica --}}
           <div>
-            <h2 class="text-xl font-semibold mb-5">Información básica</h2>
+            <h2 class="text-xl font-semibold mb-5 text-gray-900 dark:text-gray-100">Información básica</h2>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Título</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Título</label>
                 <input type="text" name="title" value="{{ old('title', $property->title) }}"
-                  class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                  class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                         bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
               </div>
 
               <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Descripción</label>
                 <textarea name="description" rows="4"
-                  class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('description', $property->description) }}</textarea>
+                  class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                         bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('description', $property->description) }}</textarea>
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Tipo</label>
                 <select name="type"
-                  class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                         bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   <option value="house"     @selected(old('type', $property->type) == 'house')>Casa</option>
                   <option value="apartment" @selected(old('type', $property->type) == 'apartment')>Departamento</option>
                   <option value="land"      @selected(old('type', $property->type) == 'land')>Terreno</option>
@@ -86,14 +132,18 @@
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700">Habitaciones</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Habitaciones</label>
                   <input type="number" name="bedrooms" min="0" value="{{ old('bedrooms', $property->bedrooms) }}"
-                    class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                           bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700">Baños</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Baños</label>
                   <input type="number" name="bathrooms" min="0" value="{{ old('bathrooms', $property->bathrooms) }}"
-                    class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                           bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
               </div>
             </div>
@@ -101,33 +151,34 @@
 
           {{-- Comercial --}}
           <div>
-            <h2 class="text-xl font-semibold mb-5">Comercial</h2>
+            <h2 class="text-xl font-semibold mb-5 text-gray-900 dark:text-gray-100">Comercial</h2>
             <div class="grid md:grid-cols-3 gap-6">
               <div class="md:col-span-2">
-                <span class="block text-sm font-medium text-gray-700 mb-2">Propósito</span>
-                <div class="flex items-center gap-6">
+                <span class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Propósito</span>
+                <div class="flex items-center gap-6 text-gray-800 dark:text-gray-100">
                   <label class="flex items-center gap-2">
                     <input type="radio" name="listing_type" value="rent"
                            @checked(old('listing_type', $property->listing_type) == 'rent')
-                           class="text-blue-600"> Renta
+                           class="text-blue-600 border-gray-300 dark:border-gray-600"> Renta
                   </label>
                   <label class="flex items-center gap-2">
                     <input type="radio" name="listing_type" value="sale"
                            @checked(old('listing_type', $property->listing_type) == 'sale')
-                           class="text-blue-600"> Venta
+                           class="text-blue-600 border-gray-300 dark:border-gray-600"> Venta
                   </label>
                 </div>
               </div>
               <div>
-                <label id="price-label" class="block text-sm font-medium text-gray-700">
-                  {{-- se ajusta por JS --}}
+                <label id="price-label" class="block text-sm font-medium text-gray-700 dark:text-gray-200">
                   Precio
                 </label>
                 <div class="relative mt-1">
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
                   <input type="number" id="price" name="price" step="100.00" max="99999999.99"
                          value="{{ old('price', $property->price) }}"
-                         class="pl-7 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                         class="pl-7 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                                bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                                focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
                 </div>
               </div>
             </div>
@@ -135,42 +186,47 @@
 
           {{-- Ubicación --}}
           <div>
-            <h2 class="text-xl font-semibold mb-5">Ubicación</h2>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+            <h2 class="text-xl font-semibold mb-5 text-gray-900 dark:text-gray-100">Ubicación</h2>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Dirección</label>
             <input id="address-input" type="text" name="location" value="{{ old('location', $property->location) }}"
-                   class="w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                   class="w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                          bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                          focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
             <div class="grid md:grid-cols-3 gap-4 mt-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Ciudad</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Ciudad</label>
                 <input id="city" name="city" value="{{ old('city', $property->city) }}"
-                       class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 bg-gray-50" readonly>
+                       class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100" readonly>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Latitud</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Latitud</label>
                 <input id="latitude" name="latitude" value="{{ old('latitude', $property->latitude) }}"
-                       class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 bg-gray-50" readonly>
+                       class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100" readonly>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">Longitud</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Longitud</label>
                 <input id="longitude" name="longitude" value="{{ old('longitude', $property->longitude) }}"
-                       class="mt-1 w-full border border-gray-300 rounded-lg shadow-inner px-3 py-2 bg-gray-50" readonly>
+                       class="mt-1 w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner px-3 py-2
+                              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100" readonly>
               </div>
             </div>
 
-            <div class="mt-4 border border-gray-200 rounded-xl bg-gray-50 p-2">
-              <div id="map" class="bg-gray-100 rounded-lg"></div>
+            <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 p-2">
+              <div id="map" class="bg-gray-100 dark:bg-gray-800 rounded-lg"></div>
             </div>
           </div>
 
           {{-- Imágenes --}}
           <div>
-            <h2 class="text-xl font-semibold mb-5">Imágenes</h2>
+            <h2 class="text-xl font-semibold mb-5 text-gray-900 dark:text-gray-100">Imágenes</h2>
 
             {{-- existentes --}}
             <div id="existing-images-container" class="flex flex-wrap gap-4">
               @forelse($property->images as $image)
                 <div class="relative" id="image-{{ $image->id }}">
-                  <img src="{{ asset('storage/' . $image->image_path) }}" class="w-36 h-36 object-cover rounded-lg border">
+                  <img src="{{ asset('storage/' . $image->image_path) }}" class="w-36 h-36 object-cover rounded-lg border border-gray-200 dark:border-gray-700">
                   <button type="button"
                           class="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 grid place-items-center delete-image-btn shadow"
                           title="Eliminar" data-image-id="{{ $image->id }}"
@@ -179,14 +235,15 @@
                   </button>
                 </div>
               @empty
-                <p id="no-images-message" class="text-gray-500">No hay imágenes actuales.</p>
+                <p id="no-images-message" class="text-gray-500 dark:text-gray-400">No hay imágenes actuales.</p>
               @endforelse
             </div>
 
             {{-- nuevas --}}
             <div class="mt-6">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Añadir más imágenes</label>
-              <label for="images" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-900">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Añadir más imágenes</label>
+              <label for="images"
+                     class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600">
                 <i class="fa-solid fa-image"></i> Seleccionar imágenes
               </label>
               <input type="file" id="images" name="images[]" multiple accept="image/*" class="hidden">
@@ -195,7 +252,7 @@
           </div>
 
           {{-- Acciones paso 1 --}}
-          <div class="flex justify-end pt-6 border-t border-gray-100">
+          <div class="flex justify-end pt-6 border-t border-gray-100 dark:border-gray-700">
             <button type="button" @click="next()"
                     class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow">
               Siguiente <i class="fa-solid fa-arrow-right ml-2"></i>
@@ -211,9 +268,9 @@
                  x-transition:leave="transition transform duration-500"
                  x-transition:leave-start="translate-x-0 opacity-100"
                  x-transition:leave-end="translate-x-full opacity-0"
-                 class="bg-white/80 backdrop-blur-md border border-gray-100 rounded-2xl shadow-lg p-6 md:p-8">
+                 class="bg-white/80 dark:bg-gray-900/90 backdrop-blur-md border border-gray-100 dark:border-gray-700 rounded-2xl shadow-lg p-6 md:p-8 transition-colors duration-300">
 
-          <h2 class="text-xl font-semibold mb-5">Amenidades</h2>
+          <h2 class="text-xl font-semibold mb-5 text-gray-900 dark:text-gray-100">Amenidades</h2>
           @php $propertyAmenities = $property->amenities->pluck('id')->toArray(); @endphp
           @foreach($amenityCategories as $category)
             @php
@@ -221,23 +278,23 @@
               $type = in_array($category->name, $saleCategories) ? 'sale' : 'rent';
             @endphp
             <div class="mb-6 amenity-category" data-type="{{ $type }}">
-              <h4 class="font-semibold mb-3 text-gray-800">{{ $category->name }}</h4>
+              <h4 class="font-semibold mb-3 text-gray-800 dark:text-gray-100">{{ $category->name }}</h4>
               <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
                 @foreach($category->amenities as $amenity)
                   <label class="inline-flex items-center gap-2">
-                    <input class="text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    <input class="text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                            type="checkbox" name="amenities[]" value="{{ $amenity->id }}"
                            @checked(in_array($amenity->id, $propertyAmenities))>
-                    <span class="text-gray-700">{{ $amenity->name }}</span>
+                    <span class="text-gray-700 dark:text-gray-200">{{ $amenity->name }}</span>
                   </label>
                 @endforeach
               </div>
             </div>
           @endforeach
 
-          <div class="flex justify-between pt-6 border-t border-gray-100">
+          <div class="flex justify-between pt-6 border-t border-gray-100 dark:border-gray-700">
             <button type="button" @click="back()"
-                    class="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 shadow">
+                    class="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 shadow">
               <i class="fa-solid fa-arrow-left mr-2"></i> Volver
             </button>
             <button type="submit"
@@ -284,7 +341,7 @@
         const wrap = document.createElement('div');
         wrap.className = 'relative';
         wrap.innerHTML = `
-          <img src="${reader.result}" class="w-36 h-36 object-cover rounded-lg border">
+          <img src="${reader.result}" class="w-36 h-36 object-cover rounded-lg border border-gray-200 dark:border-gray-700">
           <button type="button"
             class="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 grid place-items-center shadow"
             title="Quitar" onclick="removeNewImage(${idx})">&times;</button>`;
@@ -364,7 +421,6 @@
   });
 
   /* ---------- Google Maps (Autocomplete + drag) ---------- */
-  // También actualiza etiqueta de precio según propósito
   function updatePriceLabel() {
     const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
     document.getElementById('price-label').textContent =
@@ -444,6 +500,39 @@
   }
   toggleAmenities();
   document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', toggleAmenities));
+  </script>
+
+  {{-- Toggle de tema (sincronizado con localStorage, igual que en welcome) --}}
+  <script>
+    (function () {
+      const html  = document.documentElement;
+      const btn   = document.getElementById('theme-toggle');
+      const icon  = btn?.querySelector('i');
+      const label = btn?.querySelector('span');
+
+      function setIconAndLabel() {
+        const isDark = html.classList.contains('dark');
+        if (!icon || !label) return;
+        icon.classList.remove('fa-sun', 'fa-moon');
+        icon.classList.add(isDark ? 'fa-moon' : 'fa-sun');
+        label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+      }
+
+      function apply(mode) {
+        const isDark = mode === 'dark';
+        html.classList.toggle('dark', isDark);
+        try { localStorage.setItem('theme', mode); } catch (e) {}
+        setIconAndLabel();
+      }
+
+      // Al cargar, usamos la clase ya puesta por el script del <head>
+      setIconAndLabel();
+
+      btn?.addEventListener('click', () => {
+        const next = html.classList.contains('dark') ? 'light' : 'dark';
+        apply(next);
+      });
+    })();
   </script>
 </body>
 </html>

@@ -4,73 +4,126 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Crear Nueva Propiedad</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<style>
-  /* Transiciones del wizard */
-  .step-panel { transition: transform .35s ease, opacity .35s ease; }
-  .step-hidden { transform: translateX(4rem); opacity: 0; pointer-events: none; }
-  .step-active { transform: translateX(0); opacity: 1; }
-  #map { height: 360px; width: 100%; border-radius: .75rem; }
 
-  /* 🔹 Estilo moderno para campos del formulario */
-  input[type="text"],
-  input[type="number"],
-  input[type="file"],
-  textarea,
-  select {
-    background-color: #fff;
-    border: 1.5px solid #d1d5db;
-    border-radius: 0.75rem;
-    padding: 0.6rem 0.9rem;
-    transition: all 0.25s ease;
-    width: 100%;
-  }
-  input[type="text"]:hover,
-  input[type="number"]:hover,
-  textarea:hover,
-  select:hover { border-color: #9ca3af; }
-  input[type="text"]:focus,
-  input[type="number"]:focus,
-  textarea:focus,
-  select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-    outline: none;
-  }
-  input[readonly] { background-color: #f3f4f6; border-color: #d1d5db; color:#6b7280; }
-  input[type="radio"], input[type="checkbox"] { accent-color:#3b82f6; transform: scale(1.15); }
-  ::placeholder { color:#9ca3af; }
-</style>
+  {{-- Anti-flash: aplicar tema guardado antes de Tailwind --}}
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <style>
+    /* Transiciones del wizard */
+    .step-panel { transition: transform .35s ease, opacity .35s ease; }
+    .step-hidden { transform: translateX(4rem); opacity: 0; pointer-events: none; }
+    .step-active { transform: translateX(0); opacity: 1; }
+    #map { height: 360px; width: 100%; border-radius: .75rem; }
+
+    /* 🔹 Estilo moderno para campos del formulario (modo claro) */
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    textarea,
+    select {
+      background-color: #fff;
+      border: 1.5px solid #d1d5db;
+      border-radius: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      transition: all 0.25s ease;
+      width: 100%;
+    }
+    input[type="text"]:hover,
+    input[type="number"]:hover,
+    textarea:hover,
+    select:hover { border-color: #9ca3af; }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+      outline: none;
+    }
+    input[readonly] { background-color: #f3f4f6; border-color: #d1d5db; color:#6b7280; }
+    input[type="radio"], input[type="checkbox"] { accent-color:#3b82f6; transform: scale(1.15); }
+    ::placeholder { color:#9ca3af; }
+
+    /* 🔹 Overrides para modo oscuro */
+    html.dark input[type="text"],
+    html.dark input[type="number"],
+    html.dark input[type="file"],
+    html.dark textarea,
+    html.dark select {
+      background-color: #020617; /* slate-950 */
+      border-color: #374151;     /* gray-700 */
+      color: #e5e7eb;            /* gray-200 */
+    }
+    html.dark input[readonly] {
+      background-color: #020617;
+      border-color: #4b5563;
+      color: #9ca3af;
+    }
+    html.dark ::placeholder { color:#6b7280; }
+
+    html.dark #map {
+      background-color: #020617;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col
+             dark:bg-gray-950 dark:text-gray-100 transition-colors duration-300">
   <!-- Header -->
- <x-main-header />
+  <x-main-header />
+
+  {{-- Botón flotante para tema (igual que en editar propiedad) --}}
+  <button id="theme-toggle"
+          class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg
+                 bg-white text-gray-800 hover:bg-gray-100
+                 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          aria-label="Cambiar tema">
+    <i class="fa-solid"></i>
+    <span class="text-sm font-medium"></span>
+  </button>
 
   <!-- Contenido -->
   <main class="flex-1">
     <div class="max-w-5xl mx-auto px-6 py-10">
       <div class="mb-6">
-        <h1 class="text-3xl font-bold">Crear Nueva Propiedad</h1>
-        <p class="text-gray-600">Completa los pasos y guarda tu propiedad.</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Crear Nueva Propiedad</h1>
+        <p class="text-gray-600 dark:text-gray-300">Completa los pasos y guarda tu propiedad.</p>
       </div>
 
       <!-- Wizard -->
-      <div class="bg-white shadow-xl rounded-2xl overflow-hidden">
+      <div class="bg-white dark:bg-gray-900 shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 transition-colors">
         <!-- Progress -->
         <div class="px-6 pt-6">
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <div class="w-full h-2 rounded-full bg-gray-100">
+              <div class="w-full h-2 rounded-full bg-gray-100 dark:bg-gray-800">
                 <div id="progressBar" class="h-2 rounded-full bg-blue-500" style="width:20%"></div>
               </div>
             </div>
-            <div class="ml-4 text-sm text-gray-600">
+            <div class="ml-4 text-sm text-gray-600 dark:text-gray-300">
               <span id="stepLabel">Paso 1 de 5</span>
             </div>
           </div>
-          <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
+          <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>General</span><span>Comercial</span><span>Ubicación</span><span>Amenidades</span><span>Confirmación</span>
           </div>
         </div>
@@ -88,17 +141,17 @@
             <section class="step-panel step-active" data-step="1">
               <div class="grid md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
-                  <label for="title" class="block text-sm font-medium text-gray-700">Título de la propiedad</label>
+                  <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Título de la propiedad</label>
                   <input type="text" id="title" name="title" value="{{ old('title') }}" required>
                 </div>
 
                 <div class="md:col-span-2">
-                  <label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                  <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Descripción</label>
                   <textarea id="description" name="description" rows="4" placeholder="Describe la propiedad, zona, reglas, etc."></textarea>
                 </div>
 
                 <div>
-                  <label for="type" class="block text-sm font-medium text-gray-700">Tipo</label>
+                  <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Tipo</label>
                   <select id="type" name="type" required>
                     <option value="">Selecciona…</option>
                     <option value="house">Casa</option>
@@ -110,11 +163,11 @@
 
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label for="bedrooms" class="block text-sm font-medium text-gray-700">Habitaciones</label>
+                    <label for="bedrooms" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Habitaciones</label>
                     <input type="number" min="1" id="bedrooms" name="bedrooms" value="{{ old('bedrooms') }}" required>
                   </div>
                   <div>
-                    <label for="bathrooms" class="block text-sm font-medium text-gray-700">Baños</label>
+                    <label for="bathrooms" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Baños</label>
                     <input type="number" min="1" id="bathrooms" name="bathrooms" value="{{ old('bathrooms') }}" required>
                   </div>
                 </div>
@@ -125,8 +178,8 @@
             <section class="step-panel step-hidden absolute inset-0" data-step="2">
               <div class="grid md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
-                  <span class="block text-sm font-medium text-gray-700">Propósito</span>
-                  <div class="mt-2 flex items-center gap-6">
+                  <span class="block text-sm font-medium text-gray-700 dark:text-gray-200">Propósito</span>
+                  <div class="mt-2 flex items-center gap-6 text-gray-800 dark:text-gray-100">
                     <label class="inline-flex items-center gap-2">
                       <input class="text-blue-600 border-gray-300 focus:ring-blue-500" type="radio" name="listing_type" id="rent" value="rent" checked>
                       <span>Renta</span>
@@ -139,22 +192,22 @@
                 </div>
 
                 <div class="md:col-span-2">
-                  <label for="price" id="price-label" class="block text-sm font-medium text-gray-700">Precio por día (MXN)</label>
+                  <label for="price" id="price-label" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Precio por día (MXN)</label>
                   <div class="mt-1 relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
                     <input type="number" id="price" name="price" step="any" required max="99999999.99" class="pl-7">
                   </div>
                 </div>
 
                 <!-- Imágenes -->
                 <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700">Imágenes de la Propiedad</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Imágenes de la Propiedad</label>
                   <div class="mt-2 flex items-center gap-3 flex-wrap">
-                    <label for="images" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 cursor-pointer">
+                    <label for="images" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-gray-800 dark:text-gray-100">
                       <i class="fa-solid fa-camera"></i> Añadir imágenes
                     </label>
                     <input type="file" id="images" name="images[]" multiple class="hidden" accept="image/*">
-                    <span id="images-counter" class="text-xs text-gray-600">
+                    <span id="images-counter" class="text-xs text-gray-600 dark:text-gray-400">
                       0 seleccionadas · mínimo 5 para continuar
                     </span>
                   </div>
@@ -167,29 +220,29 @@
             <section class="step-panel step-hidden absolute inset-0" data-step="3">
               <div class="space-y-6">
                 <div>
-                  <label for="address-input" class="block text-sm font-medium text-gray-700">Dirección</label>
+                  <label for="address-input" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Dirección</label>
                   <input type="text" id="address-input" name="location" placeholder="Calle, número, ciudad" value="{{ old('location') }}" autocomplete="off" required>
-                  <p class="mt-1 text-xs text-gray-500">Selecciona una sugerencia para autocompletar ciudad y coordenadas.</p>
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecciona una sugerencia para autocompletar ciudad y coordenadas.</p>
                 </div>
 
                 <div class="grid md:grid-cols-3 gap-4">
                   <div class="md:col-span-2">
-                    <div id="map" class="bg-gray-100"></div>
+                    <div id="map" class="bg-gray-100 dark:bg-gray-800 rounded-xl"></div>
                   </div>
                   <div class="space-y-4">
                     <div>
-                      <label for="city" class="block text-sm font-medium text-gray-700">Ciudad</label>
-                      <input type="text" id="city" class="mt-1 w-full rounded-lg border-gray-200 bg-gray-50" readonly placeholder="Se rellenará automáticamente">
+                      <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Ciudad</label>
+                      <input type="text" id="city" class="mt-1 w-full rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100" readonly placeholder="Se rellenará automáticamente">
                       <input type="hidden" name="city" id="city-hidden">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs text-gray-500">Latitud</label>
-                        <input type="text" id="latitude" name="latitude" class="mt-1 w-full rounded-lg border-gray-200 bg-gray-50" readonly>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400">Latitud</label>
+                        <input type="text" id="latitude" name="latitude" class="mt-1 w-full rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100" readonly>
                       </div>
                       <div>
-                        <label class="block text-xs text-gray-500">Longitud</label>
-                        <input type="text" id="longitude" name="longitude" class="mt-1 w-full rounded-lg border-gray-200 bg-gray-50" readonly>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400">Longitud</label>
+                        <input type="text" id="longitude" name="longitude" class="mt-1 w-full rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100" readonly>
                       </div>
                     </div>
                   </div>
@@ -200,65 +253,65 @@
             <!-- 4. Amenidades -->
             <section class="step-panel step-hidden absolute inset-0" data-step="4">
               <div class="space-y-6">
-                <h3 class="text-lg font-semibold">Amenidades</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Amenidades</h3>
                 @foreach($amenityCategories as $category)
                   @php
                     $saleCategories = ['Cocina y Electrodomésticos','Exterior y Lote','Características Interiores','Servicios y Seguridad'];
                     $type = in_array($category->name, $saleCategories) ? 'sale' : 'rent';
                   @endphp
-                  <div class="amenity-category rounded-xl border border-gray-200 p-4" data-type="{{ $type }}">
-                    <h4 class="font-semibold mb-3">{{ $category->name }}</h4>
+                  <div class="amenity-category rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900" data-type="{{ $type }}">
+                    <h4 class="font-semibold mb-3 text-gray-900 dark:text-gray-100">{{ $category->name }}</h4>
                     <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
                       @foreach($category->amenities as $amenity)
                         <label class="inline-flex items-center gap-2">
-                          <input class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          <input class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                                  type="checkbox" name="amenities[]" value="{{ $amenity->id }}" id="amenity-{{ $amenity->id }}">
-                          <span class="text-gray-700">{{ $amenity->name }}</span>
+                          <span class="text-gray-700 dark:text-gray-200">{{ $amenity->name }}</span>
                         </label>
                       @endforeach
                     </div>
                   </div>
                 @endforeach
-                <p class="text-xs text-gray-500">Selecciona al menos 5 amenidades para continuar.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Selecciona al menos 5 amenidades para continuar.</p>
               </div>
             </section>
 
             <!-- 5. Confirmación -->
             <section class="step-panel step-hidden absolute inset-0" data-step="5">
               <div class="space-y-6">
-                <h3 class="text-lg font-semibold">Revisión y envío</h3>
-                <p class="text-gray-600">Verifica que la información sea correcta. Puedes regresar a cualquier paso para editar.</p>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Revisión y envío</h3>
+                <p class="text-gray-600 dark:text-gray-300">Verifica que la información sea correcta. Puedes regresar a cualquier paso para editar.</p>
 
                 <div class="grid md:grid-cols-2 gap-6">
-                  <div class="rounded-xl border p-4">
-                    <h4 class="font-semibold mb-2">Información general</h4>
-                    <ul class="text-sm text-gray-700 space-y-1">
-                      <li><span class="text-gray-500">Título:</span> <span id="rev-title">—</span></li>
-                      <li><span class="text-gray-500">Tipo:</span> <span id="rev-type">—</span></li>
-                      <li><span class="text-gray-500">Habitaciones:</span> <span id="rev-bed">—</span></li>
-                      <li><span class="text-gray-500">Baños:</span> <span id="rev-bath">—</span></li>
+                  <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+                    <h4 class="font-semibold mb-2 text-gray-900 dark:text-gray-100">Información general</h4>
+                    <ul class="text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                      <li><span class="text-gray-500 dark:text-gray-400">Título:</span> <span id="rev-title">—</span></li>
+                      <li><span class="text-gray-500 dark:text-gray-400">Tipo:</span> <span id="rev-type">—</span></li>
+                      <li><span class="text-gray-500 dark:text-gray-400">Habitaciones:</span> <span id="rev-bed">—</span></li>
+                      <li><span class="text-gray-500 dark:text-gray-400">Baños:</span> <span id="rev-bath">—</span></li>
                     </ul>
                   </div>
-                  <div class="rounded-xl border p-4">
-                    <h4 class="font-semibold mb-2">Comercial</h4>
-                    <ul class="text-sm text-gray-700 space-y-1">
-                      <li><span class="text-gray-500">Propósito:</span> <span id="rev-purpose">—</span></li>
-                      <li><span class="text-gray-500">Precio:</span> $<span id="rev-price">—</span> MXN</li>
+                  <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+                    <h4 class="font-semibold mb-2 text-gray-900 dark:text-gray-100">Comercial</h4>
+                    <ul class="text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                      <li><span class="text-gray-500 dark:text-gray-400">Propósito:</span> <span id="rev-purpose">—</span></li>
+                      <li><span class="text-gray-500 dark:text-gray-400">Precio:</span> $<span id="rev-price">—</span> MXN</li>
                     </ul>
                   </div>
-                  <div class="rounded-xl border p-4 md:col-span-2">
-                    <h4 class="font-semibold mb-2">Ubicación</h4>
-                    <ul class="text-sm text-gray-700 space-y-1">
-                      <li><span class="text-gray-500">Dirección:</span> <span id="rev-address">—</span></li>
-                      <li><span class="text-gray-500">Ciudad:</span> <span id="rev-city">—</span></li>
-                      <li><span class="text-gray-500">Coords:</span> <span id="rev-lat">—</span>, <span id="rev-lng">—</span></li>
+                  <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 md:col-span-2 bg-white dark:bg-gray-900">
+                    <h4 class="font-semibold mb-2 text-gray-900 dark:text-gray-100">Ubicación</h4>
+                    <ul class="text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                      <li><span class="text-gray-500 dark:text-gray-400">Dirección:</span> <span id="rev-address">—</span></li>
+                      <li><span class="text-gray-500 dark:text-gray-400">Ciudad:</span> <span id="rev-city">—</span></li>
+                      <li><span class="text-gray-500 dark:text-gray-400">Coords:</span> <span id="rev-lat">—</span>, <span id="rev-lng">—</span></li>
                     </ul>
                   </div>
                 </div>
 
-                <div class="rounded-xl border p-4">
-                  <h4 class="font-semibold mb-2">Imágenes cargadas</h4>
-                  <div id="rev-images" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-sm text-gray-500">
+                <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+                  <h4 class="font-semibold mb-2 text-gray-900 dark:text-gray-100">Imágenes cargadas</h4>
+                  <div id="rev-images" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-sm text-gray-500 dark:text-gray-400">
                     <span>Se mostrarán miniaturas si agregaste imágenes.</span>
                   </div>
                 </div>
@@ -268,13 +321,13 @@
 
           <!-- Controles -->
           <div class="mt-8 flex items-center justify-between">
-            <a href="{{ url()->previous() }}" class="text-gray-600 hover:text-gray-800 inline-flex items-center gap-2">
+            <a href="{{ url()->previous() }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 inline-flex items-center gap-2">
               <i class="fa-solid fa-arrow-left"></i> Cancelar
             </a>
 
             <div class="flex items-center gap-3">
               <button type="button" id="prevBtn"
-                      class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 hidden">
+                      class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 hidden">
                 Anterior
               </button>
               <button type="button" id="nextBtn"
@@ -292,28 +345,28 @@
     </div>
   </main>
 
-    <!-- FOOTER -->
+  <!-- FOOTER -->
   <x-main-footer />
 
   <!-- ============== MODAL GENÉRICO ============== -->
-  <div id="app-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
-      <button type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onclick="closeAppModal()">
+  <div id="app-modal" class="fixed inset-0 bg-black/50 dark:bg-black/60 hidden items-center justify-center z-[100] p-4">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 relative text-gray-900 dark:text-gray-100">
+      <button type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onclick="closeAppModal()">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
       <div class="flex items-center gap-3 mb-3">
         <div id="app-modal-icon" class="text-blue-600"><i class="fa-solid fa-circle-info text-xl"></i></div>
-        <h3 id="app-modal-title" class="text-lg font-semibold text-gray-900">Aviso</h3>
+        <h3 id="app-modal-title" class="text-lg font-semibold">Aviso</h3>
       </div>
-      <div id="app-modal-message" class="text-gray-700"></div>
+      <div id="app-modal-message" class="text-gray-700 dark:text-gray-200"></div>
       <div class="mt-5 flex justify-end gap-2">
-        <button type="button" class="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-50" onclick="closeAppModal()">Cerrar</button>
+        <button type="button" class="px-4 py-2 rounded-lg border text-gray-700 dark:text-gray-100 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" onclick="closeAppModal()">Cerrar</button>
         <button type="button" id="app-modal-confirm" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Entendido</button>
       </div>
     </div>
   </div>
 
-  <!-- JS: Menú móvil -->
+  <!-- JS: Menú móvil (si tu header lo usa) -->
   <script>
     const menuToggle = document.getElementById('menuToggle');
     const mobileMenu = document.getElementById('mobileMenu');
@@ -398,38 +451,37 @@
     }
 
     function validateStepGate(fromStep) {
-      // valida lo necesario para pasar del step actual al siguiente
       if (fromStep === 1) {
-        if (!f.title.value.trim()) { openAppModal({ title:'Falta información', message:'Ingresa un <b>título</b> para la propiedad.', type:'warning' }); return false; }
-        if (!f.description.value.trim()) { openAppModal({ title:'Falta información', message:'Añade una <b>descripción</b>.', type:'warning' }); return false; }
-        if (!f.type.value) { openAppModal({ title:'Falta información', message:'Selecciona el <b>tipo de propiedad</b>.', type:'warning' }); return false; }
-        // Habitaciones y baños: obligatorio, entero >= 0 (no permitir vacío)
+        if (!f.title.value.trim()) {
+          openAppModal({ title:'Falta información', message:'Ingresa un <b>título</b> para la propiedad.', type:'warning' }); return false;
+        }
+        if (!f.description.value.trim()) {
+          openAppModal({ title:'Falta información', message:'Añade una <b>descripción</b>.', type:'warning' }); return false;
+        }
+        if (!f.type.value) {
+          openAppModal({ title:'Falta información', message:'Selecciona el <b>tipo de propiedad</b>.', type:'warning' }); return false;
+        }
         const bedRaw  = f.bedrooms.value.trim();
         const bathRaw = f.bathrooms.value.trim();
 
         if (bedRaw === '' || !/^\d+$/.test(bedRaw)) {
-        openAppModal({
-            title:'Dato requerido',
-            message:'Indica la cantidad de <b>habitaciones</b>.',
-            type:'warning'
-        });
-        return false;
+          openAppModal({ title:'Dato requerido', message:'Indica la cantidad de <b>habitaciones</b>.', type:'warning' }); return false;
         }
         if (bathRaw === '' || !/^\d+$/.test(bathRaw)) {
-        openAppModal({
-            title:'Dato requerido',
-            message:'Indica la cantidad de <b>baños</b>.',
-            type:'warning'
-        });
-        return false;
+          openAppModal({ title:'Dato requerido', message:'Indica la cantidad de <b>baños</b>.', type:'warning' }); return false;
         }
-        }
+      }
       if (fromStep === 2) {
         if (!f.price.value || Number(f.price.value) <= 0) {
           openAppModal({ title:'Falta información', message:'Indica un <b>precio</b> válido.', type:'warning' }); return false;
         }
         if (imageStore.files.length < 5) {
-          openAppModal({ title:'Faltan imágenes', message:`Debes añadir al menos <b>5 imágenes</b> para continuar. Actualmente tienes <b>${imageStore.files.length}</b>.`, type:'warning' }); return false;
+          openAppModal({
+            title:'Faltan imágenes',
+            message:`Debes añadir al menos <b>5 imágenes</b> para continuar. Actualmente tienes <b>${imageStore.files.length}</b>.`,
+            type:'warning'
+          });
+          return false;
         }
       }
       if (fromStep === 3) {
@@ -437,13 +489,23 @@
           openAppModal({ title:'Ubicación incompleta', message:'Selecciona una <b>dirección</b> de las sugerencias.', type:'warning' }); return false;
         }
         if (!f.lat.value || !f.lng.value || !f.cityHidden.value) {
-          openAppModal({ title:'Ubicación incompleta', message:'Asegúrate de elegir una sugerencia para rellenar <b>ciudad</b> y <b>coordenadas</b>.', type:'warning' }); return false;
+          openAppModal({
+            title:'Ubicación incompleta',
+            message:'Asegúrate de elegir una sugerencia para rellenar <b>ciudad</b> y <b>coordenadas</b>.',
+            type:'warning'
+          });
+          return false;
         }
       }
       if (fromStep === 4) {
         const amenCount = countSelectedAmenities();
         if (amenCount < 5) {
-          openAppModal({ title:'Faltan amenidades', message:`Selecciona al menos <b>5 amenidades</b>. Actualmente tienes <b>${amenCount}</b>.`, type:'warning' }); return false;
+          openAppModal({
+            title:'Faltan amenidades',
+            message:`Selecciona al menos <b>5 amenidades</b>. Actualmente tienes <b>${amenCount}</b>.`,
+            type:'warning'
+          });
+          return false;
         }
       }
       return true;
@@ -479,7 +541,7 @@
       revImages.innerHTML = '';
       Array.from(imageStore.files).forEach(file => {
         const el = document.createElement('div');
-        el.className = 'relative aspect-square rounded-lg overflow-hidden border';
+        el.className = 'relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700';
         const img = document.createElement('img');
         img.className = 'w-full h-full object-cover';
         img.src = URL.createObjectURL(file);
@@ -487,7 +549,7 @@
         revImages.appendChild(el);
       });
       if (!revImages.children.length) {
-        revImages.innerHTML = '<span class="text-gray-500 text-sm">Sin imágenes seleccionadas.</span>';
+        revImages.innerHTML = '<span class="text-gray-500 dark:text-gray-400 text-sm">Sin imágenes seleccionadas.</span>';
       }
     }
 
@@ -519,7 +581,7 @@
         const reader = new FileReader();
         reader.onload = () => {
           const card = document.createElement('div');
-          card.className = 'relative rounded-xl overflow-hidden border';
+          card.className = 'relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700';
           card.innerHTML = `
             <img src="${reader.result}" class="w-full h-32 object-cover">
             <button type="button"
@@ -638,7 +700,6 @@
       // Validación redundante al submit (por seguridad)
       const form = document.getElementById('property-create-form');
       form?.addEventListener('submit', function (e) {
-        // exige todas las reglas finales
         if (!document.getElementById('title').value.trim()
           || !document.getElementById('description').value.trim()
           || !document.getElementById('type').value
@@ -698,6 +759,39 @@
         </ul>`
       });
     @endif
+  </script>
+
+  {{-- Toggle de tema (sincronizado con localStorage, igual que en otras vistas) --}}
+  <script>
+    (function () {
+      const html  = document.documentElement;
+      const btn   = document.getElementById('theme-toggle');
+      const icon  = btn?.querySelector('i');
+      const label = btn?.querySelector('span');
+
+      function setIconAndLabel() {
+        const isDark = html.classList.contains('dark');
+        if (!icon || !label) return;
+        icon.classList.remove('fa-sun', 'fa-moon');
+        icon.classList.add(isDark ? 'fa-moon' : 'fa-sun');
+        label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+      }
+
+      function apply(mode) {
+        const isDark = mode === 'dark';
+        html.classList.toggle('dark', isDark);
+        try { localStorage.setItem('theme', mode); } catch (e) {}
+        setIconAndLabel();
+      }
+
+      // Inicializar según clase actual (puesta por el script del <head>)
+      setIconAndLabel();
+
+      btn?.addEventListener('click', () => {
+        const next = html.classList.contains('dark') ? 'light' : 'dark';
+        apply(next);
+      });
+    })();
   </script>
 </body>
 </html>
