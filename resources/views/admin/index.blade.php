@@ -29,7 +29,6 @@
          class="group bg-white rounded-xl shadow-md hover:shadow-lg transition p-6">
         <div class="flex items-center justify-between mb-3">
           <div class="text-blue-500 text-3xl"><i class="fas fa-building"></i></div>
-          <span class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-1 rounded-full">Core</span>
         </div>
         <h3 class="text-xl font-semibold text-gray-900 mb-2">Gestionar Propiedades</h3>
         <p class="text-gray-600">Ver, filtrar y eliminar propiedades del sistema.</p>
@@ -47,17 +46,21 @@
         <div class="mt-4 text-blue-500 group-hover:text-blue-600 font-medium">Entrar →</div>
       </a>
 
-      <!-- Solicitudes de Agentes -->
+            <!-- Solicitudes de Agentes -->
       <a href="{{ route('admin.agent-applications.index') }}"
          class="group bg-white rounded-xl shadow-md hover:shadow-lg transition p-6">
         <div class="flex items-center justify-between mb-3">
-          <div class="text-blue-500 text-3xl"><i class="fas fa-id-card-check"></i></div>
-          <span class="text-[10px] bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full uppercase">Revisión</span>
+          <!-- ICONO ARREGLADO -->
+          <div class="text-blue-500 text-3xl">
+            <i class="fas fa-user-check"></i>
+          </div>
+          
         </div>
         <h3 class="text-xl font-semibold text-gray-900 mb-2">Solicitudes de Agentes</h3>
         <p class="text-gray-600">Revisar, aprobar o rechazar solicitudes.</p>
         <div class="mt-4 text-blue-500 group-hover:text-blue-600 font-medium">Entrar →</div>
       </a>
+
     </div>
 
     <!-- Reportes y Finanzas -->
@@ -110,34 +113,7 @@
       </div>
     </section>
 
-    <!-- Enlaces rápidos secundarios -->
-    <section>
-      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Atajos</h2>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <a href="{{ route('properties.map') }}"
-           class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 text-center">
-          <div class="text-blue-500 text-2xl mb-2"><i class="fas fa-map-location-dot"></i></div>
-          <div class="font-semibold">Mapa</div>
-          <div class="text-sm text-gray-600 mt-1">Explora propiedades en el mapa</div>
-        </a>
-
-        <a href="{{ route('favorites.index') }}"
-           class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 text-center">
-          <div class="text-pink-500 text-2xl mb-2"><i class="fas fa-heart"></i></div>
-          <div class="font-semibold">Favoritos</div>
-          <div class="text-sm text-gray-600 mt-1">Listado de favoritos</div>
-        </a>
-
-        <a href="{{ route('chat.index') }}"
-           class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 text-center">
-          <div class="text-indigo-500 text-2xl mb-2"><i class="fas fa-comments"></i></div>
-          <div class="font-semibold">Mensajería</div>
-          <div class="text-sm text-gray-600 mt-1">Contacta clientes y agentes</div>
-        </a>
-
-
-      </div>
-    </section>
+   
   </main>
   <!-- FOOTER -->
   <x-main-footer />

@@ -271,7 +271,7 @@
         @auth
             @if ($recommendedProperties->isNotEmpty())
                 <section>
-                    <h2 class="text-2xl font-semibold mb-4">Recomendado para Ti según tus preferencias.</h2>
+                    <h2 class="text-2xl font-semibold mb-4">Recomendado para ti según tus preferencias.</h2>
                     <div class="relative group">
                         <button
                             class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
@@ -354,6 +354,15 @@
                 </section>
             @endif
         @endauth
+        @if($noResults)
+            <div class="text-center py-20 text-gray-600 dark:text-gray-300 text-xl font-semibold">
+                    No encontramos propiedades con los filtros seleccionados.
+                <br>
+                <span class="text-sm block mt-2 text-gray-500">Prueba ajustando el rango de precio o la ciudad.</span>
+            </div>
+        @else
+            {{-- aquí siguen los carouseles por ciudad --}}
+        @endif
 
         {{-- Propiedades por ciudad --}}
         @foreach($propertiesByCity as $city => $cityProperties)
