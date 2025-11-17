@@ -84,16 +84,7 @@
           @enderror
         </div>
 
-        {{-- CARGO CLIENTE --}}
-        <div>
-          <label for="customer_percentage" class="block text-sm font-medium text-gray-700 mb-1">Cargo al cliente (%)</label>
-          <input type="number" step="0.01" min="0" max="100"
-                 name="customer_percentage" id="customer_percentage" value="{{ old('customer_percentage') }}" required
-                 class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-          @error('customer_percentage')
-            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-          @enderror
-        </div>
+        
 
         {{-- FECHA VIGENCIA --}}
         <div>
@@ -137,7 +128,6 @@
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tipo</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Agente</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Comisión agente</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Cargo cliente</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Vigente desde</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Notas</th>
               <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Acciones</th>
@@ -159,9 +149,7 @@
                 <td class="px-4 py-3 text-sm text-gray-700">
                   {{ number_format($commission->percentage, 2) }}%
                 </td>
-                <td class="px-4 py-3 text-sm text-gray-700">
-                  {{ number_format($commission->customer_percentage, 2) }}%
-                </td>
+               
                 <td class="px-4 py-3 text-sm text-gray-700">
                   {{ optional($commission->effective_from)->format('d/m/Y') ?? '—' }}
                 </td>

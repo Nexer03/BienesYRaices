@@ -94,7 +94,7 @@
               ({{ $reservation->nights }} noches)
             </li>
 
-            <li><b>Participantes:</b> {{ $reservation->guests ?? 1 }}</li>
+           <!-- <li><b>Participantes:</b> {{ $reservation->guests ?? 1 }}</li> -->
             <li><b>Total a pagar:</b> ${{ number_format($total,2) }} MXN</li>
 
             <li><b>Reserva #:</b> {{ $reservation->id }}</li>
@@ -142,12 +142,12 @@
             <span>{{ $reservation->nights }} noches</span>
             <span>${{ number_format($subtotal,2) }} MXN</span>
           </div>
-
+         <!-- 
           <div class="flex justify-between">
             <span>Comisión del agente ({{ number_format($commissionPercent,2) }}%)</span>
             <span>${{ number_format($agentCommission,2) }} MXN</span>
           </div>
-
+ 
           <div class="flex justify-between">
             <span>Ganancia del agente</span>
             <span>${{ number_format($agentEarnings,2) }} MXN</span>
@@ -157,7 +157,7 @@
             <span>Ganancia de la plataforma</span>
             <span>${{ number_format($platformEarnings,2) }} MXN</span>
           </div>
-
+          -->
           <div class="flex justify-between font-semibold text-lg border-t pt-3">
             <span>Total MXN</span>
             <span>${{ number_format($total,2) }} MXN</span>

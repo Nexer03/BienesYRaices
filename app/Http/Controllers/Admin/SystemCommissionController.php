@@ -72,17 +72,18 @@ class SystemCommissionController extends Controller
     {
         $listingTypes = ['sale', 'rent', 'both'];
 
+        
         $rules = [
-            'user_id' => ['nullable', 'exists:users,id'],
-            'listing_type' => ['required', 'in:' . implode(',', $listingTypes)],
-            'percentage' => ['required', 'numeric', 'min:0', 'max:100'],
-            'customer_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+            'user_id'        => ['nullable', 'exists:users,id'],
+            'listing_type'   => ['required', 'in:' . implode(',', $listingTypes)],
+            'percentage'     => ['required', 'numeric', 'min:0', 'max:100'],
             'effective_from' => ['nullable', 'date'],
-            'notes' => ['nullable', 'string', 'max:255'],
+            'notes'          => ['nullable', 'string', 'max:255'],
         ];
 
         $data = $request->validate($rules);
 
+        // Validación de duplicados
         $query = SystemCommission::query()
             ->where('listing_type', $data['listing_type'])
             ->where(function ($q) use ($data) {

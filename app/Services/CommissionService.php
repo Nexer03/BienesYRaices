@@ -54,22 +54,6 @@ class CommissionService
         return $this->applyRate($rate, $amount);
     }
 
-    public function customerRateFor(?int $agentId, string $listingType): ?float
-    {
-        return $this->matchCommission($agentId, $listingType)?->customer_percentage;
-    }
-
-    public function calculateCustomer(?int $agentId, string $listingType, float $amount): float
-    {
-        $rate = $this->customerRateFor($agentId, $listingType);
-
-        if ($rate === null) {
-            return 0.0;
-        }
-
-        return $this->applyRate($rate, $amount);
-    }
-
     protected function applyRate(float $rate, float $amount): float
     {
         return round(($amount * $rate) / 100, 2);

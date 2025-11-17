@@ -83,8 +83,6 @@ class AdminReportController extends Controller
                     'total_sold'      => $totalSold,
                     'rate'            => $commissionService->rateFor($agentId, 'sale'),
                     'commission'      => (float) $commissionService->calculate($agentId, 'sale', $totalSold),
-                    'customer_rate'   => $commissionService->customerRateFor($agentId, 'sale'),
-                    'customer_charge' => (float) $commissionService->calculateCustomer($agentId, 'sale', $totalSold),
                 ];
             })->values();
 
@@ -93,8 +91,7 @@ class AdminReportController extends Controller
             $agent->total_sales_amount    = (float) ($cd->total_sold ?? 0);
             $agent->commission_rate       = $cd->rate ?? null;
             $agent->commission_total      = (float) ($cd->commission ?? 0);
-            $agent->customer_rate         = $cd->customer_rate ?? null;
-            $agent->customer_charge_total = (float) ($cd->customer_charge ?? 0);
+
             return $agent;
         });
 
@@ -134,20 +131,15 @@ class AdminReportController extends Controller
             $agent   = $agents->get($row->agent_id);
             $agentId = $agent?->id ?? 0;
             $rate         = $commissionService->rateFor($agentId, 'rent');
-            $customerRate = $commissionService->customerRateFor($agentId, 'rent');
 
             $row->agent              = $agent;
             $row->commission_rate    = $rate ?? null;
             $row->commission_total   = (float) $commissionService->calculate($agentId, 'rent', (float) $row->total_revenue);
-            $row->customer_rate      = $customerRate ?? null;
-            $row->customer_charge    = (float) $commissionService->calculateCustomer($agentId, 'rent', (float) $row->total_revenue);
             return $row;
         })->filter(fn ($row) => $row->agent !== null);
 
         $rentalCommissionTotal      = $rentalsByAgent->sum('commission_total');
         $salesCommissionTotal       = $salesCommissionByAgent->sum('commission');
-        $rentalCustomerChargeTotal  = $rentalsByAgent->sum('customer_charge');
-        $salesCustomerChargeTotal   = $salesCommissionByAgent->sum('customer_charge');
 
         // ====== Comparativa por zona (filtrada por fechas y, opcionalmente, agente) ======
         $zoneQuery = Property::query()
@@ -177,8 +169,6 @@ class AdminReportController extends Controller
             'salesCommissionByAgent'     => $salesCommissionByAgent,
             'salesCommissionTotal'       => $salesCommissionTotal,
             'rentalCommissionTotal'      => $rentalCommissionTotal,
-            'salesCustomerChargeTotal'   => $salesCustomerChargeTotal,
-            'rentalCustomerChargeTotal'  => $rentalCustomerChargeTotal,
             // filtros + catálogos
             'filters'        => $filters,
             'agentsOptions'  => $agentsOptions,

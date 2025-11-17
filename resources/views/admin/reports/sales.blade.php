@@ -129,18 +129,6 @@
           ${{ number_format($rentalCommissionTotal, 2, '.', ',') }}
         </p>
       </div>
-      <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-        <p class="text-xs font-semibold uppercase text-gray-500">Cargo cliente (ventas)</p>
-        <p class="mt-2 text-2xl font-bold text-amber-600">
-          ${{ number_format($salesCustomerChargeTotal, 2, '.', ',') }}
-        </p>
-      </div>
-      <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-        <p class="text-xs font-semibold uppercase text-gray-500">Cargo cliente (rentas)</p>
-        <p class="mt-2 text-2xl font-bold text-amber-600">
-          ${{ number_format($rentalCustomerChargeTotal, 2, '.', ',') }}
-        </p>
-      </div>
     </section>
 
     {{-- ========== GRÁFICAS OPTIMIZADAS ========== --}}

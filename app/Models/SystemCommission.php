@@ -13,14 +13,12 @@ class SystemCommission extends Model
         'user_id',
         'listing_type',
         'percentage',
-        'customer_percentage',
         'effective_from',
         'notes',
     ];
 
     protected $casts = [
         'percentage' => 'float',
-        'customer_percentage' => 'float',
         'effective_from' => 'date',
     ];
 
@@ -36,9 +34,14 @@ class SystemCommission extends Model
               ->orWhere('listing_type', 'both');
         });
     }
-        public static function getCommissionFor($listingType, $agentId = null)
+
+    /**
+     * Obtiene la comisión correcta para un tipo de listado y agente.
+     * Prioriza la comisión del agente; si no hay, usa la general.
+     */
+    public static function getCommissionFor($listingType, $agentId = null)
     {
-        // 1. Primero buscamos comisión específica del agente
+        // 1. Comisión específica del agente
         $agentCommission = static::query()
             ->where('user_id', $agentId)
             ->whereIn('listing_type', [$listingType, 'both'])
@@ -49,12 +52,11 @@ class SystemCommission extends Model
             return $agentCommission;
         }
 
-        // 2. Si no hay para el agente → usar comisión general del sistema
+        // 2. Comisión general del sistema
         return static::query()
             ->whereNull('user_id')
             ->whereIn('listing_type', [$listingType, 'both'])
             ->orderByDesc('effective_from')
             ->first();
     }
-
 }

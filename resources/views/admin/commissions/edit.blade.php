@@ -48,20 +48,11 @@
                             <div>
                                 <label for="percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {{ __('Comisión del agente (%)') }}
-                                    {{ __('Porcentaje (%)') }}
                                 </label>
-                                <input type="number" step="0.01" min="0" max="100" name="percentage" id="percentage" value="{{ old('percentage', $commission->percentage) }}" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
+                                <input type="number" step="0.01" min="0" max="100" name="percentage" id="percentage"
+                                    value="{{ old('percentage', $commission->percentage) }}" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
                                 @error('percentage')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="customer_percentage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('Cargo al cliente (%)') }}
-                                </label>
-                                <input type="number" step="0.01" min="0" max="100" name="customer_percentage" id="customer_percentage" value="{{ old('customer_percentage', $commission->customer_percentage) }}" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
-                                @error('customer_percentage')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -70,12 +61,15 @@
                                 <label for="effective_from" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {{ __('Vigencia desde') }}
                                 </label>
-                                <input type="date" name="effective_from" id="effective_from" value="{{ old('effective_from', optional($commission->effective_from)->format('Y-m-d')) }}" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
+                                <input type="date" name="effective_from" id="effective_from"
+                                    value="{{ old('effective_from', optional($commission->effective_from)->format('Y-m-d')) }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500" />
                                 @error('effective_from')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
+
 
                         <div>
                             <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
