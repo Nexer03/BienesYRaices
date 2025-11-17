@@ -82,6 +82,7 @@
               <th class="px-4 py-3 text-left font-semibold">Propiedad</th>
               <th class="px-4 py-3 text-left font-semibold">Cliente</th>
               <th class="px-4 py-3 text-left font-semibold">Estado</th>
+              <th class="px-4 py-3 text-left font-semibold">Venta / comisión</th>
               <th class="px-4 py-3 text-right font-semibold">Acciones</th>
             </tr>
           </thead>
@@ -100,6 +101,29 @@
                       @endforeach
                     </select>
                   </form>
+                </td>
+                <td class="px-4 py-3 align-top">
+                  @if($visit->sale_recorded_at)
+                    <div class="text-sm text-gray-700 space-y-1">
+                      <div class="font-semibold text-green-700">Venta registrada</div>
+                      <div>Monto: ${{ number_format($visit->sale_price ?? 0, 2, '.', ',') }}</div>
+                      <div>Comisión ({{ number_format($visit->commission_percentage ?? 0, 2) }}%): ${{ number_format($visit->commission_amount ?? 0, 2, '.', ',') }}</div>
+                      <div class="text-xs text-gray-500">{{ $visit->commission_paid_at ? 'Pagada' : 'Pendiente de pago' }}</div>
+                    </div>
+                  @else
+                    <form method="POST" action="{{ route('agent.visits.sale', $visit) }}" class="flex flex-col gap-2 text-sm">
+                      @csrf @method('PATCH')
+                      <div>
+                        <label class="block text-gray-600">Precio de venta</label>
+                        <input type="number" name="sale_price" step="0.01" min="0" value="{{ $visit->property->price ?? 0 }}" class="w-full rounded border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      </div>
+                      <label class="inline-flex items-center gap-2 text-gray-700">
+                        <input type="checkbox" name="mark_paid" value="1" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span>Marcar comisión como pagada</span>
+                      </label>
+                      <button class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2 rounded-lg shadow transition" onclick="return confirm('¿Confirmas registrar la venta y calcular la comisión?');">Registrar venta</button>
+                    </form>
+                  @endif
                 </td>
                 <td class="px-4 py-3 text-right">
                   <a href="{{ route('agent.visits.edit', $visit) }}" class="text-blue-600 hover:underline font-medium">Editar</a>

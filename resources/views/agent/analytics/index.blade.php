@@ -64,6 +64,26 @@
       </div>
     </section>
 
+    <!-- RESUMEN DE VENTAS -->
+    <section class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div class="bg-gradient-to-tr from-emerald-500 to-emerald-600 text-white rounded-2xl shadow-lg p-6">
+        <p class="text-sm opacity-90">Ventas registradas</p>
+        <h3 class="text-4xl font-extrabold mt-2">{{ $sales['count'] }}</h3>
+      </div>
+      <div class="bg-gradient-to-tr from-teal-500 to-cyan-600 text-white rounded-2xl shadow-lg p-6">
+        <p class="text-sm opacity-90">Monto vendido</p>
+        <h3 class="text-3xl font-extrabold mt-2">${{ number_format($sales['amount'], 2, '.', ',') }}</h3>
+      </div>
+      <div class="bg-gradient-to-tr from-amber-500 to-orange-600 text-white rounded-2xl shadow-lg p-6">
+        <p class="text-sm opacity-90">Comisión generada</p>
+        <h3 class="text-3xl font-extrabold mt-2">${{ number_format($sales['commission'], 2, '.', ',') }}</h3>
+      </div>
+      <div class="bg-gradient-to-tr from-slate-600 to-slate-700 text-white rounded-2xl shadow-lg p-6">
+        <p class="text-sm opacity-90">Comisión pagada</p>
+        <h3 class="text-3xl font-extrabold mt-2">${{ number_format($sales['commission_paid'], 2, '.', ',') }}</h3>
+      </div>
+    </section>
+
     <!-- DISTRIBUCIÓN -->
     <section class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
       @php

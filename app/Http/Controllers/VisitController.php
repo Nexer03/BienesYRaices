@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Visit;
 use App\Models\Property;
 use App\Models\User;
+use App\Services\CommissionService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
@@ -268,6 +269,46 @@ class VisitController extends Controller
         $visit->update(['status' => $validated['status']]);
 
         return back()->with('success', 'Estado actualizado.');
+    }
+
+    /**
+     * PATCH /agent/visits/{visit}/sale
+     * Marca una visita como venta y registra la comisión.
+     */
+    public function registerSale(Request $request, Visit $visit, CommissionService $commissionService)
+    {
+        $this->authorizeAgent($request->user()->id, $visit);
+
+        abort_unless(optional($visit->property)->listing_type === 'sale', 422, 'Solo puedes marcar ventas en propiedades de venta.');
+
+        if ($visit->sale_recorded_at) {
+            return back()->with('error', 'Ya registraste la venta de esta visita.');
+        }
+
+        $data = $request->validate([
+            'sale_price' => ['nullable', 'numeric', 'min:0'],
+            'mark_paid'  => ['sometimes', 'boolean'],
+        ]);
+
+        $salePrice = $data['sale_price'] ?? (float) ($visit->property?->price ?? 0);
+
+        $commissionRate = (float) ($commissionService->rateFor($visit->agent_id, 'sale') ?? 0);
+        $commissionAmount = round($salePrice * ($commissionRate / 100), 2);
+
+        $visit->fill([
+            'sale_price'             => $salePrice,
+            'commission_percentage'  => $commissionRate,
+            'commission_amount'      => $commissionAmount,
+            'sale_recorded_at'       => now(),
+            'commission_paid_at'     => !empty($data['mark_paid']) ? now() : null,
+            'status'                 => 'completed',
+        ])->save();
+
+        if ($visit->property && $visit->property->status !== Property::STATUS_SOLD) {
+            $visit->property->markSold();
+        }
+
+        return back()->with('success', 'Venta registrada y comisión calculada.');
     }
 
     /**

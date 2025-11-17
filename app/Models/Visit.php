@@ -10,10 +10,17 @@ class Visit extends Model
 {
     protected $fillable = [
         'client_id', 'agent_id', 'property_id', 'visit_date', 'status', 'notes',
+        'sale_price', 'commission_percentage', 'commission_amount', 'sale_recorded_at',
+        'commission_paid_at',
     ];
 
     protected $casts = [
         'visit_date' => 'datetime',
+        'sale_recorded_at' => 'datetime',
+        'commission_paid_at' => 'datetime',
+        'sale_price' => 'float',
+        'commission_percentage' => 'float',
+        'commission_amount' => 'float',
     ];
 
     public function property(): BelongsTo

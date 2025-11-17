@@ -231,6 +231,9 @@ Route::middleware(['auth', 'agent'])->group(function () {
         Route::patch('visits/{visit}/status', [VisitController::class, 'updateStatus'])
             ->name('visits.status');
 
+        Route::patch('visits/{visit}/sale', [VisitController::class, 'registerSale'])
+            ->name('visits.sale');
+
         // Reservas del agente
         Route::get('reservations', [AgentReservationController::class, 'index'])
             ->name('reservations.index');

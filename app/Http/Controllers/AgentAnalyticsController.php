@@ -37,6 +37,17 @@ class AgentAnalyticsController extends Controller
             'total'     => (clone $visitsBase)->count(),
         ];
 
+        // 3b) Ventas registradas desde visitas
+        $salesQuery = Visit::where('agent_id', $agentId)
+            ->whereNotNull('sale_recorded_at');
+
+        $sales = [
+            'count'           => (clone $salesQuery)->count(),
+            'amount'          => (float) (clone $salesQuery)->sum('sale_price'),
+            'commission'      => (float) (clone $salesQuery)->sum('commission_amount'),
+            'commission_paid' => (float) (clone $salesQuery)->whereNotNull('commission_paid_at')->sum('commission_amount'),
+        ];
+
         // 4) Serie diaria dentro del rango seleccionado
         $daily = Visit::selectRaw('DATE(visit_date) as d, COUNT(*) as c')
             ->where('agent_id', $agentId)
@@ -66,7 +77,7 @@ class AgentAnalyticsController extends Controller
             ->get();
 
         return view('agent.analytics.index', compact(
-            'totalProps','saleProps','rentProps','visits','labels','values','from','to','topProps'
+            'totalProps','saleProps','rentProps','visits','labels','values','from','to','topProps','sales'
         ));
     }
 }
