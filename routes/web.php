@@ -212,9 +212,11 @@ Route::middleware(['auth', 'agent'])->group(function () {
         Route::patch('/{property}/status', [PropertyController::class, 'toggleStatus'])
             ->name('properties.toggleStatus');
 
+        // ⬇ CAMBIA SOLO ESTA LÍNEA
         Route::get('agent/visits/feed', [VisitController::class, 'feed'])
-            ->name('agent.visits.feed');
+            ->name('properties.agent.visits.feed'); // nombre único, ya no choca
     });
+
 
     // ---- Visits del agente (nuevo) ----
     Route::prefix('agent')->name('agent.')->group(function () {
