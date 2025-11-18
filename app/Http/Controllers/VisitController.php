@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Models\PropertyReservation;
+use App\Models\SystemCommission;
+
 
 
 
@@ -154,7 +156,7 @@ class VisitController extends Controller
         // Seguridad: la propiedad debe pertenecer al agente y ser de VENTA
         $owned = \App\Models\Property::where('id', $data['property_id'])
             ->where('user_id', $agentId)
-            ->where('listing_type', 'sale')   // 👈 SOLO VENTA
+            ->where('listing_type', 'sale')   
             ->exists();
 
     abort_unless($owned, 403, 'Solo puedes agendar visitas para propiedades en venta que te pertenecen.');
@@ -205,40 +207,62 @@ class VisitController extends Controller
      * Actualiza visita existente.
      */
     public function update(Request $request, Visit $visit)
-    {
-        $this->authorizeAgent($request->user()->id, $visit);
+{
+    $this->authorizeAgent($request->user()->id, $visit);
 
-        $agentId = $request->user()->id;
+    $agentId = $request->user()->id;
 
-        $data = $request->validate([
-            'property_id' => ['required', 'exists:properties,id'],
-            'client_id'   => ['required', 'exists:users,id', Rule::notIn([$agentId])],
-            'visit_date'  => ['required', 'date', 'after:now'],
-            'status'      => ['required', Rule::in(['pending','confirmed','completed','cancelled'])],
-            'notes'       => ['nullable', 'string', 'max:2000'],
-        ], [
-            'visit_date.after' => 'La fecha/hora debe ser futura.',
-        ]);
+    // Validación dinámica
+    $status = $request->input('status');
 
-        // Propiedad debe seguir perteneciendo al agente y ser de VENTA
-        $owned = \App\Models\Property::where('id', $data['property_id'])
-            ->where('user_id', $agentId)
-            ->where('listing_type', 'sale')   // 👈 SOLO VENTA
-            ->exists();
+    $rules = [
+        'property_id' => ['required', 'exists:properties,id'],
+        'client_id'   => ['required', 'exists:users,id', Rule::notIn([$agentId])],
+        'status'      => ['required', Rule::in(['pending','confirmed','completed','cancelled'])],
+        'notes'       => ['nullable', 'string', 'max:2000'],
+    ];
 
-        abort_unless($owned, 403, 'No puedes reasignar a una propiedad que no sea de venta y tuya.');
+    // Si la visita sigue pendiente/confirmada → debe ser futura
+    if (in_array($status, ['pending','confirmed'])) {
+        $rules['visit_date'] = ['required', 'date', 'after:now'];
+    }
+    // Si la visita está cancelada o completada → puede ser pasada
+    else {
+        $rules['visit_date'] = ['required', 'date', 'before_or_equal:now'];
+    }
+
+    $data = $request->validate($rules, [
+        'visit_date.after' => 'La fecha/hora debe ser futura.',
+        'visit_date.before_or_equal' => 'Para visitas completadas o canceladas, la fecha no puede ser futura.',
+    ]);
 
 
-        if (\App\Models\Visit::overlapsForAgent($agentId, $data['visit_date'], $visit->id)) {
+    // Propiedad debe seguir perteneciendo al agente
+    $owned = Property::where('id', $data['property_id'])
+        ->where('user_id', $agentId)
+        ->where('listing_type', 'sale')
+        ->exists();
+
+    abort_unless($owned, 403, 'No puedes reasignar a una propiedad que no sea de venta y tuya.');
+
+
+    // Anti-solape (excepto para visitas ya completadas/canceladas)
+    if (in_array($status, ['pending','confirmed'])) {
+        if (Visit::overlapsForAgent($agentId, $data['visit_date'], $visit->id)) {
             return back()->withInput()->withErrors([
                 'visit_date' => 'Ya existe otra visita del agente que se cruza con este horario.',
             ]);
         }
-
-        $visit->update($data);
-
-        return redirect()->route('agent.visits.index')->with('success', 'Visita actualizada.');
     }
+
+    // Guardar cambios
+    $visit->update($data);
+
+    return redirect()
+        ->route('agent.visits.index')
+        ->with('success', 'Visita actualizada.');
+    }
+
 
     /**
      * DELETE /agent/visits/{visit}
@@ -276,6 +300,81 @@ class VisitController extends Controller
     protected function authorizeAgent(int $agentId, Visit $visit): void
     {
         abort_unless($visit->agent_id === $agentId, 403, 'No autorizado para esta visita.');
+    }
+    /**
+     * POST /agent/visits/{visit}/sale
+     * Registra una venta asociada a la visita.
+     */
+    public function saleForm(Request $request, Visit $visit)
+        {
+            $this->authorizeAgent($request->user()->id, $visit);
+
+            if ($visit->status !== 'completed') {
+                abort(403, 'Solo puedes registrar ventas de visitas completadas.');
+            }
+
+            $property = $visit->property;
+            $client   = $visit->client;
+
+            // Obtener comisión con tu sistema nuevo
+            $commission = \App\Models\SystemCommission::getCommissionFor(
+                'sale',
+                $visit->agent_id
+            );
+
+            // Obtener venta previa (si existe)
+            $sale = \App\Models\Sale::where('visit_id', $visit->id)
+                ->latest()
+                ->first();
+
+            return view('agent.visits.sale', compact(
+                'visit','property','client','commission','sale'
+            ));
+        }
+
+
+            // este es el metodo post que guarda la venta
+
+        public function saleStore(Request $request, Visit $visit)
+    {
+        $this->authorizeAgent($request->user()->id, $visit);
+
+        if ($visit->status !== 'completed') {
+            abort(403, 'Solo puedes registrar ventas de visitas completadas.');
+        }
+
+        $data = $request->validate([
+            'sale_price' => 'required|numeric|min:0',
+            'notes'      => 'nullable|string|max:2000',
+        ]);
+
+        $property = $visit->property;
+        $client   = $visit->client;
+
+        // Comisión correcta según agente y tipo de listado
+        $commission = \App\Models\SystemCommission::getCommissionFor(
+            $property->listing_type,
+            $visit->agent_id
+        );
+
+        $percentage = $commission?->percentage ?? 0;
+        $commissionAmount = ($data['sale_price'] * $percentage) / 100;
+
+        // Guardar venta
+        \App\Models\Sale::create([
+            'property_id'           => $property->id,
+            'agent_id'              => $visit->agent_id,
+            'client_id'             => $client->id,
+            'visit_id'              => $visit->id,
+            'sale_price'            => $data['sale_price'],
+            'commission_percentage' => $percentage,
+            'commission_amount'     => $commissionAmount,
+            'notes'                 => $data['notes'] ?? null,
+        ]);
+
+       return redirect()
+        ->route('agent.visits.sale', $visit->id)
+        ->with('success', 'Venta registrada. Ahora puedes pagar la comisión.');
     }
 
 }

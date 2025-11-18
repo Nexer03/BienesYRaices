@@ -49,15 +49,31 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Estado</label>
-        <select name="status" class="form-select" required>
-          @foreach(['pending','confirmed','completed','cancelled'] as $st)
-            <option value="{{ $st }}" @selected(old('status', $visit->status)===$st)>{{ ucfirst($st) }}</option>
-          @endforeach
-        </select>
-        @error('status') <small class="text-danger">{{ $message }}</small> @enderror
-      </div>
+      <label class="form-label">Estado</label>
 
+      @php
+          $estados = [
+              'pending'   => 'Pendiente',
+              'confirmed' => 'Confirmada',
+              'completed' => 'Completada',
+              'cancelled' => 'Cancelada',
+          ];
+      @endphp
+
+      <select name="status" class="form-select" required>
+          @foreach($estados as $key => $label)
+              <option value="{{ $key }}" @selected(old('status', $visit->status) === $key)>
+                  {{ $label }}
+              </option>
+          @endforeach
+      </select>
+
+      @error('status') 
+          <small class="text-danger">{{ $message }}</small> 
+      @enderror
+  </div>
+
+    
       <div class="mb-3">
         <label class="form-label">Notas (opcional)</label>
         <textarea name="notes" class="form-control" rows="3">{{ old('notes', $visit->notes) }}</textarea>
@@ -68,8 +84,15 @@
     <div class="card-footer d-flex gap-2">
       <button class="btn btn-primary">Guardar cambios</button>
       <a class="btn btn-outline-secondary" href="{{ route('agent.visits.index') }}">Cancelar</a>
+      @if ($visit->status === 'completed')
+            <a href="{{ route('agent.visits.sale', $visit) }}"
+              class="btn btn-success mt-3">
+              Registrar venta de la propiedad
+            </a>
+         @endif
     </div>
+    
   </form>
-
+          
 </div>
 @endsection

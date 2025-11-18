@@ -25,6 +25,8 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatReservationController;
 use App\Http\Controllers\ChatVisitController;
 
+
+
 /*
 |--------------------------------------------------------------------------
 | Rutas Públicas
@@ -198,8 +200,8 @@ Route::middleware(['auth', 'agent'])->group(function () {
 
     Route::prefix('properties')->group(function () {
 
-        Route::get('/', [PropertyController::class, 'index'])->name('properties.index'); // listado general
-        Route::get('/my', [PropertyController::class, 'myProperties'])->name('properties.my'); // listado del usuario/ agente
+        Route::get('/', [PropertyController::class, 'index'])->name('properties.index');
+        Route::get('/my', [PropertyController::class, 'myProperties'])->name('properties.my');
         Route::get('/create', [PropertyController::class, 'create'])->name('properties.create');
         Route::post('/', [PropertyController::class, 'store'])->name('properties.store');
         Route::get('/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
@@ -216,7 +218,8 @@ Route::middleware(['auth', 'agent'])->group(function () {
 
     // ---- Visits del agente (nuevo) ----
     Route::prefix('agent')->name('agent.')->group(function () {
-        // CRUD de visitas para el agente
+
+        // CRUD de visitas
         Route::get('visits', [VisitController::class, 'index'])->name('visits.index');
         Route::get('visits/create', [VisitController::class, 'create'])->name('visits.create');
         Route::post('visits', [VisitController::class, 'store'])->name('visits.store');
@@ -224,9 +227,8 @@ Route::middleware(['auth', 'agent'])->group(function () {
         Route::put('visits/{visit}', [VisitController::class, 'update'])->name('visits.update');
         Route::delete('visits/{visit}', [VisitController::class, 'destroy'])->name('visits.destroy');
 
-        // Rutas del calendario (feed JSON)
-        Route::get('agent/visits/feed', [VisitController::class, 'feed'])
-            ->name('agent.visits.feed');
+        // Calendario
+        Route::get('visits/feed', [VisitController::class, 'feed'])->name('visits.feed');
 
         Route::patch('visits/{visit}/status', [VisitController::class, 'updateStatus'])
             ->name('visits.status');
@@ -236,12 +238,34 @@ Route::middleware(['auth', 'agent'])->group(function () {
             ->name('reservations.index');
         Route::get('reservations/feed', [AgentReservationController::class, 'feed'])
             ->name('reservations.feed');
-    });
 
-    // Analytics del agente
+        // ---- Venta / Comisión ----
+        Route::get('visits/{visit}/sale', [VisitController::class, 'saleForm'])
+            ->name('visits.sale');
+
+        Route::post('visits/{visit}/sale', [VisitController::class, 'saleStore'])
+            ->name('visits.sale.store');
+
+        // Crear orden para pagar comisión
+        Route::post('/commission/{visit}/create-order', 
+            [PayPalController::class, 'createCommissionOrder']
+        )->name('paypal.commission.create');
+
+        // Capturar comisión (pago)
+        Route::post('/commission/{visit}/capture', 
+            [PayPalController::class, 'captureCommissionOrder']
+        )->name('paypal.captureCommission');
+            Route::get('/commission/{visit}/capture', 
+                [PayPalController::class, 'captureCommissionOrder']
+            )->name('paypal.captureCommission.get');
+    });
+        
+
+    // Analytics
     Route::get('/agent/analytics', [\App\Http\Controllers\AgentAnalyticsController::class, 'index'])
         ->name('agent.analytics');
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -285,4 +309,5 @@ Route::middleware(['auth', 'verified', 'admin'])
 | Auth routes (Laravel Breeze/Fortify/etc.)
 |--------------------------------------------------------------------------
 */
+
 require __DIR__ . '/auth.php';

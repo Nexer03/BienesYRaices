@@ -94,10 +94,19 @@
                 <td class="px-4 py-3">
                   <form action="{{ route('agent.visits.status', $visit) }}" method="POST">
                     @csrf @method('PATCH')
-                    <select name="status" onchange="this.form.submit()" class="rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-                      @foreach(['pending','confirmed','completed','cancelled'] as $st)
-                        <option value="{{ $st }}" @selected($visit->status === $st)>{{ ucfirst($st) }}</option>
-                      @endforeach
+                      <select name="status" onchange="this.form.submit()" class="rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                      @php
+                        $estados = [
+                            'pending'   => 'Pendiente',
+                            'confirmed' => 'Confirmada',
+                            'completed' => 'Completada',
+                            'cancelled' => 'Cancelada',
+                        ];
+                    @endphp
+
+                    @foreach($estados as $key => $label)
+                        <option value="{{ $key }}" @selected($visit->status === $key)>{{ $label }}</option>
+                    @endforeach
                     </select>
                   </form>
                 </td>

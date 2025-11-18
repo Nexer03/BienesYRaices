@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\PropertyReservation;
+use App\Models\Sale;
+
 
 class PayPalController extends Controller
 {
@@ -144,109 +146,128 @@ class PayPalController extends Controller
     /**
      * Capturar pago después de aprobar
      */
-    public function captureOrder(Request $request)
-    {
-        $data = $request->validate([
-            'order_id' => ['required', 'string'],
-        ]);
-
-        try {
-            $accessToken = $this->getAccessToken();
-
-            $url = $this->apiBase().'/v2/checkout/orders/'.$data['order_id'].'/capture';
-
-            $resp = $this->http()
-                ->withToken($accessToken)
-                ->acceptJson()
-                ->withHeaders(['Content-Type' => 'application/json'])
-                ->withBody('{}', 'application/json')
-                ->post($url);
-
-            if (!$resp->successful()) {
-                Log::error('PayPal capture error', [
-                    'status' => $resp->status(),
-                    'body'   => $resp->body()
-                ]);
-                return response()->json(['error' => 'No se pudo capturar el pago.'], 500);
-            }
-
-            $json = $resp->json();
-
-            if (($json['status'] ?? null) !== 'COMPLETED') {
-                Log::warning('PayPal capture no COMPLETED', ['json' => $json]);
-                return response()->json(['error' => 'Pago no completado.'], 400);
-            }
-
-            /** Obtener referencia (res-ID) */
-            $reference = $json['purchase_units'][0]['reference_id'] ?? null;
-
-            if ($reference && str_starts_with($reference, 'res-')) {
-                $reservationId = (int) substr($reference, 4);
-
-                $reservation = PropertyReservation::find($reservationId);
-
-                if ($reservation) {
-
-                    /**
-                     * 🎯 Marcar como pagado y confirmado
-                     * (las comisiones ya se calcularon en preview)
-                     */
-                    $reservation->fill([
-                        'status'             => 'confirmed',
-                        'payment_status'     => 'paid',
-                        'payment_method'     => 'paypal',
-                        'payment_id'         => $json['id'] ?? null,
-                        'payer_email'        => data_get($json, 'payer.email_address'),
-                        'paid_at'            => now(),
-                    ]);
-
-                    $reservation->save();
-
-                    event(new \App\Events\ReservationPaid($reservation));
-                    /**
-                     * Crear conversación y mandar mensaje automático
-                     */
-                    try {
-
-                        $property = $reservation->property;
-                        $agentId  = $property->user_id;
-                        $clientId = $reservation->user_id;
-
-                        // buscar o crear conversación
-                        $conversation = \App\Models\Conversation::firstOrCreate([
-                            'property_id' => $property->id,
-                            'agent_id'    => $agentId,
-                            'client_id'   => $clientId,
-                        ]);
-
-                        // mensaje que el usuario escribió en checkout
-                        $msgText = $reservation->meta['host_message'] ?? 'Hola, acabo de confirmar la reserva.';
-
-                        // crear mensaje
-                        $conversation->messages()->create([
-                            'sender_id' => $clientId,
-                            'body'      => $msgText,
-                        ]);
-
-                        // actualizar orden del inbox
-                        $conversation->touch();
-
-                    } catch (\Throwable $e) {
-                        \Log::error('No se pudo enviar mensaje al agente', ['msg' => $e->getMessage()]);
-                    }
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'order'   => $json
+        public function captureOrder(Request $request)
+            {
+            $data = $request->validate([
+                'order_id' => ['required', 'string'],
+                'sale_id'  => ['nullable', 'integer', 'exists:sales,id'],
             ]);
 
-        } catch (\Throwable $e) {
-            Log::error('PayPal captureOrder Exception', ['msg' => $e->getMessage()]);
-            return response()->json(['error' => 'Excepción al capturar el pago.'], 500);
+            try {
+                $accessToken = $this->getAccessToken();
+
+                $url = $this->apiBase().'/v2/checkout/orders/'.$data['order_id'].'/capture';
+
+                $resp = $this->http()
+                    ->withToken($accessToken)
+                    ->acceptJson()
+                    ->withHeaders(['Content-Type' => 'application/json'])
+                    ->withBody('{}', 'application/json')
+                    ->post($url);
+
+                if (!$resp->successful()) {
+                    Log::error('PayPal capture error', [
+                        'status' => $resp->status(),
+                        'body'   => $resp->body()
+                    ]);
+                    return response()->json(['error' => 'No se pudo capturar el pago.'], 500);
+                }
+
+                $json = $resp->json();
+
+                if (($json['status'] ?? null) !== 'COMPLETED') {
+                    Log::warning('PayPal capture no COMPLETED', ['json' => $json]);
+                    return response()->json(['error' => 'Pago no completado.'], 400);
+                }
+
+                /** ----------------------------
+                 *  FLUJO EXISTENTE: RESERVACIÓN
+                 *  ---------------------------*/
+                $reference = $json['purchase_units'][0]['reference_id'] ?? null;
+
+                if ($reference && str_starts_with($reference, 'res-')) {
+                    $reservationId = (int) substr($reference, 4);
+
+                    $reservation = PropertyReservation::find($reservationId);
+
+                    if ($reservation) {
+
+                        $reservation->fill([
+                            'status'         => 'confirmed',
+                            'payment_status' => 'paid',
+                            'payment_method' => 'paypal',
+                            'payment_id'     => $json['id'] ?? null,
+                            'payer_email'    => data_get($json, 'payer.email_address'),
+                            'paid_at'        => now(),
+                        ]);
+
+                        $reservation->save();
+
+                        event(new \App\Events\ReservationPaid($reservation));
+
+                        // (aquí dejas tu bloque de conversación automática tal cual lo tenías)
+                        try {
+
+                            $property = $reservation->property;
+                            $agentId  = $property->user_id;
+                            $clientId = $reservation->user_id;
+
+                            $conversation = \App\Models\Conversation::firstOrCreate([
+                                'property_id' => $property->id,
+                                'agent_id'    => $agentId,
+                                'client_id'   => $clientId,
+                            ]);
+
+                            $msgText = $reservation->meta['host_message'] ?? 'Hola, acabo de confirmar la reserva.';
+
+                            $conversation->messages()->create([
+                                'sender_id' => $clientId,
+                                'body'      => $msgText,
+                            ]);
+
+                            $conversation->touch();
+
+                        } catch (\Throwable $e) {
+                            \Log::error('No se pudo enviar mensaje al agente', ['msg' => $e->getMessage()]);
+                        }
+                    }
+                }
+
+                /** ---------------------------------
+                 *  NUEVO: PAGO DE COMISIÓN POR VENTA
+                 *  --------------------------------*/
+                $redirectUrl = null;
+
+                if (!empty($data['sale_id'])) {
+                    $sale = Sale::with('property')->findOrFail($data['sale_id']);
+
+                    // Marcar la comisión como pagada (solo si no lo estaba ya)
+                    if (is_null($sale->commission_paid_at)) {
+                        $sale->commission_paid_at = now();
+                        $sale->save();
+                    }
+
+                    // Marcar la propiedad como vendida, si aún no lo está
+                    if ($sale->property && is_null($sale->property->sold_at)) {
+                        $sale->property->sold_at = now();
+                        $sale->property->save();
+                    }
+
+                    // Después de pagar comisión, mandamos al dashboard del agente
+                    $redirectUrl = route('agent.analytics');
+                }
+
+                return response()->json([
+                    'success'      => true,
+                    'order'        => $json,
+                    'redirect_url' => $redirectUrl,   // null si fue solo reserva
+                ]);
+
+            } catch (\Throwable $e) {
+                Log::error('PayPal captureOrder Exception', ['msg' => $e->getMessage()]);
+                return response()->json(['error' => 'Excepción al capturar el pago.'], 500);
+            }
         }
-    }
 
     /**
      * Si usas return_url/cancel_url (opcional)
@@ -305,4 +326,75 @@ class PayPalController extends Controller
     {
         return redirect()->route('properties.map')->with('error', 'Pago cancelado en PayPal.');
     }
+
+
+
+    // Creaciones de ordenes de comisiones y capturas para ventas
+   public function createCommissionOrder(Request $request, Visit $visit)
+        {
+            $sale = \App\Models\Sale::where('visit_id', $visit->id)->latest()->first();
+
+            if (!$sale) {
+                return response()->json(['error' => 'No hay venta registrada.'], 404);
+            }
+
+            // No permitir pagar dos veces
+            if ($sale->commission_paid_at) {
+                return response()->json(['error' => 'La comisión ya fue pagada.'], 400);
+            }
+
+            $amount = $sale->commission_amount;
+
+            $paypal = new \PayPalCheckoutSdk\Orders\OrdersCreateRequest();
+            $paypal->prefer('return=representation');
+            $paypal->body = [
+                'intent' => 'CAPTURE',
+                'purchase_units' => [[
+                    'amount' => [
+                        'currency_code' => config('services.paypal.currency'),
+                        'value' => number_format($amount, 2, '.', '')
+                    ]
+                ]]
+            ];
+
+            $client = $this->getPaypalClient();
+            $response = $client->execute($paypal);
+
+            return response()->json([
+                'orderID' => $response->result->id
+            ]);
+        }
+
+
+    // Captura de orden de comisión
+       public function captureCommissionOrder(Request $request, Visit $visit)
+        {
+            try {
+                $sale = \App\Models\Sale::where('visit_id', $visit->id)->latest()->first();
+
+                if (!$sale) {
+                    return response()->json(['error' => 'Venta no encontrada'], 404);
+                }
+
+                // Guardamos la fecha en que se pagó la comisión
+                $sale->commission_paid_at = now();
+                $sale->save();
+
+                // Marcar la propiedad como vendida
+                $property = $sale->property;
+                $property->sold_at = now();
+                $property->save();
+
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('agent.analytics')
+                ]);
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+        }
+
 }

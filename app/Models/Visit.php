@@ -42,4 +42,5 @@ class Visit extends Model
             ->where('visit_date', '>=', $start->copy()->subMinutes($durationMinutes))
             ->exists();
     }
+    
 }
