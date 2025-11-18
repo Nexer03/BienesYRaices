@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\PropertyReservation;
 use App\Models\Sale;
 use App\Models\Visit;
-
+use Illuminate\Support\Facades\Route;
 
 class PayPalController extends Controller
 {
@@ -47,7 +47,7 @@ class PayPalController extends Controller
         if (!$resp->successful()) {
             Log::error('PayPal token error', [
                 'status' => $resp->status(),
-                'body' => $resp->body()
+                'body'   => $resp->body()
             ]);
             abort(500, 'No se pudo obtener token de PayPal.');
         }
@@ -55,15 +55,15 @@ class PayPalController extends Controller
         return $resp->json()['access_token'];
     }
 
-   /**
-     * Crear orden en PayPal
+    /**
+     * Crear orden en PayPal (reservas).
      */
     public function createOrder(Request $request)
     {
         $data = $request->validate([
             'reservation_id' => ['required','integer','exists:property_reservations,id'],
             'pay_mode'       => ['nullable','in:full,partial'],
-            'host_message'   => ['nullable','string','max:500'], // 👈 SE AGREGA
+            'host_message'   => ['nullable','string','max:500'],
         ]);
 
         $reservation = PropertyReservation::with('property')->findOrFail($data['reservation_id']);
@@ -78,14 +78,19 @@ class PayPalController extends Controller
             ? round($totalToPay * 0.20, 2)
             : $totalToPay;
 
+        // ⚠️ NUEVO: Evitar mandar órdenes de 0 a PayPal
+        if ($payNow <= 0) {
+            return response()->json([
+                'error' => 'El monto a pagar es 0. Verifica el total de la reservación.'
+            ], 400);
+        }
+
         $currency = config('services.paypal.currency', 'MXN');
 
         try {
             $accessToken = $this->getAccessToken();
 
-            /**
-             *  GUARDAR EL MENSAJE EN META
-             */
+            // Guardar mensaje al host en meta (opcional)
             if (!empty($data['host_message'])) {
                 $reservation->meta = array_merge((array)$reservation->meta, [
                     'host_message' => $data['host_message']
@@ -93,9 +98,6 @@ class PayPalController extends Controller
                 $reservation->save();
             }
 
-            /**
-             * Crear orden PayPal
-             */
             $payload = [
                 'intent' => 'CAPTURE',
                 'purchase_units' => [[
@@ -142,136 +144,133 @@ class PayPalController extends Controller
         }
     }
 
-
-
     /**
-     * Capturar pago después de aprobar
+     * Capturar pago después de aprobar (reservas y comisión por venta).
      */
-        public function captureOrder(Request $request)
-            {
-            $data = $request->validate([
-                'order_id' => ['required', 'string'],
-                'sale_id'  => ['nullable', 'integer', 'exists:sales,id'],
-            ]);
+    public function captureOrder(Request $request)
+    {
+        $data = $request->validate([
+            'order_id' => ['required', 'string'],
+            'sale_id'  => ['nullable', 'integer', 'exists:sales,id'],
+        ]);
 
-            try {
-                $accessToken = $this->getAccessToken();
+        try {
+            $accessToken = $this->getAccessToken();
 
-                $url = $this->apiBase().'/v2/checkout/orders/'.$data['order_id'].'/capture';
+            $url = $this->apiBase().'/v2/checkout/orders/'.$data['order_id'].'/capture';
 
-                $resp = $this->http()
-                    ->withToken($accessToken)
-                    ->acceptJson()
-                    ->withHeaders(['Content-Type' => 'application/json'])
-                    ->withBody('{}', 'application/json')
-                    ->post($url);
+            $resp = $this->http()
+                ->withToken($accessToken)
+                ->acceptJson()
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->withBody('{}', 'application/json')
+                ->post($url);
 
-                if (!$resp->successful()) {
-                    Log::error('PayPal capture error', [
-                        'status' => $resp->status(),
-                        'body'   => $resp->body()
+            if (!$resp->successful()) {
+                Log::error('PayPal capture error', [
+                    'status' => $resp->status(),
+                    'body'   => $resp->body()
+                ]);
+                return response()->json(['error' => 'No se pudo capturar el pago.'], 500);
+            }
+
+            $json = $resp->json();
+
+            if (($json['status'] ?? null) !== 'COMPLETED') {
+                Log::warning('PayPal capture no COMPLETED', ['json' => $json]);
+                return response()->json(['error' => 'Pago no completado.'], 400);
+            }
+
+            /** ----------------------------
+             *  FLUJO EXISTENTE: RESERVACIÓN
+             *  ---------------------------*/
+            $reference = $json['purchase_units'][0]['reference_id'] ?? null;
+
+            if ($reference && str_starts_with($reference, 'res-')) {
+                $reservationId = (int) substr($reference, 4);
+
+                $reservation = PropertyReservation::find($reservationId);
+
+                if ($reservation) {
+                    $reservation->fill([
+                        'status'         => 'confirmed',
+                        'payment_status' => 'paid',
+                        'payment_method' => 'paypal',
+                        'payment_id'     => $json['id'] ?? null,
+                        'payer_email'    => data_get($json, 'payer.email_address'),
+                        'paid_at'        => now(),
                     ]);
-                    return response()->json(['error' => 'No se pudo capturar el pago.'], 500);
-                }
 
-                $json = $resp->json();
+                    $reservation->save();
 
-                if (($json['status'] ?? null) !== 'COMPLETED') {
-                    Log::warning('PayPal capture no COMPLETED', ['json' => $json]);
-                    return response()->json(['error' => 'Pago no completado.'], 400);
-                }
+                    event(new \App\Events\ReservationPaid($reservation));
 
-                /** ----------------------------
-                 *  FLUJO EXISTENTE: RESERVACIÓN
-                 *  ---------------------------*/
-                $reference = $json['purchase_units'][0]['reference_id'] ?? null;
+                    // Mensaje automático al agente
+                    try {
+                        $property = $reservation->property;
+                        $agentId  = $property->user_id;
+                        $clientId = $reservation->user_id;
 
-                if ($reference && str_starts_with($reference, 'res-')) {
-                    $reservationId = (int) substr($reference, 4);
-
-                    $reservation = PropertyReservation::find($reservationId);
-
-                    if ($reservation) {
-
-                        $reservation->fill([
-                            'status'         => 'confirmed',
-                            'payment_status' => 'paid',
-                            'payment_method' => 'paypal',
-                            'payment_id'     => $json['id'] ?? null,
-                            'payer_email'    => data_get($json, 'payer.email_address'),
-                            'paid_at'        => now(),
+                        $conversation = \App\Models\Conversation::firstOrCreate([
+                            'property_id' => $property->id,
+                            'agent_id'    => $agentId,
+                            'client_id'   => $clientId,
                         ]);
 
-                        $reservation->save();
+                        $msgText = $reservation->meta['host_message'] ?? 'Hola, acabo de confirmar la reserva.';
 
-                        event(new \App\Events\ReservationPaid($reservation));
+                        $conversation->messages()->create([
+                            'sender_id' => $clientId,
+                            'body'      => $msgText,
+                        ]);
 
-                        // (aquí dejas tu bloque de conversación automática tal cual lo tenías)
-                        try {
+                        $conversation->touch();
 
-                            $property = $reservation->property;
-                            $agentId  = $property->user_id;
-                            $clientId = $reservation->user_id;
-
-                            $conversation = \App\Models\Conversation::firstOrCreate([
-                                'property_id' => $property->id,
-                                'agent_id'    => $agentId,
-                                'client_id'   => $clientId,
-                            ]);
-
-                            $msgText = $reservation->meta['host_message'] ?? 'Hola, acabo de confirmar la reserva.';
-
-                            $conversation->messages()->create([
-                                'sender_id' => $clientId,
-                                'body'      => $msgText,
-                            ]);
-
-                            $conversation->touch();
-
-                        } catch (\Throwable $e) {
-                            \Log::error('No se pudo enviar mensaje al agente', ['msg' => $e->getMessage()]);
-                        }
+                    } catch (\Throwable $e) {
+                        \Log::error('No se pudo enviar mensaje al agente', ['msg' => $e->getMessage()]);
                     }
                 }
-
-                /** ---------------------------------
-                 *  NUEVO: PAGO DE COMISIÓN POR VENTA
-                 *  --------------------------------*/
-                $redirectUrl = null;
-
-                if (!empty($data['sale_id'])) {
-                    $sale = Sale::with('property')->findOrFail($data['sale_id']);
-
-                    // Marcar la comisión como pagada (solo si no lo estaba ya)
-                    if (is_null($sale->commission_paid_at)) {
-                        $sale->commission_paid_at = now();
-                        $sale->save();
-                    }
-
-                    // Marcar la propiedad como vendida, si aún no lo está
-                    if ($sale->property && is_null($sale->property->sold_at)) {
-                        $sale->property->sold_at = now();
-                        $sale->property->save();
-                    }
-
-                    // Después de pagar comisión, mandamos al dashboard del agente
-                    $redirectUrl = route('agent.analytics');
-                }
-
-                return response()->json([
-                    'success'      => true,
-                    'order'        => $json,
-                    'redirect_url' => $redirectUrl,   // null si fue solo reserva
-                ]);
-
-            } catch (\Throwable $e) {
-                Log::error('PayPal captureOrder Exception', ['msg' => $e->getMessage()]);
-                return response()->json(['error' => 'Excepción al capturar el pago.'], 500);
             }
+
+            /** ---------------------------------
+             *  NUEVO: PAGO DE COMISIÓN POR VENTA
+             *  --------------------------------*/
+            $redirectUrl = null;
+
+            if (!empty($data['sale_id'])) {
+                $sale = Sale::with('property')->findOrFail($data['sale_id']);
+
+                if (is_null($sale->commission_paid_at)) {
+                    $sale->commission_paid_at = now();
+                    $sale->save();
+                }
+
+                if ($sale->property && is_null($sale->property->sold_at)) {
+                    $sale->property->sold_at = now();
+                    $sale->property->save();
+                }
+
+                // 👇 Evitar excepción si la ruta no existe
+                $redirectUrl = Route::has('agent.analytics')
+                    ? route('agent.analytics')
+                    : url('/agent'); // aquí puedes poner la URL que quieras como fallback
+            }
+
+
+            return response()->json([
+                'success'      => true,
+                'order'        => $json,
+                'redirect_url' => $redirectUrl,
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('PayPal captureOrder Exception', ['msg' => $e->getMessage()]);
+            return response()->json(['error' => 'Excepción al capturar el pago.'], 500);
         }
+    }
 
     /**
-     * Si usas return_url/cancel_url (opcional)
+     * Si usas return_url/cancel_url (opcional).
      */
     public function captureReturn(Request $request)
     {
@@ -304,7 +303,7 @@ class PayPalController extends Controller
 
             if ($reference && str_starts_with($reference, 'res-')) {
                 $reservationId = (int) substr($reference, 4);
-                $reservation = PropertyReservation::find($reservationId);
+                $reservation   = PropertyReservation::find($reservationId);
 
                 if ($reservation) {
                     $reservation->status         = 'confirmed';
@@ -328,9 +327,9 @@ class PayPalController extends Controller
         return redirect()->route('properties.map')->with('error', 'Pago cancelado en PayPal.');
     }
 
-
-
-    // Creaciones de ordenes de comisiones y capturas para ventas
+    /**
+     * Crear orden de comisión (desde la vista de visitas).
+     */
     public function createCommissionOrder(Request $request, Visit $visit)
     {
         abort_unless($visit->agent_id === $request->user()->id, 403);
@@ -343,6 +342,25 @@ class PayPalController extends Controller
 
         if ($sale->commission_paid_at) {
             return response()->json(['error' => 'La comisión ya fue pagada.'], 400);
+        }
+
+        // ⚠️ NUEVO: Evitar mandar comisiones de 0 o negativas a PayPal
+        if ($sale->commission_amount <= 0) {
+            Log::warning('Intento de pago de comisión con monto 0', [
+                'sale_id'            => $sale->id,
+                'commission_amount'  => $sale->commission_amount,
+            ]);
+
+            return response()->json([
+                'error' => 'La comisión para esta venta es 0, no hay nada que pagar.'
+            ], 400);
+        }
+
+        // ⚠️ NUEVO: evitar error si la venta no tiene propiedad cargada
+        if (!$sale->property) {
+            return response()->json([
+                'error' => 'La venta no tiene una propiedad asociada, no se puede crear la orden.'
+            ], 422);
         }
 
         $amount   = $sale->commission_amount;
@@ -376,6 +394,7 @@ class PayPalController extends Controller
                 Log::error('PayPal createCommissionOrder error', [
                     'status' => $resp->status(),
                     'body'   => $resp->body(),
+                    'sale_id'=> $sale->id,
                 ]);
                 return response()->json(['error' => 'No se pudo crear la orden con PayPal.'], 500);
             }
@@ -387,8 +406,9 @@ class PayPalController extends Controller
         }
     }
 
-
-    // Captura de orden de comisión
+    /**
+     * Captura de orden de comisión.
+     */
     public function captureCommissionOrder(Request $request, Visit $visit)
     {
         abort_unless($visit->agent_id === $request->user()->id, 403);
@@ -399,6 +419,12 @@ class PayPalController extends Controller
         ]);
 
         try {
+            Log::info('captureCommissionOrder INIT', [
+                'visit_id' => $visit->id,
+                'sale_id'  => $data['sale_id'],
+                'order_id' => $data['order_id'],
+            ]);
+
             $sale = Sale::with('property')
                 ->where('id', $data['sale_id'])
                 ->where('visit_id', $visit->id)
@@ -406,15 +432,28 @@ class PayPalController extends Controller
                 ->first();
 
             if (!$sale) {
+                Log::warning('captureCommissionOrder: venta no encontrada para visita', [
+                    'visit_id' => $visit->id,
+                    'sale_id'  => $data['sale_id'],
+                ]);
+
                 return response()->json(['error' => 'Venta no encontrada'], 404);
             }
 
             if ($sale->commission_paid_at) {
+                Log::warning('captureCommissionOrder: comisión ya pagada', [
+                    'sale_id' => $sale->id,
+                ]);
+
                 return response()->json(['error' => 'La comisión ya fue pagada.'], 400);
             }
 
             $accessToken = $this->getAccessToken();
             $url         = $this->apiBase().'/v2/checkout/orders/'.$data['order_id'].'/capture';
+
+            Log::info('captureCommissionOrder: llamando a PayPal capture', [
+                'url' => $url,
+            ]);
 
             $resp = $this->http()
                 ->withToken($accessToken)
@@ -428,32 +467,62 @@ class PayPalController extends Controller
                     'status' => $resp->status(),
                     'body'   => $resp->body(),
                 ]);
-                return response()->json(['error' => 'No se pudo capturar el pago.'], 500);
+
+                return response()->json([
+                    'error'   => 'Error al capturar el pago en PayPal.',
+                    'status'  => $resp->status(),
+                    'details' => $resp->json(),
+                ], 400);
             }
 
             $json = $resp->json();
 
+            Log::info('captureCommissionOrder: respuesta PayPal OK', [
+                'paypal_status' => $json['status'] ?? null,
+            ]);
+
             if (($json['status'] ?? null) !== 'COMPLETED') {
                 Log::warning('PayPal captureCommissionOrder no COMPLETED', ['json' => $json]);
-                return response()->json(['error' => 'Pago no completado.'], 400);
+
+                return response()->json([
+                    'error'   => 'Pago no completado en PayPal.',
+                    'details' => $json,
+                ], 400);
             }
 
+            // Marcar comisión pagada
             $sale->commission_paid_at = now();
             $sale->save();
 
+            // Marcar propiedad vendida si no lo estaba
             if ($sale->property && is_null($sale->property->sold_at)) {
                 $sale->property->sold_at = now();
                 $sale->property->save();
             }
 
+            // 🔁 Redirección después del pago (si existe la ruta)
+            $redirectUrl = \Illuminate\Support\Facades\Route::has('agent.analytics')
+                ? route('agent.analytics')
+                : url('/agent');
+
+            Log::info('captureCommissionOrder DONE', [
+                'sale_id'      => $sale->id,
+                'redirect_url' => $redirectUrl,
+            ]);
+
             return response()->json([
                 'success'  => true,
-                'redirect' => route('agent.analytics'),
+                'redirect' => $redirectUrl,
             ]);
+
         } catch (\Throwable $e) {
-            Log::error('PayPal captureCommissionOrder Exception', ['msg' => $e->getMessage()]);
+            Log::error('PayPal captureCommissionOrder Exception', [
+                'msg'   => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
-                'error' => 'Excepción al capturar el pago.'
+                'error' => 'Excepción al capturar el pago.',
             ], 500);
         }
     }
