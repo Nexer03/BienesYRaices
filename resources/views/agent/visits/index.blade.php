@@ -13,6 +13,25 @@
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/es.global.min.js"></script>
+
+  <style>
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-gray-200 rounded-2xl shadow-xl;
+  }
+  .section-title {
+    @apply text-xl font-bold text-gray-800 flex items-center;
+  }
+  .badge-gray {
+    @apply text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-lg;
+  }
+  .th {
+    @apply px-4 py-3 text-left font-semibold;
+  }
+  .td {
+    @apply px-4 py-3 text-gray-700;
+  }
+</style>
+
 </head>
 
 <body class="min-h-screen bg-gradient-to-b from-gray-50 via-gray-100 to-gray-200 text-gray-800 flex flex-col">
@@ -20,121 +39,144 @@
   <x-main-header />
 
   <main class="flex-1 max-w-7xl mx-auto px-6 py-12" x-data="{ activeTab: 'visits' }">
-    <header class="mb-10">
-      <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Gestión de visitas y reservaciones</h1>
-      <p class="text-gray-500 text-lg">Consulta tus visitas agendadas y las reservaciones activas en un mismo lugar.</p>
-    </header>
 
-    <!-- SWITCH ENTRE PESTAÑAS -->
-    <div class="flex justify-center mb-10">
-      <div class="inline-flex rounded-xl shadow-sm overflow-hidden bg-white/70 backdrop-blur-sm border border-gray-100">
-        <button 
-          @click="activeTab = 'visits'" 
-          :class="activeTab === 'visits' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-50'" 
-          class="px-6 py-2 text-sm font-semibold transition">
-          Visitas
-        </button>
-        <button 
-          @click="activeTab = 'reservations'" 
-          :class="activeTab === 'reservations' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-50'" 
-          class="px-6 py-2 text-sm font-semibold transition">
-          Reservaciones
-        </button>
+  <!-- HEADER -->
+  <header class="mb-12">
+    <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight mb-2">
+      Gestión de visitas y reservaciones
+    </h1>
+    <p class="text-gray-600 text-lg">
+      Consulta tus visitas agendadas y reservaciones desde un solo panel.
+    </p>
+  </header>
+
+  <!-- SWITCH ENTRE TABS -->
+  <div class="flex justify-center mb-12">
+    <div class="bg-white/80 backdrop-blur-lg border border-gray-200 shadow-lg rounded-2xl flex p-1">
+      
+      <button 
+        @click="activeTab = 'visits'"
+        :class="activeTab === 'visits' 
+          ? 'bg-blue-600 text-white shadow px-6' 
+          : 'text-gray-600 hover:bg-gray-100 px-6'"
+        class="py-2 rounded-xl text-sm font-semibold transition-all"
+      >
+        <i class="fa-solid fa-calendar-check mr-2"></i> Visitas
+      </button>
+
+      <button 
+        @click="activeTab = 'reservations'"
+        :class="activeTab === 'reservations' 
+          ? 'bg-blue-600 text-white shadow px-6' 
+          : 'text-gray-600 hover:bg-gray-100 px-6'"
+        class="py-2 rounded-xl text-sm font-semibold transition-all"
+      >
+        <i class="fa-solid fa-calendar-days mr-2"></i> Reservaciones
+      </button>
+
+    </div>
+  </div>
+
+  <!-- CALENDARIO VISITAS -->
+  <section x-show="activeTab === 'visits'" x-transition>
+    <div class="glass-card p-8 mb-10">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="section-title"><i class="fa-solid fa-house mr-2"></i> Calendario de visitas</h2>
+        <span class="badge-gray">Solo propiedades en venta</span>
       </div>
+      <div id="visits-calendar"></div>
+    </div>
+  </section>
+
+  <!-- CALENDARIO RESERVACIONES -->
+  <section x-show="activeTab === 'reservations'" x-transition>
+    <div class="glass-card p-8 mb-10">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="section-title"><i class="fa-solid fa-bookmark mr-2"></i> Calendario de reservaciones</h2>
+        <span class="badge-gray">Activas y pasadas</span>
+      </div>
+      <div id="reservations-calendar"></div>
+    </div>
+  </section>
+
+  <!-- LISTA DE VISITAS -->
+  <section class="glass-card p-8">
+    
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="section-title">
+        <i class="fa-solid fa-list mr-2"></i> Listado de visitas
+      </h2>
+
+      <a href="{{ route('agent.visits.create') }}"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow font-semibold transition-all">
+        <i class="fa-solid fa-plus mr-1"></i> Nueva visita
+      </a>
     </div>
 
-    <!-- CONTENIDO DE VISITAS -->
-    <section x-show="activeTab === 'visits'" x-transition>
-      <div class="bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-md p-8 mb-10">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xl font-semibold text-gray-800">Calendario de visitas</h2>
-          <span class="text-sm text-gray-500">Solo propiedades en venta</span>
-        </div>
-        <div id="visits-calendar"></div>
-      </div>
-    </section>
+    <div class="overflow-x-auto rounded-xl border border-gray-100">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="bg-gray-100/60 text-gray-700">
+            <th class="th">Fecha / hora</th>
+            <th class="th">Propiedad</th>
+            <th class="th">Cliente</th>
+            <th class="th">Estado</th>
+            <th class="th text-right">Acciones</th>
+          </tr>
+        </thead>
 
-    <!-- CONTENIDO DE RESERVACIONES -->
-    <section x-show="activeTab === 'reservations'" x-transition>
-      <div class="bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-md p-8 mb-10">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-xl font-semibold text-gray-800">Calendario de reservaciones</h2>
-          <span class="text-sm text-gray-500">Reservaciones activas y pasadas</span>
-        </div>
-        <div id="reservations-calendar"></div>
-      </div>
-    </section>
-    <!-- LISTA DE VISITAS -->
-    <section class="bg-white/70 backdrop-blur-md border border-gray-100 rounded-2xl shadow-md p-8">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-gray-800">Listado de visitas</h2>
-        <a href="{{ route('agent.visits.create') }}"
-           class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition">
-          + Nueva visita
-        </a>
-      </div>
+        <tbody class="divide-y divide-gray-100">
 
-      <div class="overflow-x-auto">
-        <table class="min-w-full border-collapse text-sm">
-          <thead>
-            <tr class="bg-gray-100 text-gray-700">
-              <th class="px-4 py-3 text-left font-semibold">Fecha / hora</th>
-              <th class="px-4 py-3 text-left font-semibold">Propiedad</th>
-              <th class="px-4 py-3 text-left font-semibold">Cliente</th>
-              <th class="px-4 py-3 text-left font-semibold">Estado</th>
-              <th class="px-4 py-3 text-right font-semibold">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            @forelse($visits as $visit)
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-4 py-3">{{ $visit->visit_date ? $visit->visit_date->format('Y-m-d H:i') : '—' }}</td>
-                <td class="px-4 py-3">{{ $visit->property?->title ?? '—' }}</td>
-                <td class="px-4 py-3">{{ $visit->client?->name ?? '—' }}</td>
-                <td class="px-4 py-3">
-                  <form action="{{ route('agent.visits.status', $visit) }}" method="POST">
-                    @csrf @method('PATCH')
-                      <select name="status" onchange="this.form.submit()" class="rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
-                      @php
-                        $estados = [
-                            'pending'   => 'Pendiente',
-                            'confirmed' => 'Confirmada',
-                            'completed' => 'Completada',
-                            'cancelled' => 'Cancelada',
-                        ];
-                    @endphp
+          @forelse($visits as $visit)
+          <tr class="hover:bg-gray-50 transition">
 
-                    @foreach($estados as $key => $label)
-                        <option value="{{ $key }}" @selected($visit->status === $key)>{{ $label }}</option>
-                    @endforeach
-                    </select>
-                  </form>
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <a href="{{ route('agent.visits.edit', $visit) }}" class="text-blue-600 hover:underline font-medium">Editar</a>
-                  <span class="mx-2 text-gray-300">|</span>
-                  <form action="{{ route('agent.visits.destroy', $visit) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar esta visita?');">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="text-red-600 hover:underline font-medium">Eliminar</button>
-                  </form>
-                </td>
-              </tr>
-            @empty
-              <tr>
-                <td colspan="5" class="text-center text-gray-500 py-6">No tienes visitas registradas.</td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
+            <td class="td">{{ $visit->visit_date?->format('Y-m-d H:i') ?? '—' }}</td>
+            <td class="td">{{ $visit->property?->title ?? '—' }}</td>
+            <td class="td">{{ $visit->client?->name ?? '—' }}</td>
+
+            <td class="td">
+              <form action="{{ route('agent.visits.status', $visit) }}" method="POST">
+                @csrf @method('PATCH')
+
+                <select name="status" onchange="this.form.submit()"
+                  class="rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                  @foreach(['pending'=>'Pendiente','confirmed'=>'Confirmada','completed'=>'Completada','cancelled'=>'Cancelada'] as $key => $label)
+                  <option value="{{ $key }}" @selected($visit->status === $key)>{{ $label }}</option>
+                  @endforeach
+                </select>
+              </form>
+            </td>
+
+            <td class="td text-right">
+              <a href="{{ route('agent.visits.edit', $visit) }}" class="text-blue-600 hover:underline font-medium">Editar</a>
+              <span class="mx-2 text-gray-300">|</span>
+              <form action="{{ route('agent.visits.destroy', $visit) }}" method="POST" class="inline"
+                onsubmit="return confirm('¿Eliminar esta visita?');">
+                @csrf @method('DELETE')
+                <button class="text-red-600 hover:underline font-medium" type="submit">Eliminar</button>
+              </form>
+            </td>
+
+          </tr>
+          @empty
+          <tr>
+            <td colspan="5" class="text-center text-gray-500 py-6">No tienes visitas registradas.</td>
+          </tr>
+          @endforelse
+
+        </tbody>
+      </table>
+    </div>
+
+    @if(method_exists($visits, 'links'))
+      <div class="mt-8">
+        {{ $visits->links() }}
       </div>
+    @endif
 
-      @if(method_exists($visits, 'links'))
-        <div class="mt-8">
-          {{ $visits->links() }}
-        </div>
-      @endif
-    </section>
-  </main>
+  </section>
+</main>
+
 
   {{-- FOOTER --}}
  <x-main-footer />
