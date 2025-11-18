@@ -247,19 +247,19 @@ Route::middleware(['auth', 'agent'])->group(function () {
             ->name('visits.sale.store');
 
         // Crear orden para pagar comisión
-        Route::post('/commission/{visit}/create-order', 
+        Route::post('/commission/{visit}/create-order',
             [PayPalController::class, 'createCommissionOrder']
         )->name('paypal.commission.create');
 
         // Capturar comisión (pago)
-        Route::post('/commission/{visit}/capture', 
+        Route::post('/commission/{visit}/capture',
             [PayPalController::class, 'captureCommissionOrder']
         )->name('paypal.captureCommission');
-            Route::get('/commission/{visit}/capture', 
+            Route::get('/commission/{visit}/capture',
                 [PayPalController::class, 'captureCommissionOrder']
             )->name('paypal.captureCommission.get');
     });
-        
+
 
     // Analytics
     Route::get('/agent/analytics', [\App\Http\Controllers\AgentAnalyticsController::class, 'index'])

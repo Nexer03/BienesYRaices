@@ -41,8 +41,9 @@ class AdminReportController extends Controller
             ->pluck('city');
 
         // ====== Ventas (inmuebles vendidos) ======
+        // Usamos sold_at para identificar ventas reales
         $soldQuery = Property::with('user')
-            ->where('status', 'sold');
+            ->whereNotNull('sold_at');
 
         if ($filters['agent']) {
             $soldQuery->where('user_id', $filters['agent']);
@@ -51,47 +52,56 @@ class AdminReportController extends Controller
             $soldQuery->where('city', $filters['city']);
         }
         if ($filters['from']) {
-            $soldQuery->whereDate('updated_at', '>=', $filters['from']); // usa sold_at si lo tienes
+            $soldQuery->whereDate('sold_at', '>=', $filters['from']);
         }
         if ($filters['to']) {
-            $soldQuery->whereDate('updated_at', '<=', $filters['to']);
+            $soldQuery->whereDate('sold_at', '<=', $filters['to']);
         }
 
         $soldProperties = $soldQuery->get();
+        // Valor total vendido (puedes ajustar el campo si usas otro distinto de price)
         $totalValueSold = $soldProperties->sum('price');
 
-        // Ventas por agente (conteo)
+        // Ventas por agente (conteo y totales)
         $salesByAgent = User::where('role', 'agent')
             ->when($filters['agent'], fn($q) => $q->where('id', $filters['agent']))
             ->withCount(['properties' => function ($q) use ($filters) {
-                $q->where('status', 'sold');
-                if ($filters['city']) $q->where('city', $filters['city']);
-                if ($filters['from']) $q->whereDate('updated_at', '>=', $filters['from']);
-                if ($filters['to'])   $q->whereDate('updated_at', '<=', $filters['to']);
+                // propiedades vendidas por agente
+                $q->whereNotNull('sold_at');
+                if ($filters['city']) {
+                    $q->where('city', $filters['city']);
+                }
+                if ($filters['from']) {
+                    $q->whereDate('sold_at', '>=', $filters['from']);
+                }
+                if ($filters['to']) {
+                    $q->whereDate('sold_at', '<=', $filters['to']);
+                }
             }])
             ->get();
 
-        // Comisiones por ventas (por agente)
+        // Comisiones por ventas (por agente) usando CommissionService
         $salesCommissionByAgent = $soldProperties
             ->groupBy('user_id')
             ->map(function ($properties) use ($commissionService) {
-                $agent = $properties->first()->user;
+                $agent   = $properties->first()->user;
                 $agentId = $agent?->id ?? 0;
                 $totalSold = (float) $properties->sum('price');
+
                 return (object) [
-                    'agent'           => $agent,
-                    'total_sold'      => $totalSold,
-                    'rate'            => $commissionService->rateFor($agentId, 'sale'),
-                    'commission'      => (float) $commissionService->calculate($agentId, 'sale', $totalSold),
+                    'agent'      => $agent,
+                    'total_sold' => $totalSold,
+                    'rate'       => $commissionService->rateFor($agentId, 'sale'),
+                    'commission' => (float) $commissionService->calculate($agentId, 'sale', $totalSold),
                 ];
             })->values();
 
+        // Mezclamos info de comisiones dentro de salesByAgent para las tarjetas y las gráficas
         $salesByAgent = $salesByAgent->map(function ($agent) use ($salesCommissionByAgent) {
             $cd = $salesCommissionByAgent->first(fn($row) => optional($row->agent)->id === $agent->id);
-            $agent->total_sales_amount    = (float) ($cd->total_sold ?? 0);
-            $agent->commission_rate       = $cd->rate ?? null;
-            $agent->commission_total      = (float) ($cd->commission ?? 0);
-
+            $agent->total_sales_amount = (float) ($cd->total_sold ?? 0);
+            $agent->commission_rate    = $cd->rate ?? null;
+            $agent->commission_total   = (float) ($cd->commission ?? 0);
             return $agent;
         });
 
@@ -111,7 +121,8 @@ class AdminReportController extends Controller
             $rentalFiltered->where('properties.city', $filters['city']);
         }
         if ($filters['from']) {
-            $rentalFiltered->whereDate('property_reservations.created_at', '>=', $filters['from']); // ajusta si usas otro campo
+            // aquí podrías usar paid_at si lo prefieres
+            $rentalFiltered->whereDate('property_reservations.created_at', '>=', $filters['from']);
         }
         if ($filters['to']) {
             $rentalFiltered->whereDate('property_reservations.created_at', '<=', $filters['to']);
@@ -125,54 +136,69 @@ class AdminReportController extends Controller
             ->groupBy('properties.user_id')
             ->get();
 
-        $agents = User::whereIn('id', $rentalsByAgent->pluck('agent_id')->filter()->unique())->get()->keyBy('id');
+        $agents = User::whereIn('id', $rentalsByAgent->pluck('agent_id')->filter()->unique())
+            ->get()
+            ->keyBy('id');
 
         $rentalsByAgent = $rentalsByAgent->map(function ($row) use ($agents, $commissionService) {
             $agent   = $agents->get($row->agent_id);
             $agentId = $agent?->id ?? 0;
-            $rate         = $commissionService->rateFor($agentId, 'rent');
+            $rate    = $commissionService->rateFor($agentId, 'rent');
 
-            $row->agent              = $agent;
-            $row->commission_rate    = $rate ?? null;
-            $row->commission_total   = (float) $commissionService->calculate($agentId, 'rent', (float) $row->total_revenue);
+            $row->agent            = $agent;
+            $row->commission_rate  = $rate ?? null;
+            $row->commission_total = (float) $commissionService->calculate($agentId, 'rent', (float) $row->total_revenue);
+
             return $row;
         })->filter(fn ($row) => $row->agent !== null);
 
-        $rentalCommissionTotal      = $rentalsByAgent->sum('commission_total');
-        $salesCommissionTotal       = $salesCommissionByAgent->sum('commission');
+        $rentalCommissionTotal = $rentalsByAgent->sum('commission_total');
+        $salesCommissionTotal  = $salesCommissionByAgent->sum('commission');
 
-        // ====== Comparativa por zona (filtrada por fechas y, opcionalmente, agente) ======
+        // ====== Comparativa por zona ======
         $zoneQuery = Property::query()
             ->select('city')
             ->whereNotNull('city')
             ->selectRaw('COUNT(*) as total_properties')
-            ->selectRaw("SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold_count")
+            // usamos sold_at para contar vendidas
+            ->selectRaw("SUM(CASE WHEN sold_at IS NOT NULL THEN 1 ELSE 0 END) as sold_count")
             ->selectRaw("SUM(CASE WHEN status = 'rented' THEN 1 ELSE 0 END) as rented_count")
             ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_count")
             ->selectRaw('AVG(price) as average_price');
 
-        if ($filters['agent']) $zoneQuery->where('user_id', $filters['agent']);
-        if ($filters['city'])  $zoneQuery->where('city', $filters['city']);
-        if ($filters['from'])  $zoneQuery->whereDate('updated_at', '>=', $filters['from']);
-        if ($filters['to'])    $zoneQuery->whereDate('updated_at', '<=', $filters['to']);
+        if ($filters['agent']) {
+            $zoneQuery->where('user_id', $filters['agent']);
+        }
+        if ($filters['city']) {
+            $zoneQuery->where('city', $filters['city']);
+        }
+        if ($filters['from']) {
+            $zoneQuery->whereDate('sold_at', '>=', $filters['from']);
+        }
+        if ($filters['to']) {
+            $zoneQuery->whereDate('sold_at', '<=', $filters['to']);
+        }
 
-        $zoneComparison = $zoneQuery->groupBy('city')->orderByDesc('total_properties')->get();
+        $zoneComparison = $zoneQuery
+            ->groupBy('city')
+            ->orderByDesc('total_properties')
+            ->get();
 
         return view('admin.reports.sales', [
             // datos
-            'salesByAgent'               => $salesByAgent,
-            'totalValueSold'             => $totalValueSold,
-            'rentalsByAgent'             => $rentalsByAgent,
-            'totalRentalRevenue'         => $totalRentalRevenue,
-            'totalRentalReservations'    => $totalRentalReservations,
-            'zoneComparison'             => $zoneComparison,
-            'salesCommissionByAgent'     => $salesCommissionByAgent,
-            'salesCommissionTotal'       => $salesCommissionTotal,
-            'rentalCommissionTotal'      => $rentalCommissionTotal,
+            'salesByAgent'            => $salesByAgent,
+            'totalValueSold'          => $totalValueSold,
+            'rentalsByAgent'          => $rentalsByAgent,
+            'totalRentalRevenue'      => $totalRentalRevenue,
+            'totalRentalReservations' => $totalRentalReservations,
+            'zoneComparison'          => $zoneComparison,
+            'salesCommissionByAgent'  => $salesCommissionByAgent,
+            'salesCommissionTotal'    => $salesCommissionTotal,
+            'rentalCommissionTotal'   => $rentalCommissionTotal,
             // filtros + catálogos
-            'filters'        => $filters,
-            'agentsOptions'  => $agentsOptions,
-            'citiesOptions'  => $citiesOptions,
+            'filters'       => $filters,
+            'agentsOptions' => $agentsOptions,
+            'citiesOptions' => $citiesOptions,
         ]);
     }
 
@@ -213,11 +239,11 @@ class AdminReportController extends Controller
             ->get();
 
         return view('admin.reports.visits', [
-            'totalVisits' => $totalVisits,
-            'visitsByStatus' => $visitsByStatus,
-            'visitsByAgent' => $visitsByAgent,
-            'visitsByMonth' => $visitsByMonth,
-            'upcomingVisits' => $upcomingVisits,
+            'totalVisits'         => $totalVisits,
+            'visitsByStatus'      => $visitsByStatus,
+            'visitsByAgent'       => $visitsByAgent,
+            'visitsByMonth'       => $visitsByMonth,
+            'upcomingVisits'      => $upcomingVisits,
             'upcomingVisitsCount' => $upcomingVisitsQuery->count(),
         ]);
     }
