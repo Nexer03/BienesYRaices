@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\PropertyReservation;
 use App\Models\Sale;
+use App\Models\Visit;
 
 
 class PayPalController extends Controller
@@ -330,71 +331,131 @@ class PayPalController extends Controller
 
 
     // Creaciones de ordenes de comisiones y capturas para ventas
-   public function createCommissionOrder(Request $request, Visit $visit)
-        {
-            $sale = \App\Models\Sale::where('visit_id', $visit->id)->latest()->first();
+    public function createCommissionOrder(Request $request, Visit $visit)
+    {
+        abort_unless($visit->agent_id === $request->user()->id, 403);
 
-            if (!$sale) {
-                return response()->json(['error' => 'No hay venta registrada.'], 404);
+        $sale = Sale::with('property')->where('visit_id', $visit->id)->latest()->first();
+
+        if (!$sale) {
+            return response()->json(['error' => 'No hay venta registrada.'], 404);
+        }
+
+        if ($sale->commission_paid_at) {
+            return response()->json(['error' => 'La comisión ya fue pagada.'], 400);
+        }
+
+        $amount   = $sale->commission_amount;
+        $currency = config('services.paypal.currency', 'MXN');
+
+        try {
+            $accessToken = $this->getAccessToken();
+
+            $payload = [
+                'intent' => 'CAPTURE',
+                'purchase_units' => [[
+                    'reference_id' => 'sale-'.$sale->id,
+                    'amount' => [
+                        'currency_code' => $currency,
+                        'value' => number_format($amount, 2, '.', ''),
+                    ],
+                    'description' => 'Pago de comisión por venta de propiedad #'.$sale->property_id,
+                ]],
+                'application_context' => [
+                    'shipping_preference' => 'NO_SHIPPING',
+                    'user_action'         => 'PAY_NOW',
+                ],
+            ];
+
+            $resp = $this->http()
+                ->withToken($accessToken)
+                ->acceptJson()
+                ->post($this->apiBase().'/v2/checkout/orders', $payload);
+
+            if (!$resp->successful()) {
+                Log::error('PayPal createCommissionOrder error', [
+                    'status' => $resp->status(),
+                    'body'   => $resp->body(),
+                ]);
+                return response()->json(['error' => 'No se pudo crear la orden con PayPal.'], 500);
             }
 
-            // No permitir pagar dos veces
+            return response()->json(['id' => $resp->json('id')]);
+        } catch (\Throwable $e) {
+            Log::error('PayPal createCommissionOrder Exception', ['msg' => $e->getMessage()]);
+            return response()->json(['error' => 'Excepción al crear la orden.'], 500);
+        }
+    }
+
+
+    // Captura de orden de comisión
+    public function captureCommissionOrder(Request $request, Visit $visit)
+    {
+        abort_unless($visit->agent_id === $request->user()->id, 403);
+
+        $data = $request->validate([
+            'order_id' => ['required', 'string'],
+            'sale_id'  => ['required', 'integer', 'exists:sales,id'],
+        ]);
+
+        try {
+            $sale = Sale::with('property')
+                ->where('id', $data['sale_id'])
+                ->where('visit_id', $visit->id)
+                ->latest()
+                ->first();
+
+            if (!$sale) {
+                return response()->json(['error' => 'Venta no encontrada'], 404);
+            }
+
             if ($sale->commission_paid_at) {
                 return response()->json(['error' => 'La comisión ya fue pagada.'], 400);
             }
 
-            $amount = $sale->commission_amount;
+            $accessToken = $this->getAccessToken();
+            $url         = $this->apiBase().'/v2/checkout/orders/'.$data['order_id'].'/capture';
 
-            $paypal = new \PayPalCheckoutSdk\Orders\OrdersCreateRequest();
-            $paypal->prefer('return=representation');
-            $paypal->body = [
-                'intent' => 'CAPTURE',
-                'purchase_units' => [[
-                    'amount' => [
-                        'currency_code' => config('services.paypal.currency'),
-                        'value' => number_format($amount, 2, '.', '')
-                    ]
-                ]]
-            ];
+            $resp = $this->http()
+                ->withToken($accessToken)
+                ->acceptJson()
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->withBody('{}', 'application/json')
+                ->post($url);
 
-            $client = $this->getPaypalClient();
-            $response = $client->execute($paypal);
+            if (!$resp->successful()) {
+                Log::error('PayPal captureCommissionOrder error', [
+                    'status' => $resp->status(),
+                    'body'   => $resp->body(),
+                ]);
+                return response()->json(['error' => 'No se pudo capturar el pago.'], 500);
+            }
+
+            $json = $resp->json();
+
+            if (($json['status'] ?? null) !== 'COMPLETED') {
+                Log::warning('PayPal captureCommissionOrder no COMPLETED', ['json' => $json]);
+                return response()->json(['error' => 'Pago no completado.'], 400);
+            }
+
+            $sale->commission_paid_at = now();
+            $sale->save();
+
+            if ($sale->property && is_null($sale->property->sold_at)) {
+                $sale->property->sold_at = now();
+                $sale->property->save();
+            }
 
             return response()->json([
-                'orderID' => $response->result->id
+                'success'  => true,
+                'redirect' => route('agent.analytics'),
             ]);
+        } catch (\Throwable $e) {
+            Log::error('PayPal captureCommissionOrder Exception', ['msg' => $e->getMessage()]);
+            return response()->json([
+                'error' => 'Excepción al capturar el pago.'
+            ], 500);
         }
-
-
-    // Captura de orden de comisión
-       public function captureCommissionOrder(Request $request, Visit $visit)
-        {
-            try {
-                $sale = \App\Models\Sale::where('visit_id', $visit->id)->latest()->first();
-
-                if (!$sale) {
-                    return response()->json(['error' => 'Venta no encontrada'], 404);
-                }
-
-                // Guardamos la fecha en que se pagó la comisión
-                $sale->commission_paid_at = now();
-                $sale->save();
-
-                // Marcar la propiedad como vendida
-                $property = $sale->property;
-                $property->sold_at = now();
-                $property->save();
-
-                return response()->json([
-                    'success' => true,
-                    'redirect' => route('agent.analytics')
-                ]);
-
-            } catch (\Exception $e) {
-                return response()->json([
-                    'error' => $e->getMessage()
-                ], 500);
-            }
-        }
+    }
 
 }

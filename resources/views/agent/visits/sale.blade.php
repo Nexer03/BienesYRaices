@@ -39,7 +39,7 @@
 
         <div class="mb-3">
           <label class="form-label">Comisión aplicada</label>
-          <input type="text" class="form-control" 
+          <input type="text" class="form-control"
                  value="{{ $commission ? $commission->percentage.'%' : '0%' }}"
                  disabled>
         </div>
@@ -57,7 +57,7 @@
         <h5 class="mt-3 mb-2">Pagar comisión</h5>
 
         <p>
-            Comisión a pagar: 
+            Comisión a pagar:
             <strong>${{ number_format($sale->commission_amount, 2) }} MXN</strong>
         </p>
 
@@ -67,69 +67,71 @@
         @else
             <p class="text-green-600 font-semibold">Comisión pagada correctamente.</p>
         @endif
-    
 
-
-
-      <script src="https://www.paypal.com/sdk/js?client-id={{ config('services.paypal.client_id') }}&currency=MXN"></script>
-
-      <script src="https://www.paypal.com/sdk/js?client-id={{ config('services.paypal.client_id') }}&currency=MXN"></script>
+      <script src="https://www.paypal.com/sdk/js?client-id={{ config('services.paypal.client_id') }}&currency={{ config('services.paypal.currency', 'MXN') }}&intent=capture&components=buttons"></script>
 
       <script>
       paypal.Buttons({
-    commit: true,
-    experience: { noShipping: true },
-
-    createOrder: function(data, actions) {
-        return actions.order.create({
-            purchase_units: [{
-                amount: { value: "{{ $sale->commission_amount }}" },
-                description: "Pago de comisión por venta de propiedad #{{ $property->id }}"
-            }]
-        });
-    },
-
-            onApprove: function(data, actions) {
-                return fetch("{{ route('agent.paypal.captureCommission', $visit->id) }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                order_id: data.orderID,
-                sale_id: "{{ $sale->id }}"
+        createOrder: function() {
+            return fetch("{{ route('agent.paypal.commission.create', $visit->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
             })
-        })
+            .then(res => res.json())
+            .then(function (data) {
+                if (data?.id) {
+                    return data.id;
+                }
 
-        .then(res => res.json())
-        .then(function(response) {
+                throw new Error(data?.error || 'No se pudo crear la orden de PayPal.');
+            });
+        },
 
-            if (response.redirect) {
-                window.location.href = response.redirect;
-                return;
-            }
+        onApprove: function(data) {
+            return fetch("{{ route('agent.paypal.captureCommission', $visit->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_id: data.orderID,
+                    sale_id: "{{ $sale->id }}"
+                })
+            })
+            .then(res => res.json())
+            .then(function(response) {
+                if (response.redirect) {
+                    window.location.href = response.redirect;
+                    return;
+                }
 
-            if (response.success) {
-                alert("Pago de comisión registrado correctamente.");
-                window.location.reload();
-            } else {
-                alert("Ocurrió un error al registrar el pago.");
-            }
+                if (response.success) {
+                    alert("Pago de comisión registrado correctamente.");
+                    window.location.reload();
+                } else {
+                    alert(response.error || "Ocurrió un error al registrar el pago.");
+                }
 
-        })
-        .catch(function() {
-            alert("Error de comunicación con el servidor.");
-        });
-    }
+            })
+            .catch(function(error) {
+                console.error(error);
+                alert("Error de comunicación con el servidor.");
+            });
+        }
 
-}).render('#paypal-button-container');
+      }).render('#paypal-button-container');
 
       </script>
 
 
-      @endif 
-      
+      @endif
+
     </div>
   </div>
 
