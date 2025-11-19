@@ -96,12 +96,14 @@
                 $badgeMap = [
                     'available'   => 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:ring-emerald-700',
                     'unavailable' => 'bg-gray-100 text-gray-700 ring-1 ring-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600',
+                    'pending'     => 'bg-amber-100 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:ring-amber-700',
                     'rented'      => 'bg-cyan-100 text-cyan-800 ring-1 ring-cyan-200 dark:bg-cyan-900/40 dark:text-cyan-200 dark:ring-cyan-700',
                     'sold'        => 'bg-slate-200 text-slate-800 ring-1 ring-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600',
                 ];
                 $dotMap = [
                     'available'   => 'bg-emerald-500',
                     'unavailable' => 'bg-gray-400',
+                    'pending'     => 'bg-amber-500',
                     'rented'      => 'bg-cyan-500',
                     'sold'        => 'bg-slate-500',
                 ];
