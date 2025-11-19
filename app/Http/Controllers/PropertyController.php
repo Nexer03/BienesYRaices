@@ -185,10 +185,11 @@ class PropertyController extends Controller
 
         // Para badge y <select> en UI
         $allowedStatuses = [
-            'available' => 'Disponible',
-            'pending'   => 'Pendiente',
-            'rented'    => 'Rentada',
-            'sold'      => 'Vendida',
+            Property::STATUS_AVAILABLE   => 'Disponible',
+            Property::STATUS_UNAVAILABLE => 'No disponible',
+            Property::STATUS_PENDING     => 'Pendiente',
+            Property::STATUS_RENTED      => 'Rentada',
+            Property::STATUS_SOLD        => 'Vendida',
         ];
 
         return view('properties.index', compact('properties','allowedStatuses'));

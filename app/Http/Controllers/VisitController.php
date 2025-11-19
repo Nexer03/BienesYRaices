@@ -352,12 +352,8 @@ class VisitController extends Controller
         $client   = $visit->client;
 
         // Comisión correcta según agente y tipo de listado
-        $commission = \App\Models\SystemCommission::getCommissionFor(
-            $property->listing_type,
-            $visit->agent_id
-        );
-
-        $percentage = $commission?->percentage ?? 0;
+        $percentage = app(\App\Services\CommissionService::class)
+            ->rateFor($visit->agent_id, $property->listing_type) ?? 0;
         $commissionAmount = ($data['sale_price'] * $percentage) / 100;
 
         // Guardar venta

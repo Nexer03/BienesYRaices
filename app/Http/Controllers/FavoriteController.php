@@ -33,6 +33,11 @@ class FavoriteController extends Controller
     public function store(Property $property)
     {
         $user = Auth::user();
+
+        if ($property->user_id === $user->id) {
+            return back()->with('error', 'No puedes guardar en favoritos una propiedad que te pertenece.');
+        }
+
         $user->favoriteProperties()->syncWithoutDetaching([$property->id]);
 
         // fallback no-AJAX
@@ -58,6 +63,13 @@ class FavoriteController extends Controller
     public function toggle(Property $property)
     {
         $user = Auth::user();
+
+        if ($property->user_id === $user->id) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No puedes guardar en favoritos tu propia propiedad.',
+            ], 403);
+        }
         $exists = $user->favoriteProperties()->where('property_id', $property->id)->exists();
 
         if ($exists) {
