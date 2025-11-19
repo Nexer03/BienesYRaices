@@ -44,25 +44,33 @@
       </form>
     </section>
 
-    <!-- RESUMEN DE MÉTRICAS -->
+        <!-- RESUMEN DE MÉTRICAS -->
     <section class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      {{-- Propiedades Totales --}}
       <div class="bg-gradient-to-tr from-blue-500 to-blue-600 text-white rounded-2xl shadow-lg p-6">
         <p class="text-sm opacity-90">Propiedades Totales</p>
         <h3 class="text-4xl font-extrabold mt-2">{{ $totalProps }}</h3>
       </div>
-      <div class="bg-gradient-to-tr from-green-500 to-green-600 text-white rounded-2xl shadow-lg p-6">
+
+      {{-- En Venta --}}
+      <div class="bg-gradient-to-tr from-blue-500 to-sky-500 text-white rounded-2xl shadow-lg p-6">
         <p class="text-sm opacity-90">En Venta</p>
         <h3 class="text-4xl font-extrabold mt-2">{{ $saleProps }}</h3>
       </div>
-      <div class="bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white rounded-2xl shadow-lg p-6">
+
+      {{-- En Renta --}}
+      <div class="bg-gradient-to-tr from-indigo-500 to-blue-500 text-white rounded-2xl shadow-lg p-6">
         <p class="text-sm opacity-90">En Renta</p>
         <h3 class="text-4xl font-extrabold mt-2">{{ $rentProps }}</h3>
       </div>
-      <div class="bg-gradient-to-tr from-rose-500 to-pink-600 text-white rounded-2xl shadow-lg p-6">
+
+      {{-- Visitas (90 días) --}}
+      <div class="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-2xl shadow-lg p-6">
         <p class="text-sm opacity-90">Visitas (90 días)</p>
         <h3 class="text-4xl font-extrabold mt-2">{{ $visits['total'] }}</h3>
       </div>
     </section>
+
 
     <!-- DISTRIBUCIÓN -->
     <section class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

@@ -64,35 +64,57 @@
           </small>
         </div>
 
-        {{-- INE frontal --}}
-        <div class="mb-4">
-          <label for="ine_front" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Foto INE (frontal)
-          </label>
-          <input
-            type="file"
-            name="ine_front"
-            id="ine_front"
-            accept="image/*"
-            required
-            class="mt-1 block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800"
-          >
-        </div>
+       {{-- INE frontal --}}
+<div class="mb-4">
+  <label for="ine_front" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <i class="fa-regular fa-id-card mr-1 text-blue-500"></i>
+    Foto INE (frontal)
+  </label>
+  <input
+    type="file"
+    name="ine_front"
+    id="ine_front"
+    accept="image/*"
+    required
+    class="mt-1 block w-full text-sm
+           text-gray-900 dark:text-gray-100
+           border border-gray-300 dark:border-gray-600
+           rounded-lg shadow-sm
+           bg-white dark:bg-gray-800
+           file:mr-3 file:py-2 file:px-4
+           file:rounded-lg file:border-0
+           file:text-sm file:font-semibold
+           file:bg-blue-600 file:text-white
+           hover:file:bg-blue-700
+           file:cursor-pointer"
+  >
+</div>
 
-        {{-- INE reverso --}}
-        <div class="mb-4">
-          <label for="ine_back" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Foto INE (reverso)
-          </label>
-          <input
-            type="file"
-            name="ine_back"
-            id="ine_back"
-            accept="image/*"
-            required
-            class="mt-1 block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800"
-          >
-        </div>
+{{-- INE reverso --}}
+<div class="mb-4">
+  <label for="ine_back" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <i class="fa-regular fa-id-card mr-1 text-blue-500"></i>
+    Foto INE (reverso)
+  </label>
+  <input
+    type="file"
+    name="ine_back"
+    id="ine_back"
+    accept="image/*"
+    required
+    class="mt-1 block w-full text-sm
+           text-gray-900 dark:text-gray-100
+           border border-gray-300 dark:border-gray-600
+           rounded-lg shadow-sm
+           bg-white dark:bg-gray-800
+           file:mr-3 file:py-2 file:px-4
+           file:rounded-lg file:border-0
+           file:text-sm file:font-semibold
+           file:bg-blue-600 file:text-white
+           hover:file:bg-blue-700
+           file:cursor-pointer"
+  >
+</div>
 
         <button
           type="submit"
