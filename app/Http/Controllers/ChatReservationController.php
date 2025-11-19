@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Conversation;
 use App\Models\PropertyReservation;
-use App\Models\SystemCommission;
 use App\Services\ConversationMessenger;
+use App\Services\CommissionService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +23,13 @@ class ChatReservationController extends Controller
         $property = $conversation->property;
 
         abort_unless($property && $property->listing_type === 'rent', 422, 'Esta propiedad no admite reservas.');
+
+        if ($property->user_id === $request->user()->id) {
+            return $this->respond($request, [
+                'status'  => 'error',
+                'message' => 'No puedes reservar tu propia propiedad.',
+            ], back()->with('error', 'No puedes reservar tu propia propiedad.'));
+        }
 
         $data = $request->validate([
             'start_date' => ['required', 'date', 'after_or_equal:today'],
@@ -48,7 +55,7 @@ class ChatReservationController extends Controller
         $pricePerNight = (float) $property->price;
         $subtotal = round($pricePerNight * $nights, 2);
 
-        $commissionPercent = $this->resolveCommissionPercentage($property->user_id);
+        $commissionPercent = app(CommissionService::class)->rateFor($property->user_id, 'rent') ?? 0.0;
         $agentCommission = round($subtotal * ($commissionPercent / 100), 2);
         $agentEarnings = round($subtotal - $agentCommission, 2);
 
@@ -95,21 +102,6 @@ class ChatReservationController extends Controller
     protected function authorizeConversation(Request $request, Conversation $conversation): void
     {
         abort_unless(in_array($request->user()->id, [$conversation->agent_id, $conversation->client_id]), 403);
-    }
-
-    protected function resolveCommissionPercentage(int $agentId): float
-    {
-        $commission = SystemCommission::query()
-            ->where(function ($query) use ($agentId) {
-                $query->whereNull('user_id')
-                    ->orWhere('user_id', $agentId);
-            })
-            ->whereIn('listing_type', ['rent', 'both'])
-            ->orderByDesc('user_id')
-            ->orderByDesc('effective_from')
-            ->first();
-
-        return $commission ? (float) $commission->percentage : 0.0;
     }
 
     protected function respond(Request $request, array $payload, Response|RedirectResponse $fallback)

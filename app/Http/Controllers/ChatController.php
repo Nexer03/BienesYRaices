@@ -48,6 +48,12 @@ class ChatController extends Controller
         $authId  = Auth::id();
         $user    = Auth::user();
 
+        if ($agentId === $authId) {
+            return redirect()
+                ->route('properties.show', $property)
+                ->with('error', 'No puedes iniciar un chat sobre una propiedad que te pertenece.');
+        }
+
         $conversation = Conversation::firstOrCreate([
             'property_id' => $property->id,
             'agent_id'    => $agentId,

@@ -17,16 +17,14 @@ class Property extends Model
     public const STATUS_UNAVAILABLE = 'unavailable';
     public const STATUS_RENTED      = 'rented';
     public const STATUS_SOLD        = 'sold';
-
-    /** Si mantendrás 'pending', descomenta: */
-    // public const STATUS_PENDING     = 'pending';
+    public const STATUS_PENDING     = 'pending';
 
     public const ALLOWED_STATUSES = [
         self::STATUS_AVAILABLE,
         self::STATUS_UNAVAILABLE,
         self::STATUS_RENTED,
         self::STATUS_SOLD,
-        // self::STATUS_PENDING,
+        self::STATUS_PENDING,
     ];
 
     protected $fillable = [
@@ -41,6 +39,7 @@ class Property extends Model
 
     protected $casts = [
         'rented_until' => 'datetime', // <-- para trabajar como Carbon
+        'sold_at'      => 'datetime',
         'price' => 'float',
         'total_price' => 'float',
         'start_date'  => 'date',
@@ -99,6 +98,7 @@ class Property extends Model
             self::STATUS_UNAVAILABLE => 'No disponible',
             self::STATUS_RENTED      => 'Rentada',
             self::STATUS_SOLD        => 'Vendida',
+            self::STATUS_PENDING     => 'Pendiente',
             default                  => ucfirst($this->status),
         };
     }

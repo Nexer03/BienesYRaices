@@ -34,6 +34,13 @@ public function store(Request $request)
             ], 422);
         }
 
+        if ($property->user_id === $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No puedes reservar tu propia propiedad.'
+            ], 403);
+        }
+
         abort_unless($property->status === 'available', 422, 'La propiedad no está disponible.');
         abort_if(
             PropertyReservation::overlaps($property->id, $request->start_date, $request->end_date),

@@ -7,6 +7,11 @@ use Illuminate\Support\Collection;
 
 class CommissionService
 {
+    private const DEFAULT_RATES = [
+        'rent' => 15.0,
+        'sale' => 1.0,
+    ];
+
     protected Collection $commissions;
 
     public function __construct()
@@ -40,12 +45,35 @@ class CommissionService
 
     public function rateFor(?int $agentId, string $listingType): ?float
     {
-        return $this->matchCommission($agentId, $listingType)?->percentage;
+        $commission = $this->matchCommission($agentId, $listingType);
+
+        if ($commission?->percentage !== null) {
+            return (float) $commission->percentage;
+        }
+
+        return self::DEFAULT_RATES[$listingType] ?? 0.0;
+    }
+
+    public function customerRateFor(?int $agentId, string $listingType): ?float
+    {
+        // Ya no se cobra comisión al cliente directamente.
+        return 0.0;
     }
 
     public function calculate(?int $agentId, string $listingType, float $amount): float
     {
         $rate = $this->rateFor($agentId, $listingType);
+
+        if ($rate === null) {
+            return 0.0;
+        }
+
+        return $this->applyRate($rate, $amount);
+    }
+
+    public function calculateCustomer(?int $agentId, string $listingType, float $amount): float
+    {
+        $rate = $this->customerRateFor($agentId, $listingType);
 
         if ($rate === null) {
             return 0.0;

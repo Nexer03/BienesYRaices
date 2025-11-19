@@ -173,6 +173,27 @@
       #lightbox .lb-nav a.lb-prev { left: 0.75rem; }
       #lightbox .lb-nav a.lb-next { right: 0.75rem; }
     }
+
+    /* Modal ligero para mensajes (éxito / error) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 16px;
+    }
+
+    .modal-card {
+      max-width: 480px;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+    }
   </style>
 </head>
 
@@ -182,6 +203,7 @@
 
 @php
   $isRent = $property->listing_type === 'rent';
+  $isOwner = auth()->check() && auth()->id() === $property->user_id;
 @endphp
 
 <main class="max-w-6xl mx-auto mt-8 md:mt-10 px-4 lg:px-0 space-y-8 md:space-y-10 mb-10">
@@ -229,32 +251,34 @@
 
         {{-- Botón de favoritos al nivel del título --}}
         @auth
-          @php
-            $isFav = auth()->user()->favoriteProperties()->where('properties.id',$property->id)->exists();
-          @endphp
+          @if(!$isOwner)
+            @php
+              $isFav = auth()->user()->favoriteProperties()->where('properties.id',$property->id)->exists();
+            @endphp
 
-          <form method="POST"
-                action="{{ $isFav ? route('favorites.destroy',$property) : route('favorites.store',$property) }}"
-                id="fav-fallback-form"
-                class="hidden">
-            @csrf
-            @if($isFav) @method('DELETE') @endif
-          </form>
+            <form method="POST"
+                  action="{{ $isFav ? route('favorites.destroy',$property) : route('favorites.store',$property) }}"
+                  id="fav-fallback-form"
+                  class="hidden">
+              @csrf
+              @if($isFav) @method('DELETE') @endif
+            </form>
 
-          <button id="fav-btn"
-                  class="inline-flex items-center justify-center w-10 h-10 rounded-full
-                         bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700
-                         shadow-sm hover:bg-pink-50 dark:hover:bg-pink-900/30 transition
-                         text-gray-400"
-                  data-toggle-url="{{ route('favorites.toggle',$property) }}"
-                  data-state="{{ $isFav ? 'on' : 'off' }}"
-                  onclick="if(!window.toggleFavorite){ document.getElementById('fav-fallback-form').submit(); }">
-            <i id="fav-icon"
-               class="fa-heart {{ $isFav ? 'fa-solid text-pink-500' : 'fa-regular' }}"></i>
-            <span id="fav-text" class="sr-only">
-              {{ $isFav ? 'Quitar de favoritos' : 'Agregar a favoritos' }}
-            </span>
-          </button>
+            <button id="fav-btn"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-full
+                           bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700
+                           shadow-sm hover:bg-pink-50 dark:hover:bg-pink-900/30 transition
+                           text-gray-400"
+                    data-toggle-url="{{ route('favorites.toggle',$property) }}"
+                    data-state="{{ $isFav ? 'on' : 'off' }}"
+                    onclick="if(!window.toggleFavorite){ document.getElementById('fav-fallback-form').submit(); }">
+              <i id="fav-icon"
+                 class="fa-heart {{ $isFav ? 'fa-solid text-pink-500' : 'fa-regular' }}"></i>
+              <span id="fav-text" class="sr-only">
+                {{ $isFav ? 'Quitar de favoritos' : 'Agregar a favoritos' }}
+              </span>
+            </button>
+          @endif
         @endauth
       </div>
     </div>
@@ -529,7 +553,12 @@
           @endif
         </div>
 
-        @if($property->listing_type == 'sale')
+        @if($isOwner)
+          <div class="p-3 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-sm flex items-start gap-2">
+            <i class="fa-solid fa-circle-info mt-0.5"></i>
+            <p class="leading-snug">Eres el dueño de esta propiedad; no es posible reservarla, contactarte a ti mismo ni guardarla como favorita.</p>
+          </div>
+        @elseif($property->listing_type == 'sale')
           {{-- Venta: solo contacto/chat --}}
           @auth
             <a href="{{ route('chat.show', $property) }}"
@@ -662,6 +691,30 @@
 {{-- FOOTER --}}
 <x-main-footer />
 
+{{-- Modal genérico para feedback --}}
+<div id="feedbackModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="flex items-start gap-3">
+      <div id="feedbackIconWrapper" class="mt-1">
+        <span id="feedbackIcon" class="w-10 h-10 inline-flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+          <i class="fa-solid fa-circle-info"></i>
+        </span>
+      </div>
+      <div class="flex-1">
+        <h3 id="feedbackTitle" class="text-lg font-semibold text-gray-900">Aviso</h3>
+        <p id="feedbackMessage" class="text-gray-700 mt-1 leading-relaxed">Mensaje.</p>
+      </div>
+    </div>
+    <div class="flex justify-end mt-6">
+      <button type="button"
+              onclick="closeFeedbackModal()"
+              class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700">
+        Entendido
+      </button>
+    </div>
+  </div>
+</div>
+
 @php
   /* ===== Rangos NO disponibles (checkout libre) ===== */
   $blocked = [];
@@ -686,6 +739,33 @@
 @endphp
 
 <script>
+  // ===== Modal de feedback (sin alertas nativas) =====
+  const feedbackModal = document.getElementById('feedbackModal');
+  const feedbackTitle = document.getElementById('feedbackTitle');
+  const feedbackMessage = document.getElementById('feedbackMessage');
+  const feedbackIcon = document.getElementById('feedbackIcon');
+
+  function showFeedbackModal(message, { title = 'Aviso', variant = 'info' } = {}) {
+    const styles = {
+      success: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: 'fa-circle-check' },
+      error:   { bg: 'bg-red-100',     text: 'text-red-700',     icon: 'fa-circle-xmark' },
+      info:    { bg: 'bg-blue-100',    text: 'text-blue-700',    icon: 'fa-circle-info' },
+    };
+
+    const current = styles[variant] || styles.info;
+    feedbackTitle.textContent = title;
+    feedbackMessage.textContent = message;
+
+    feedbackIcon.className = `w-10 h-10 inline-flex items-center justify-center rounded-full ${current.bg} ${current.text}`;
+    feedbackIcon.querySelector('i').className = `fa-solid ${current.icon}`;
+
+    feedbackModal.style.display = 'flex';
+  }
+
+  function closeFeedbackModal() {
+    feedbackModal.style.display = 'none';
+  }
+
   // ================== Variables base ==================
   const propertyLocation = { lat: {{ $property->latitude }}, lng: {{ $property->longitude }} };
   const propertyId    = {{ $property->id }};
@@ -715,15 +795,24 @@
   function closeModal(){ document.getElementById('visitModal').style.display='none'; }
   function scheduleVisit(){
     const visitDate=document.getElementById('visitDateTime').value;
-    if(!visitDate){ alert('Por favor selecciona una fecha y hora'); return; }
+    if(!visitDate){
+      showFeedbackModal('Por favor selecciona una fecha y hora para agendar tu visita.', { variant: 'info', title: 'Selecciona fecha' });
+      return;
+    }
     fetch('/visits',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
       body:JSON.stringify({ property_id:propertyId, agent_id:{{ $property->user_id }}, visit_date:visitDate })
     }).then(r=>r.json()).then(data=>{
-      if(data.success){ alert('Visita agendada'); closeModal(); }
-      else{ alert('Error: '+data.message); }
-    }).catch(()=>alert('Error al agendar la visita'));
+      if(data.success){
+        showFeedbackModal('Tu visita ha sido agendada correctamente.', { title: 'Visita agendada', variant: 'success' });
+        closeModal();
+      }
+      else{
+        const msg = data.message || 'No pudimos agendar tu visita. Inténtalo de nuevo.';
+        showFeedbackModal(msg, { title: 'No se pudo agendar', variant: 'error' });
+      }
+    }).catch(()=>showFeedbackModal('Error al agendar la visita. Intenta nuevamente en unos minutos.', { title: 'Error de red', variant: 'error' }));
   }
 
   // ================== RESERVA (Flatpickr) ==================
@@ -822,7 +911,8 @@
   // Checkout al preview
   window.goToCheckout=function(){
     if(!selectedRange.start || !selectedRange.end){
-      alert('Selecciona fechas de entrada y salida'); return;
+      showFeedbackModal('Selecciona fechas de entrada y salida para continuar con tu reserva.', { variant: 'info', title: 'Faltan fechas' });
+      return;
     }
     const fmt=d=>d.toISOString().split('T')[0];
     document.getElementById('checkout_start_date').value=fmt(selectedRange.start);
@@ -849,9 +939,10 @@
   window.addEventListener('click',(e)=>{
     if(e.target===document.getElementById('visitModal')) closeModal();
     if(e.target===document.getElementById('reservationModal')) closeReservationModal();
+    if(e.target===feedbackModal) closeFeedbackModal();
   });
   window.addEventListener('keydown',(e)=>{
-    if(e.key==='Escape'){ closeModal(); closeReservationModal(); }
+    if(e.key==='Escape'){ closeModal(); closeReservationModal(); closeFeedbackModal(); }
   });
 </script>
 

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Property;
 use App\Models\PropertyReservation;
-use App\Models\SystemCommission;
+use App\Services\CommissionService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -24,6 +24,12 @@ class ReservationController extends Controller
 
         $property = Property::with('images')->findOrFail($data['property_id']);
 
+        if ($property->user_id === $request->user()->id) {
+            return redirect()
+                ->route('properties.show', $property)
+                ->with('error', 'No puedes reservar tu propia propiedad.');
+        }
+
         $start  = Carbon::parse($data['start_date'])->startOfDay();
         $end    = Carbon::parse($data['end_date'])->startOfDay();
         $nights = max(1, $start->diffInDays($end));
@@ -40,36 +46,12 @@ class ReservationController extends Controller
         //  agente dueño de la propiedad
         $agentId = $property->user_id;
 
-        //  comisión específica del agente
-        $agentCommissionConf = SystemCommission::query()
-            ->where('user_id', $agentId)
-            ->whereIn('listing_type', [$listingType, 'both'])
-            ->orderByDesc('effective_from')
-            ->first();
-
-        //  comisión general del sistema
-        $globalCommissionConf = SystemCommission::query()
-            ->whereNull('user_id')
-            ->whereIn('listing_type', [$listingType, 'both'])
-            ->orderByDesc('effective_from')
-            ->first();
-
-        //  resultado final
-        $commissionConf = $agentCommissionConf ?? $globalCommissionConf;
-        $commissionPercent = $commissionConf ? (float) $commissionConf->percentage : 0.0;
+        $commissionPercent = app(CommissionService::class)->rateFor($agentId, $listingType) ?? 0.0;
 
         //  Cálculo de comisiones
         $agentCommission = round($subtotal * ($commissionPercent / 100), 2);
         $agentEarnings   = round($subtotal - $agentCommission, 2);
         $platformEarnings = $agentCommission;
-        // si el usuario escribió mensaje, se guarda temporalmente
-        if ($request->filled('host_message')) {
-            $reservation->meta = array_merge((array)$reservation->meta, [
-                'host_message' => $request->host_message
-            ]);
-            $reservation->save();
-        }
-
         // Guardar en DB
         $reservation = PropertyReservation::updateOrCreate(
             [
@@ -88,6 +70,14 @@ class ReservationController extends Controller
                 'commission_percentage' => $commissionPercent,
             ]
         );
+
+        // si el usuario escribió mensaje, se guarda temporalmente
+        if ($request->filled('host_message')) {
+            $reservation->meta = array_merge((array) $reservation->meta, [
+                'host_message' => $request->host_message,
+            ]);
+            $reservation->save();
+        }
 
         session(['current_reservation_id' => $reservation->id]);
 
