@@ -380,22 +380,50 @@
   <section class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
     {{-- Columna izquierda --}}
     <div class="md:col-span-2 space-y-6">
-      {{-- Card de features --}}
-      <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 px-5 py-4 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-200">
-        @if($property->bedrooms)
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800">
-            <i class="fa-solid fa-bed text-gray-500 dark:text-gray-400"></i>
-            <span class="font-medium">{{ $property->bedrooms }} hab.</span>
-          </span>
-        @endif
 
-        @if($property->bathrooms)
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800">
+@php
+  $types = [
+    'house'      => 'Casa',
+    'apartment'  => 'Departamento',
+    'office'     => 'Oficina',
+    'land'       => 'Terreno',
+  ];
+
+  $typeLabel = $types[$property->type] ?? ucfirst($property->type);
+@endphp
+
+{{-- Card de features --}}
+<div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 px-5 py-4 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-200">
+
+    {{-- Tipo de propiedad --}}
+    @if($property->type)
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800">
+            <i class="fa-solid fa-house text-gray-500 dark:text-gray-400"></i>
+            <span class="font-medium">{{ $typeLabel }}</span>
+        </span>
+    @endif
+
+    {{-- Habitaciones --}}
+    @if($property->bedrooms)
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800">
+            <i class="fa-solid fa-bed text-gray-500 dark:text-gray-400"></i>
+            <span class="font-medium">
+                {{ $property->bedrooms }} hab.
+            </span>
+        </span>
+    @endif
+
+    {{-- Baños --}}
+    @if($property->bathrooms)
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-gray-800">
             <i class="fa-solid fa-bath text-gray-500 dark:text-gray-400"></i>
-            <span class="font-medium">{{ $property->bathrooms }} baños</span>
-          </span>
-        @endif
-      </div>
+            <span class="font-medium">
+                {{ $property->bathrooms }} {{ $property->bathrooms == 1 ? 'baño' : 'baños' }}
+            </span>
+        </span>
+    @endif
+
+</div>
 
       {{-- Descripción + amenidades + reseñas --}}
       <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 md:p-6 space-y-6">
