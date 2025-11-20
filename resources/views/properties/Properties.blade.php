@@ -1,11 +1,36 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Propiedades - SIN BECA NO HAY RENTA</title>
+
+    {{-- Anti-flash: aplica tema guardado ANTES de pintar la página --}}
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('theme') === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    {{-- Tailwind --}}
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+    </script>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         /* Mantenemos #map al 80vh para que ocupe gran parte de la pantalla */
         #map { height: 80vh; width: 100%; }
@@ -13,8 +38,8 @@
         /* Estilos para el marcador de precio */
         .price-marker {
             background-color: white;
-            color: #222;
-            border: 1px solid #ccc;
+            color: #111827;
+            border: 1px solid #d1d5db;
             border-radius: 16px;
             padding: 2px 8px;
             font-size: 12px;
@@ -24,6 +49,13 @@
             transition: transform 0.2s;
         }
         .price-marker:hover { transform: scale(1.1); }
+
+        .dark .price-marker {
+            background-color: #020617; /* slate-950 */
+            color: #e5e7eb;           /* gray-200 */
+            border-color: #374151;    /* gray-700 */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
 
         /* Ocultar POIs */
         .gm-style .gm-style-iw,
@@ -60,6 +92,11 @@
             transform: translateY(0) scale(1);
         }
 
+        .dark .modal-content {
+            background: #020617;   /* slate-950 */
+            color: #e5e7eb;
+        }
+
         /* Contenedor de imagen principal */
         .carousel-container {
             overflow:hidden;
@@ -70,6 +107,9 @@
             align-items:center;
             justify-content:center;
         }
+        .dark .carousel-container {
+            background:#020617;
+        }
 
         /* Imagen dentro del modal */
         .carousel-item {
@@ -78,23 +118,67 @@
             object-fit:cover;
             border-radius:inherit;
         }
+
+        /* ==== Transición global de tema + animación botón ==== */
+        html.theme-fade * {
+            transition:
+                background-color .35s ease,
+                color .35s ease,
+                border-color .35s ease,
+                fill .35s ease;
+        }
+
+        #theme-toggle {
+            transition: background-color .25s ease,
+                        color .25s ease,
+                        transform .25s ease,
+                        box-shadow .25s ease;
+        }
+
+        #theme-toggle.theme-bounce {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(0,0,0,.18);
+        }
+
+        #theme-toggle-icon {
+            transition: transform .35s ease, opacity .2s ease;
+        }
+
+        #theme-toggle-icon.theme-spin {
+            transform: rotate(180deg);
+        }
+
+        .dark footer {
+            background-color: #020617 !important;
+        }
     </style>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
 </head>
 
-<body class="min-h-screen flex flex-col bg-gray-50">
+<body class="min-h-screen flex flex-col bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-300">
     {{-- Encabezado global --}}
     <x-main-header />
+
+    {{-- Botón Tema (mismo estilo que en home) --}}
+    <button id="theme-toggle"
+            class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg
+                   bg-white text-gray-800 hover:bg-gray-100
+                   dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            aria-label="Cambiar tema">
+        <i id="theme-toggle-icon" class="fa-solid"></i>
+        <span class="text-sm font-medium"></span>
+    </button>
 
     {{-- Contenido Principal --}}
     <main class="relative flex-grow">
         {{-- Filtros flotantes a la izquierda --}}
         <aside id="map-filter-panel"
-        class="fixed top-24 left-[8rem] z-40 w-72 max-w-[90vw]">
-            <div class="bg-white/95 backdrop-blur-sm shadow-xl rounded-2xl p-4 space-y-4 border border-gray-100">
+               class="fixed top-24 left-[8rem] z-40 w-72 max-w-[90vw]">
+            <div class="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl rounded-2xl p-4 space-y-4 border border-gray-100 dark:border-gray-700">
 
                 <div class="flex items-center justify-between mb-1">
-                    <h2 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                         <i class="fa-solid fa-filter text-blue-500"></i>
                         <span>Filtros del mapa</span>
                     </h2>
@@ -106,26 +190,26 @@
 
                 {{-- Filtro de precio --}}
                 <div class="space-y-2">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio</span>
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide">Precio</span>
 
                     <div class="relative w-full">
                         <button type="button" id="price-filter-button"
-                                class="w-full text-left border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400">
+                                class="w-full text-left border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-gray-100">
                             <span>Precio</span>
                         </button>
 
                         <div id="price-dropdown"
-                             class="hidden absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
-                            <p class="font-semibold text-gray-800 mb-3 text-sm">Rango de Precio</p>
+                             class="hidden absolute top-full mt-2 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 p-4">
+                            <p class="font-semibold text-gray-800 dark:text-gray-100 mb-3 text-sm">Rango de Precio</p>
 
                             <div id="price-slider" class="mb-4 mx-1"></div>
 
-                            <div class="flex justify-between items-center text-xs text-gray-700">
-                                <div class="flex items-center gap-1 border rounded-md px-2 py-1 bg-gray-50">
+                            <div class="flex justify-between items-center text-xs text-gray-700 dark:text-gray-200">
+                                <div class="flex items-center gap-1 border rounded-md px-2 py-1 bg-gray-50 dark:bg-gray-800">
                                     $ <span id="slider-min-value"></span>
                                 </div>
                                 <div class="text-gray-400">-</div>
-                                <div class="flex items-center gap-1 border rounded-md px-2 py-1 bg-gray-50">
+                                <div class="flex items-center gap-1 border rounded-md px-2 py-1 bg-gray-50 dark:bg-gray-800">
                                     $ <span id="slider-max-value"></span>
                                 </div>
                             </div>
@@ -145,11 +229,11 @@
 
                 {{-- Tipo de propiedad --}}
                 <div class="space-y-1">
-                    <label for="listingType" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <label for="listingType" class="block text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide">
                         Tipo de propiedad
                     </label>
                     <select id="listingType"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-gray-100">
                         <option value="rent">Renta</option>
                         <option value="sale">Venta</option>
                     </select>
@@ -164,10 +248,10 @@
             </div>
         </aside>
 
-       {{-- Mapa con margen/padding lateral --}}
-    <section class="w-full h-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-8">
-        <div id="map" class="rounded-2xl overflow-hidden shadow-md"></div>
-    </section>
+        {{-- Mapa con margen/padding lateral --}}
+        <section class="w-full h-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-8">
+            <div id="map" class="rounded-2xl overflow-hidden shadow-md bg-gray-200 dark:bg-gray-900"></div>
+        </section>
     </main>
 
     {{-- Modal de Propiedad (rediseñado) --}}
@@ -175,14 +259,14 @@
         <div class="modal-content">
             {{-- Botón cerrar --}}
             <button onclick="closePropertyModal()"
-                    class="absolute right-3 top-3 text-gray-400 hover:text-gray-700">
+                    class="absolute right-3 top-3 text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                 <i class="fas fa-times text-sm"></i>
             </button>
 
             {{-- Corazón flotante (solo diseño, sin lógica) --}}
             <button type="button"
-                    class="absolute right-12 top-3 bg-white/95 rounded-full p-2 shadow hover:bg-gray-100">
-                <i class="fa-regular fa-heart text-gray-700 text-sm"></i>
+                    class="absolute right-12 top-3 bg-white/95 dark:bg-gray-800/95 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700">
+                <i class="fa-regular fa-heart text-gray-700 dark:text-gray-100 text-sm"></i>
             </button>
 
             <div class="flex flex-col md:flex-row gap-6 mt-4 md:mt-2">
@@ -318,10 +402,10 @@
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700">
                         ${typeLabel}
                     </span>
-                    <h3 class="text-xl font-semibold text-gray-900 leading-snug line-clamp-2">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-snug line-clamp-2">
                         ${prop.title}
                     </h3>
-                    <p class="text-sm text-gray-600 line-clamp-2">
+                    <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                         ${locationText}
                     </p>
                 </div>
@@ -491,37 +575,90 @@
         initSlider();
     });
     </script>
-<script>
-  (function () {
-    const searchToggle = document.getElementById('search-toggle');
-    const filterPanel  = document.getElementById('map-filter-panel');
-    if (!searchToggle || !filterPanel) return;
 
-    function syncByWidth() {
-      // Desktop: siempre visible
-      if (window.innerWidth >= 768) {
-        filterPanel.classList.remove('hidden');
-      } else {
-        // Móvil: se esconde por defecto
-        filterPanel.classList.add('hidden');
-      }
-    }
+    <script>
+      (function () {
+        const searchToggle = document.getElementById('search-toggle');
+        const filterPanel  = document.getElementById('map-filter-panel');
+        if (!searchToggle || !filterPanel) return;
 
-    syncByWidth();
+        function syncByWidth() {
+          // Desktop: siempre visible
+          if (window.innerWidth >= 768) {
+            filterPanel.classList.remove('hidden');
+          } else {
+            // Móvil: se esconde por defecto
+            filterPanel.classList.add('hidden');
+          }
+        }
 
-    // Click en la lupa → mostrar/ocultar filtros en móvil
-    searchToggle.addEventListener('click', () => {
-      if (window.innerWidth < 768) {
-        filterPanel.classList.toggle('hidden');
-      }
-    });
+        syncByWidth();
 
-    window.addEventListener('resize', syncByWidth);
-  })();
-</script>
+        // Click en la lupa → mostrar/ocultar filtros en móvil
+        searchToggle.addEventListener('click', () => {
+          if (window.innerWidth < 768) {
+            filterPanel.classList.toggle('hidden');
+          }
+        });
+
+        window.addEventListener('resize', syncByWidth);
+      })();
+    </script>
+
+    {{-- Lógica del botón de tema (igual que en home) --}}
+    <script>
+        (function () {
+            const html  = document.documentElement;
+            const btn   = document.getElementById('theme-toggle');
+            const icon  = document.getElementById('theme-toggle-icon');
+            const label = btn?.querySelector('span');
+
+            function setIconAndLabel() {
+                const isDark = html.classList.contains('dark');
+                if (!icon || !label) return;
+
+                icon.classList.remove('fa-sun', 'fa-moon');
+                icon.classList.add(isDark ? 'fa-moon' : 'fa-sun');
+                label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+            }
+
+            function startPageFade() {
+                html.classList.add('theme-fade');
+                setTimeout(() => html.classList.remove('theme-fade'), 400);
+            }
+
+            function animateButton() {
+                if (!btn || !icon) return;
+                btn.classList.add('theme-bounce');
+                icon.classList.add('theme-spin');
+                setTimeout(() => {
+                    btn.classList.remove('theme-bounce');
+                    icon.classList.remove('theme-spin');
+                }, 350);
+            }
+
+            function apply(mode) {
+                const isDark = mode === 'dark';
+                startPageFade();
+                html.classList.toggle('dark', isDark);
+                try {
+                    localStorage.setItem('theme', mode);
+                } catch (e) {}
+                setIconAndLabel();
+                animateButton();
+            }
+
+            // Estado inicial de icono/texto según clase actual del <html>
+            setIconAndLabel();
+
+            btn?.addEventListener('click', () => {
+                const next = html.classList.contains('dark') ? 'light' : 'dark';
+                apply(next);
+            });
+        })();
+    </script>
 
     <!-- FOOTER -->
     <x-main-footer />
-
 </body>
 </html>
