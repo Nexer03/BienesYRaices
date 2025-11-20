@@ -38,6 +38,7 @@ class NewPropertyMatchNotification extends Notification
         return [
             'property_id' => $this->property->id,
             'title' => $this->property->title,
+            'property_title' => $this->property->title,
             'city' => $this->property->city,
             'price' => $this->property->price,
             'listing_type' => $this->property->listing_type,
