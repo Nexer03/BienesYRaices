@@ -97,7 +97,8 @@
               <td class="px-6 py-3">{{ $property->user->name ?? 'N/A' }}</td>
               <td class="px-6 py-3">${{ number_format($property->price, 2) }}</td>
               <td class="px-6 py-3">{{ $property->listing_type == 'rent' ? 'Renta' : 'Venta' }}</td>
-              <td class="px-6 py-3">{{ ucfirst($property->status) }}</td>
+              <td class="px-6 py-3">{{ $property->status_label }}</td>
+
               <td class="px-6 py-3">
                 <button type="button"
                         onclick="openAdminDeletePropertyModal(this)"
