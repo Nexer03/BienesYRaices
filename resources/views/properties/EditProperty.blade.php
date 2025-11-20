@@ -491,13 +491,16 @@
 
   /* ---------- Mostrar/ocultar amenidades por propósito ---------- */
   function toggleAmenities() {
-    const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
-    document.querySelectorAll('.amenity-category').forEach(cat => {
-      const show = cat.dataset.type === selectedType;
-      cat.style.display = show ? 'block' : 'none';
-      if (!show) cat.querySelectorAll('input[type="checkbox"]').forEach(ch => ch.checked = false);
-    });
-  }
+  const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
+
+  document.querySelectorAll('.amenity-category').forEach(cat => {
+    const show = cat.dataset.type === selectedType;
+    cat.style.display = show ? 'block' : 'none';
+  });
+}
+toggleAmenities();
+document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', toggleAmenities));
+
   toggleAmenities();
   document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', toggleAmenities));
   </script>
