@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable
 {
-    use Notifiable;
     use HasFactory, Notifiable;
 
     protected $fillable = [
@@ -22,18 +21,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(Property::class);
     }
+
     public function preferences()
-{
-    // Define la relación uno a uno con UserPreference
-    return $this->hasOne(UserPreference::class);
-}
+    {
+        return $this->hasOne(UserPreference::class);
+    }
 
     public function favoriteProperties()
     {
         return $this->belongsToMany(\App\Models\Property::class, 'favorites')->withTimestamps();
     }
-
-
 
     public function visitsAsClient()
     {
@@ -65,4 +62,18 @@ class User extends Authenticatable
         return $this->hasMany(Visit::class, 'client_id');
     }
 
+    // Traducción de roles
+    public function getRoleLabelAttribute()
+    {
+        $map = [
+            'admin'          => 'Administrador',
+            'superadmin'     => 'Super Administrador',
+            'agent'          => 'Agente',
+            'client'         => 'Cliente',
+            'pending_agent'  => 'Solicitante a Agente',
+            'banned'         => 'Suspendido',
+        ];
+
+        return $map[$this->role] ?? ucfirst($this->role);
+    }
 }

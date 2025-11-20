@@ -194,7 +194,7 @@
                 <div class="md:col-span-2">
                   <label for="price" id="price-label" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Precio por día (MXN)</label>
                   <div class="mt-1 relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                    <span class="absolute left-1 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
                     <input type="number" id="price" name="price" step="any" required max="99999999.99" class="pl-7">
                   </div>
                 </div>

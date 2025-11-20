@@ -194,8 +194,10 @@
     </button>
 
     {{-- Filtro principal --}}
-    <section id="filter-panel"
-             class="bg-white dark:bg-gray-900 dark:text-gray-100 shadow-md w-full py-6 md:translate-y-0 transform -translate-y-full transition-transform duration-300 fixed md:static top-16 md:top-auto left-0 z-40 md:z-0">
+<section id="filter-panel"
+         class="bg-white dark:bg-gray-900 dark:text-gray-100 shadow-md w-full py-6
+                fixed md:static top-16 left-0 z-[999]">
+
         <div class="max-w-6xl mx-auto px-6">
             <form id="property-filter-form" method="GET" action="{{ route('home') }}"
                   class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 text-center">
