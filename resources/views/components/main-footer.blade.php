@@ -32,9 +32,9 @@
         <div>
             <h3 class="text-white text-lg font-semibold mb-4 border-b border-gray-700 pb-2">Contacto</h3>
             <ul class="space-y-3 text-sm">
-                <li class="flex items-center"><i class="fas fa-envelope text-blue-400 mr-2"></i> soporte@sinbeca.com</li>
-                <li class="flex items-center"><i class="fas fa-phone text-blue-400 mr-2"></i> +1 (555) 123-4567</li>
-                <li class="flex items-center"><i class="fas fa-map-marker-alt text-blue-400 mr-2"></i> Ciudad, País</li>
+                <li class="flex items-center"><i class="fas fa-envelope text-blue-400 mr-2"></i> ti1901032@academica.utbb.edu.mx</li>
+                <li class="flex items-center"><i class="fas fa-phone text-blue-400 mr-2"></i> +52 (322) 108-8514</li>
+                <li class="flex items-center"><i class="fas fa-map-marker-alt text-blue-400 mr-2"></i> Universidad Tecnologica de Bahia de Banderas, Mexico</li>
             </ul>
         </div>
     </div>
