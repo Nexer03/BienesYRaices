@@ -15,6 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewPropertyMatchNotification;
 use App\Support\NotificationPresenter;
+use Illuminate\Support\Collection;
 
 class PropertyController extends Controller
 {
@@ -336,73 +337,133 @@ class PropertyController extends Controller
 
         $propertyAmenities = $property->amenities->pluck('id')->map(fn ($id) => (string) $id);
 
-        $matchingUsers = $preferences->filter(function (UserPreference $preference) use ($property, $propertyAmenities) {
-            $user = $preference->user;
-            if (!$user) {
-                return false;
-            }
-
-            if ($preference->preferred_listing_type && $preference->preferred_listing_type !== $property->listing_type) {
-                return false;
-            }
-
-            if ($preference->min_price && $property->price < $preference->min_price) {
-                return false;
-            }
-
-            if ($preference->max_price && $property->price > $preference->max_price) {
-                return false;
-            }
-
-            if ($preference->pref_latitude && $preference->pref_longitude && $preference->pref_radius && $property->latitude && $property->longitude) {
-                $distanceKm = $this->distanceBetween(
-                    (float) $preference->pref_latitude,
-                    (float) $preference->pref_longitude,
-                    (float) $property->latitude,
-                    (float) $property->longitude,
-                );
-
-                $radiusKm = ((float) $preference->pref_radius) / 1000; // radius stored in meters
-                if ($distanceKm > $radiusKm) {
-                    return false;
+        $matches = $preferences
+            ->map(function (UserPreference $preference) use ($property, $propertyAmenities) {
+                $user = $preference->user;
+                if (!$user) {
+                    return null;
                 }
-            } elseif ($preference->preferred_location && $property->city) {
-                $preferredCity = mb_strtolower($preference->preferred_location);
-                $propertyCity = mb_strtolower($property->city);
-                if (!str_contains($propertyCity, $preferredCity)) {
-                    return false;
+
+                $matchScore = $this->calculateMatchScore($preference, $property, $propertyAmenities);
+
+                if ($matchScore === null) {
+                    return null;
                 }
-            }
 
-            if ($preference->min_bedrooms && $property->bedrooms && $property->bedrooms < $preference->min_bedrooms) {
-                return false;
-            }
-
-            if ($preference->min_bathrooms && $property->bathrooms && $property->bathrooms < $preference->min_bathrooms) {
-                return false;
-            }
-
-            if ($preference->preferred_amenities) {
-                $preferredAmenities = collect(explode(',', $preference->preferred_amenities))
-                    ->map(fn ($id) => trim((string) $id))
-                    ->filter();
-
-                if ($preferredAmenities->isNotEmpty() && $preferredAmenities->diff($propertyAmenities)->isNotEmpty()) {
-                    return false;
-                }
-            }
-
-            return true;
-        })
-            ->map(fn (UserPreference $preference) => $preference->user)
+                return ['user' => $user, 'score' => $matchScore];
+            })
             ->filter()
-            ->unique('id');
+            ->unique(fn (array $match) => $match['user']->id);
 
-        if ($matchingUsers->isEmpty()) {
+        if ($matches->isEmpty()) {
             return;
         }
 
-        Notification::send($matchingUsers, new NewPropertyMatchNotification($property));
+        $matches->each(function (array $match) use ($property) {
+            $match['user']->notify(new NewPropertyMatchNotification($property, $match['score']));
+        });
+    }
+
+    private function calculateMatchScore(UserPreference $preference, Property $property, Collection $propertyAmenities): ?int
+    {
+        $components = [];
+
+        if ($preference->preferred_listing_type) {
+            if ($preference->preferred_listing_type !== $property->listing_type) {
+                return null;
+            }
+
+            $components[] = 1.0;
+        }
+
+        if ($preference->min_price) {
+            if ($property->price < $preference->min_price) {
+                return null;
+            }
+        }
+
+        if ($preference->max_price) {
+            if ($property->price > $preference->max_price) {
+                return null;
+            }
+        }
+
+        if ($preference->min_price || $preference->max_price) {
+            $components[] = $this->priceCloseness($property->price, $preference->min_price, $preference->max_price);
+        }
+
+        if ($preference->pref_latitude && $preference->pref_longitude && $preference->pref_radius && $property->latitude && $property->longitude) {
+            $distanceKm = $this->distanceBetween(
+                (float) $preference->pref_latitude,
+                (float) $preference->pref_longitude,
+                (float) $property->latitude,
+                (float) $property->longitude,
+            );
+
+            $radiusKm = ((float) $preference->pref_radius) / 1000; // radius stored in meters
+            if ($distanceKm > $radiusKm) {
+                return null;
+            }
+
+            $components[] = max(0.0, 1.0 - ($distanceKm / $radiusKm));
+        } elseif ($preference->preferred_location && $property->city) {
+            $preferredCity = mb_strtolower($preference->preferred_location);
+            $propertyCity = mb_strtolower($property->city);
+            if (!str_contains($propertyCity, $preferredCity)) {
+                return null;
+            }
+
+            $components[] = 1.0;
+        }
+
+        if ($preference->min_bedrooms) {
+            if (!$property->bedrooms || $property->bedrooms < $preference->min_bedrooms) {
+                return null;
+            }
+
+            $components[] = 1.0;
+        }
+
+        if ($preference->min_bathrooms) {
+            if (!$property->bathrooms || $property->bathrooms < $preference->min_bathrooms) {
+                return null;
+            }
+
+            $components[] = 1.0;
+        }
+
+        if ($preference->preferred_amenities) {
+            $preferredAmenities = collect(explode(',', $preference->preferred_amenities))
+                ->map(fn ($id) => trim((string) $id))
+                ->filter();
+
+            if ($preferredAmenities->isNotEmpty()) {
+                if ($preferredAmenities->diff($propertyAmenities)->isNotEmpty()) {
+                    return null;
+                }
+
+                $components[] = 1.0;
+            }
+        }
+
+        if (empty($components)) {
+            return 100;
+        }
+
+        $score = array_sum($components) / count($components) * 100;
+
+        return (int) round($score);
+    }
+
+    private function priceCloseness(float $price, ?float $minPrice, ?float $maxPrice): float
+    {
+        if ($minPrice && $maxPrice && $maxPrice > $minPrice) {
+            $midpoint = ($minPrice + $maxPrice) / 2;
+            $halfRange = ($maxPrice - $minPrice) / 2;
+            return max(0.0, 1.0 - (abs($price - $midpoint) / max($halfRange, 1)));
+        }
+
+        return 1.0;
     }
 
     private function distanceBetween(float $lat1, float $lng1, float $lat2, float $lng2): float

@@ -15,6 +15,10 @@ class EventServiceProvider extends ServiceProvider
             \App\Listeners\NotifyAdminsOfReservationPaid::class,
         ],
 
+        \App\Events\PropertyPublishedOrUpdated::class => [
+            \App\Listeners\DispatchAlertsForProperty::class,
+        ],
+
         // Puedes agregar más eventos si lo necesitas
     ];
 
