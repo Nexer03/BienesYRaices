@@ -129,7 +129,7 @@
                     Puedes configurar tu navegador para rechazar cookies o recibir avisos antes de guardarlas. Algunas funciones pueden verse afectadas si las desactivas.
                 </p>
                 <p>
-                    Al continuar navegando aceptas el uso de cookies según esta política. Para más información o ajustar tu consentimiento, escríbenos a soporte@sinbeca.com.
+                    Al continuar navegando aceptas el uso de cookies según esta política. Para más información o ajustar tu consentimiento, escríbenos a ti1901032@academica.utbb.edu.mx.
                 </p>
             </div>
             <div class="flex justify-end gap-3 px-6 pb-6">
