@@ -24,6 +24,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatReservationController;
 use App\Http\Controllers\ChatVisitController;
+use App\Http\Controllers\AlertController;
 
 
 
@@ -51,6 +52,9 @@ Route::get('/properties-map', function () {
     $properties = Property::with('images')->get();
     return view('properties.Properties', ['properties' => $properties]);
 })->name('properties.map');
+
+Route::get('/alerts/{alert}/{channel}/unsubscribe', [AlertController::class, 'unsubscribe'])
+    ->name('alerts.unsubscribe');
 
 // Formulario para convertirse en agente
 Route::get('/agent-register', function () {
@@ -168,6 +172,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('preferences.edit');
     Route::put('/preferences', [UserPreferenceController::class, 'update'])
         ->name('preferences.update');
+
+    Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
+    Route::post('/alerts', [AlertController::class, 'store'])->name('alerts.store');
+    Route::patch('/alerts/{alert}', [AlertController::class, 'update'])->name('alerts.update');
+    Route::patch('/alerts/{alert}/pause', [AlertController::class, 'pause'])->name('alerts.pause');
+    Route::patch('/alerts/{alert}/resume', [AlertController::class, 'resume'])->name('alerts.resume');
+    Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
+    Route::get('/alerts/metrics', [AlertController::class, 'metrics'])->name('alerts.metrics');
 
     // Favoritos del usuario logeado
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');

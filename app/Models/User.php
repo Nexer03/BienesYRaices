@@ -50,6 +50,11 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
+    public function alertCriteria()
+    {
+        return $this->hasMany(AlertCriteria::class);
+    }
+
     public function agentVisits()
     {
         return $this->hasMany(Visit::class, 'agent_id');

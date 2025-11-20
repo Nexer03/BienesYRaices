@@ -106,6 +106,7 @@ class NotificationPresenter
         $title = $data['property_title'] ?? $data['title'] ?? null;
         $city = $data['city'] ?? null;
         $price = $data['price'] ?? null;
+        $matchScore = $data['match_score'] ?? null;
 
         $parts[] = $title
             ? "Hemos encontrado una propiedad que podría interesarte: \"{$title}\""
@@ -117,6 +118,10 @@ class NotificationPresenter
 
         if ($price) {
             $parts[] = 'con un precio de $' . number_format((float) $price, 2);
+        }
+
+        if ($matchScore !== null) {
+            $parts[] = "Nivel de coincidencia: {$matchScore}%";
         }
 
         return implode(' ', $parts) . '.';
