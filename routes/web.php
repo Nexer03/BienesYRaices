@@ -28,6 +28,7 @@ use App\Http\Controllers\AlertController;
 
 
 
+
 /*
 |--------------------------------------------------------------------------
 | Rutas Públicas
@@ -213,7 +214,7 @@ Route::middleware(['auth', 'agent'])->group(function () {
     Route::prefix('properties')->group(function () {
 
         Route::get('/', [PropertyController::class, 'index'])->name('properties.index');
-        Route::get('/my', [PropertyController::class, 'myProperties'])->name('properties.my');
+        Route::get('my', [PropertyController::class, 'myProperties'])->name('properties.my');
         Route::get('/create', [PropertyController::class, 'create'])->name('properties.create');
         Route::post('/', [PropertyController::class, 'store'])->name('properties.store');
         Route::get('/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
@@ -227,6 +228,10 @@ Route::middleware(['auth', 'agent'])->group(function () {
         // ⬇ CAMBIA SOLO ESTA LÍNEA
         Route::get('agent/visits/feed', [VisitController::class, 'feed'])
             ->name('properties.agent.visits.feed'); // nombre único, ya no choca
+
+        Route::get('/{property}/sale-redirect', [PropertyController::class, 'redirectToSaleCommission'])
+            ->name('properties.sale.redirect');
+
     });
 
 

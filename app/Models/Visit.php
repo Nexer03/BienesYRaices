@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Visit extends Model
 {
+    public const STATUS_PENDING   = 'pending';
+    public const STATUS_CONFIRMED = 'confirmed';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_CANCELLED = 'cancelled';
     protected $fillable = [
         'client_id', 'agent_id', 'property_id', 'visit_date', 'status', 'notes',
     ];
@@ -42,5 +46,5 @@ class Visit extends Model
             ->where('visit_date', '>=', $start->copy()->subMinutes($durationMinutes))
             ->exists();
     }
-    
+
 }

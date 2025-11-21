@@ -13,6 +13,8 @@ class AlertCriteria extends Model
 {
     use HasFactory;
 
+    protected $table = 'alert_criteria';
+
     protected $fillable = [
         'user_id',
         'name',

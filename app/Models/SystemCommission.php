@@ -61,4 +61,14 @@ class SystemCommission extends Model
             ->orderByDesc('effective_from')
             ->first();
     }
+
+    public static function currentCommission(): ?self
+    {
+        // Regresa la comisión más reciente creada en el sistema.
+        // Si no hay registros, regresa null.
+        return self::query()
+            ->orderByDesc('created_at')
+            ->first();
+    }
+
 }

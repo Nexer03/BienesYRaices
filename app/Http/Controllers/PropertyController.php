@@ -4,18 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Property;
 use App\Models\AmenityCategory;
-use App\Models\PropertyImage; // <-- Asegúrate de importar este modelo
-use App\Models\UserPreference;
+use App\Models\PropertyImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // <-- Y este para borrar archivos
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Arr;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\NewPropertyMatchNotification;
 use App\Support\NotificationPresenter;
-use Illuminate\Support\Collection;
 
 class PropertyController extends Controller
 {
@@ -30,9 +26,9 @@ class PropertyController extends Controller
         $unreadNotificationCount = 0;
 
         $rentMinRange = 100;
-        $rentMaxRange = 10000; // Rango para Renta (0 - 10k)
-        $saleMinRange = 500000; // Rango para Venta (500k - 10M)
-        $saleMaxRange = 10000000;
+        $rentMaxRange = 10000;
+        $saleMinRange = 500000;
+        $saleMaxRange = 20000000;
 
         // --- 1. Filtros de búsqueda ---
         $query = Property::with('images')->whereNotNull('city');
@@ -86,23 +82,36 @@ class PropertyController extends Controller
                     $lng = $userPreferences->pref_longitude;
                     $radius = $userPreferences->pref_radius / 1000; // km
 
-                    $prefQuery->selectRaw("*, ( 6371 * acos( cos( radians(?) ) *
+                    $prefQuery->selectRaw(
+                        "*, ( 6371 * acos( cos( radians(?) ) *
                                        cos( radians( latitude ) )
                                        * cos( radians( longitude ) - radians(?)
                                        ) + sin( radians(?) ) *
                                        sin( radians( latitude ) ) )
-                                     ) AS distance", [$lat, $lng, $lat])
-                              ->having("distance", "<", $radius)
-                              ->orderBy("distance", 'asc');
+                                     ) AS distance",
+                        [$lat, $lng, $lat]
+                    )
+                    ->having('distance', '<', $radius)
+                    ->orderBy('distance', 'asc');
                 } elseif ($userPreferences->preferred_location) {
                     $prefQuery->where('city', 'like', '%' . $userPreferences->preferred_location . '%');
                 }
 
-                if ($userPreferences->min_price) $prefQuery->where('price', '>=', $userPreferences->min_price);
-                if ($userPreferences->max_price) $prefQuery->where('price', '<=', $userPreferences->max_price);
-                if ($userPreferences->preferred_listing_type) $prefQuery->where('listing_type', $userPreferences->preferred_listing_type);
-                if ($userPreferences->min_bedrooms) $prefQuery->where('bedrooms', '>=', $userPreferences->min_bedrooms);
-                if ($userPreferences->min_bathrooms) $prefQuery->where('bathrooms', '>=', $userPreferences->min_bathrooms);
+                if ($userPreferences->min_price) {
+                    $prefQuery->where('price', '>=', $userPreferences->min_price);
+                }
+                if ($userPreferences->max_price) {
+                    $prefQuery->where('price', '<=', $userPreferences->max_price);
+                }
+                if ($userPreferences->preferred_listing_type) {
+                    $prefQuery->where('listing_type', $userPreferences->preferred_listing_type);
+                }
+                if ($userPreferences->min_bedrooms) {
+                    $prefQuery->where('bedrooms', '>=', $userPreferences->min_bedrooms);
+                }
+                if ($userPreferences->min_bathrooms) {
+                    $prefQuery->where('bathrooms', '>=', $userPreferences->min_bathrooms);
+                }
 
                 if ($userPreferences->preferred_amenities) {
                     $amenityIds = explode(',', $userPreferences->preferred_amenities);
@@ -127,7 +136,8 @@ class PropertyController extends Controller
             }
         }
 
-        if (Auth::check() && in_array(Auth::user()->role, ['agent', 'admin'])) {
+        // --- 6. Notificaciones en header para cualquier usuario autenticado ---
+        if (Auth::check()) {
             $user = Auth::user();
             $presenter = app(NotificationPresenter::class);
 
@@ -136,7 +146,9 @@ class PropertyController extends Controller
                 ->limit(5)
                 ->get();
 
-            $headerNotifications = $notifications->map(fn ($notification) => $presenter->summarize($notification, $user));
+            $headerNotifications = $notifications->map(
+                fn ($notification) => $presenter->summarize($notification, $user)
+            );
             $unreadNotificationCount = $user->unreadNotifications()->count();
         }
 
@@ -145,31 +157,32 @@ class PropertyController extends Controller
         if (Auth::check()) {
             $favoriteIds = Auth::user()
                 ->favoriteProperties()
-                ->pluck('id')   // <-- CORREGIDO: antes 'properties.id'
+                ->pluck('id')
                 ->toArray();
         }
+
         $noResults = $request->filled('city')
             || $request->filled('min_price')
             || $request->filled('max_price')
             || $request->filled('type');
         $noResults = $noResults && $filteredProperties->isEmpty();
-        
-        // --- 6. Enviar datos a la vista ---
+
+        // --- 7. Enviar datos a la vista ---
         return view('welcome', [
-            'properties' => $properties,
-            'recommendedProperties' => $recommendedProperties,
-            'userPreferences' => $userPreferences,
-            'typeFilter' => $typeFilter,
-            'propertiesByCity' => $propertiesByCity,
-            'cities' => $cities,
-            'rentMinRange' => $rentMinRange,
-            'rentMaxRange' => $rentMaxRange,
-            'saleMinRange' => $saleMinRange,
-            'saleMaxRange' => $saleMaxRange,
-            'headerNotifications' => $headerNotifications,
-            'unreadNotificationCount' => $unreadNotificationCount,
-            'favoriteIds' => $favoriteIds, 
-            'noResults' => $noResults,
+            'properties'               => $properties,
+            'recommendedProperties'    => $recommendedProperties,
+            'userPreferences'          => $userPreferences,
+            'typeFilter'               => $typeFilter,
+            'propertiesByCity'         => $propertiesByCity,
+            'cities'                   => $cities,
+            'rentMinRange'             => $rentMinRange,
+            'rentMaxRange'             => $rentMaxRange,
+            'saleMinRange'             => $saleMinRange,
+            'saleMaxRange'             => $saleMaxRange,
+            'headerNotifications'      => $headerNotifications,
+            'unreadNotificationCount'  => $unreadNotificationCount,
+            'favoriteIds'              => $favoriteIds,
+            'noResults'                => $noResults,
         ]);
     }
 
@@ -177,9 +190,15 @@ class PropertyController extends Controller
     {
         $query = Property::with(['images', 'amenities'])
             ->where('user_id', Auth::id())
-            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
-            ->when($request->filled('city'), fn($q) => $q->where('city', $request->city))
-            ->when($request->filled('type') && in_array($request->type, ['rent','sale']), fn($q) => $q->where('listing_type', $request->type))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->when(
+                $request->filled('city'),
+                fn ($q) => $q->where('city', $request->city)
+            )
+            ->when(
+                $request->filled('type') && in_array($request->type, ['rent', 'sale']),
+                fn ($q) => $q->where('listing_type', $request->type)
+            )
             ->latest('updated_at');
 
         $properties = $query->paginate(12)->withQueryString();
@@ -193,7 +212,7 @@ class PropertyController extends Controller
             Property::STATUS_SOLD        => 'Vendida',
         ];
 
-        return view('properties.index', compact('properties','allowedStatuses'));
+        return view('properties.index', compact('properties', 'allowedStatuses'));
     }
 
     /**
@@ -210,22 +229,20 @@ class PropertyController extends Controller
      */
     public function store(Request $request)
     {
-
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
             'type'         => 'required|string',
-            'city'          =>'required|string|max:50',
+            'city'         => 'required|string|max:50',
             'price'        => 'required|numeric|min:0|max:99999999.99',
             'location'     => 'required|string|max:255',
-            'latitude' => ['required','numeric','between:-90,90'],
-            'longitude' => ['required','numeric','between:-180,180'],
+            'latitude'     => ['required', 'numeric', 'between:-90,90'],
+            'longitude'    => ['required', 'numeric', 'between:-180,180'],
             'listing_type' => 'required|in:sale,rent',
-            'bedrooms'     => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
-            'bathrooms'    => 'nullable|integer|min:1|max:20', // <-- ADD VALIDATION
+            'bedrooms'     => 'nullable|integer|min:1|max:20',
+            'bathrooms'    => 'nullable|integer|min:1|max:20',
             'images.*'     => 'image|mimes:jpeg,png,jpg,gif|max:65536',
             'amenities'    => 'nullable|array',
-
         ]);
 
         $property = Property::create([
@@ -239,8 +256,8 @@ class PropertyController extends Controller
             'latitude'     => $validated['latitude'],
             'longitude'    => $validated['longitude'],
             'listing_type' => $validated['listing_type'],
-            'bedrooms'     => $validated['bedrooms'] ?? null, // <-- ADD FIELD
-            'bathrooms'    => $validated['bathrooms'] ?? null, // <-- ADD FIELD
+            'bedrooms'     => $validated['bedrooms'] ?? null,
+            'bathrooms'    => $validated['bathrooms'] ?? null,
             'status'       => 'available',
         ]);
 
@@ -255,8 +272,9 @@ class PropertyController extends Controller
             $property->amenities()->attach($validated['amenities']);
         }
 
-        $property->load('amenities');
-        $this->notifyUsersAboutNewProperty($property);
+        // ⚠️ Ya NO llamamos al sistema viejo de notificación por preferencias.
+        // El sistema nuevo de alertas se dispara vía eventos en el modelo Property
+        // (PropertyPublishedOrUpdated + AlertDispatchService).
 
         return redirect()
             ->route('properties.my')
@@ -292,17 +310,15 @@ class PropertyController extends Controller
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
-            'type'         => 'required|string',                 // <- si NO existe en BD, elimínalo en store/update
+            'type'         => 'required|string',
             'city'         => 'required|string|max:50',
             'price'        => 'required|numeric|min:0|max:99999999.99',
             'location'     => 'required|string|max:255',
-            'latitude'     => ['required','numeric','between:-90,90'],     // <- más robusto
-            'longitude'    => ['required','numeric','between:-180,180'],   // <- más robusto
+            'latitude'     => ['required', 'numeric', 'between:-90,90'],
+            'longitude'    => ['required', 'numeric', 'between:-180,180'],
             'listing_type' => 'required|in:sale,rent',
             'bedrooms'     => 'nullable|integer|min:1|max:20',
             'bathrooms'    => 'nullable|integer|min:1|max:20',
-
-            // Unificar tamaño (ej. 5 MB)
             'images.*'     => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'amenities'    => 'nullable|array',
         ]);
@@ -328,155 +344,40 @@ class PropertyController extends Controller
             ->with('success', 'Propiedad actualizada correctamente.');
     }
 
-    private function notifyUsersAboutNewProperty(Property $property): void
+    public function redirectToSaleCommission(Property $property)
     {
-        $preferences = UserPreference::with('user')->get();
-        if ($preferences->isEmpty()) {
-            return;
+        $this->authorize('update', $property);
+
+        if ($property->listing_type !== 'sale') {
+            return redirect()
+                ->route('properties.my')
+                ->with('error', 'Solo puedes registrar comisión de propiedades en venta.');
         }
 
-        $propertyAmenities = $property->amenities->pluck('id')->map(fn ($id) => (string) $id);
+        // Buscar última visita COMPLETADA de este agente para esta propiedad
+        $visit = $property->visits()
+            ->where('agent_id', Auth::id())
+            ->where('status', 'completed')
+            ->latest('visit_date')
+            ->first();
 
-        $matches = $preferences
-            ->map(function (UserPreference $preference) use ($property, $propertyAmenities) {
-                $user = $preference->user;
-                if (!$user) {
-                    return null;
-                }
+        if (!$visit) {
+            // Si no hay visita completada, creamos una automáticamente
+            $fallbackClientId = Auth::id(); // luego se puede cambiar en el formulario
 
-                $matchScore = $this->calculateMatchScore($preference, $property, $propertyAmenities);
-
-                if ($matchScore === null) {
-                    return null;
-                }
-
-                return ['user' => $user, 'score' => $matchScore];
-            })
-            ->filter()
-            ->unique(fn (array $match) => $match['user']->id);
-
-        if ($matches->isEmpty()) {
-            return;
+            $visit = $property->visits()->create([
+                'agent_id'   => Auth::id(),
+                'client_id'  => $fallbackClientId,
+                'visit_date' => now(),
+                'status'     => 'completed',
+                'notes'      => 'Visita generada automáticamente al marcar la propiedad como vendida para registrar la comisión.',
+            ]);
         }
 
-        $matches->each(function (array $match) use ($property) {
-            $match['user']->notify(new NewPropertyMatchNotification($property, $match['score']));
-        });
+        // 👉 Desde aquí SIEMPRE se va a VisitController@saleForm
+        return redirect()->route('agent.visits.sale', $visit);
     }
 
-    private function calculateMatchScore(UserPreference $preference, Property $property, Collection $propertyAmenities): ?int
-    {
-        $components = [];
-
-        if ($preference->preferred_listing_type) {
-            if ($preference->preferred_listing_type !== $property->listing_type) {
-                return null;
-            }
-
-            $components[] = 1.0;
-        }
-
-        if ($preference->min_price) {
-            if ($property->price < $preference->min_price) {
-                return null;
-            }
-        }
-
-        if ($preference->max_price) {
-            if ($property->price > $preference->max_price) {
-                return null;
-            }
-        }
-
-        if ($preference->min_price || $preference->max_price) {
-            $components[] = $this->priceCloseness($property->price, $preference->min_price, $preference->max_price);
-        }
-
-        if ($preference->pref_latitude && $preference->pref_longitude && $preference->pref_radius && $property->latitude && $property->longitude) {
-            $distanceKm = $this->distanceBetween(
-                (float) $preference->pref_latitude,
-                (float) $preference->pref_longitude,
-                (float) $property->latitude,
-                (float) $property->longitude,
-            );
-
-            $radiusKm = ((float) $preference->pref_radius) / 1000; // radius stored in meters
-            if ($distanceKm > $radiusKm) {
-                return null;
-            }
-
-            $components[] = max(0.0, 1.0 - ($distanceKm / $radiusKm));
-        } elseif ($preference->preferred_location && $property->city) {
-            $preferredCity = mb_strtolower($preference->preferred_location);
-            $propertyCity = mb_strtolower($property->city);
-            if (!str_contains($propertyCity, $preferredCity)) {
-                return null;
-            }
-
-            $components[] = 1.0;
-        }
-
-        if ($preference->min_bedrooms) {
-            if (!$property->bedrooms || $property->bedrooms < $preference->min_bedrooms) {
-                return null;
-            }
-
-            $components[] = 1.0;
-        }
-
-        if ($preference->min_bathrooms) {
-            if (!$property->bathrooms || $property->bathrooms < $preference->min_bathrooms) {
-                return null;
-            }
-
-            $components[] = 1.0;
-        }
-
-        if ($preference->preferred_amenities) {
-            $preferredAmenities = collect(explode(',', $preference->preferred_amenities))
-                ->map(fn ($id) => trim((string) $id))
-                ->filter();
-
-            if ($preferredAmenities->isNotEmpty()) {
-                if ($preferredAmenities->diff($propertyAmenities)->isNotEmpty()) {
-                    return null;
-                }
-
-                $components[] = 1.0;
-            }
-        }
-
-        if (empty($components)) {
-            return 100;
-        }
-
-        $score = array_sum($components) / count($components) * 100;
-
-        return (int) round($score);
-    }
-
-    private function priceCloseness(float $price, ?float $minPrice, ?float $maxPrice): float
-    {
-        if ($minPrice && $maxPrice && $maxPrice > $minPrice) {
-            $midpoint = ($minPrice + $maxPrice) / 2;
-            $halfRange = ($maxPrice - $minPrice) / 2;
-            return max(0.0, 1.0 - (abs($price - $midpoint) / max($halfRange, 1)));
-        }
-
-        return 1.0;
-    }
-
-    private function distanceBetween(float $lat1, float $lng1, float $lat2, float $lng2): float
-    {
-        $earthRadius = 6371; // km
-        $latDistance = deg2rad($lat2 - $lat1);
-        $lngDistance = deg2rad($lng2 - $lng1);
-
-        $a = sin($latDistance / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($lngDistance / 2) ** 2;
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c;
-    }
 
     /**
      * Elimina una propiedad y sus recursos.
@@ -552,5 +453,4 @@ class PropertyController extends Controller
         $properties = Property::with('images', 'amenities')->get();
         return view('properties.properties', compact('properties'));
     }
-
 }
