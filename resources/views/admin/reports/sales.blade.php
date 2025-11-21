@@ -6,7 +6,29 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Reporte de Ventas y Rentas</title>
 
+  {{-- Anti-flash: aplica tema guardado ANTES de pintar la página --}}
+  <script>
+      (function () {
+          try {
+              if (localStorage.getItem('theme') === 'dark') {
+                  document.documentElement.classList.add('dark');
+              } else {
+                  document.documentElement.classList.remove('dark');
+              }
+          } catch (e) {
+              document.documentElement.classList.remove('dark');
+          }
+      })();
+  </script>
+
+  {{-- Tailwind --}}
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+      tailwind.config = {
+          darkMode: 'class'
+      };
+  </script>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <style>
@@ -21,17 +43,61 @@
     .table-wrapper::-webkit-scrollbar-thumb:hover {
       background: #9ca3af;
     }
+
+    /* Fade suave para todo al cambiar de tema */
+    html.theme-fade * {
+        transition:
+            background-color .35s ease,
+            color .35s ease,
+            border-color .35s ease,
+            fill .35s ease;
+    }
+
+    /* Botón de tema: animación */
+    #theme-toggle {
+        transition: background-color .25s ease,
+                    color .25s ease,
+                    transform .25s ease,
+                    box-shadow .25s ease;
+    }
+
+    #theme-toggle.theme-bounce {
+        transform: translateY(-1px) scale(1.03);
+        box-shadow: 0 15px 30px rgba(0,0,0,.18);
+    }
+
+    #theme-toggle-icon {
+        transition: transform .35s ease, opacity .2s ease;
+    }
+
+    #theme-toggle-icon.theme-spin {
+        transform: rotate(180deg);
+    }
+
+    .dark footer {
+        background-color: #020617 !important; /* slate-950 */
+    }
   </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800 dark:bg-slate-950 dark:text-slate-100 flex flex-col min-h-screen transition-colors duration-300">
 
   {{-- HEADER GLOBAL --}}
   <x-main-header />
 
-  <main class="max-w-7xl mx-auto px-4 py-12">
+  {{-- Botón Tema (igual que en home) --}}
+  <button id="theme-toggle"
+          class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg
+                 bg-white text-gray-800 hover:bg-gray-100
+                 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          aria-label="Cambiar tema">
+      <i id="theme-toggle-icon" class="fa-solid"></i>
+      <span class="text-sm font-medium"></span>
+  </button>
 
-    <h2 class="text-3xl font-semibold text-gray-900 mb-8 flex items-center gap-2">
+  <main class="max-w-7xl mx-auto px-4 py-12 flex-1">
+
+    <h2 class="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-8 flex items-center gap-2">
       <i class="fa-solid fa-chart-column text-blue-600"></i>
       Reporte de Ventas y Rentas
     </h2>
@@ -46,9 +112,9 @@
         $city   = $filters['city']  ?? '';
     @endphp
 
-    <section class="bg-white border border-gray-200 rounded-xl shadow mb-10">
-      <div class="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+    <section class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow mb-10">
+      <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
           <i class="fa-solid fa-filter text-blue-600"></i>
           Filtros
         </h3>
@@ -70,21 +136,21 @@
         <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-4">
 
           <div class="md:col-span-3">
-            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Desde</label>
+            <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Desde</label>
             <input type="date" name="from" value="{{ $from }}"
-                   class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="w-full rounded-lg border-gray-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
           </div>
 
           <div class="md:col-span-3">
-            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Hasta</label>
+            <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Hasta</label>
             <input type="date" name="to" value="{{ $to }}"
-                   class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="w-full rounded-lg border-gray-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
           </div>
 
           <div class="md:col-span-3">
-            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Agente</label>
+            <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Agente</label>
             <select name="agent"
-                    class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="w-full rounded-lg border-gray-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="">Todos</option>
               @foreach($agentsOptions as $opt)
                 <option value="{{ $opt->id }}" @selected($agent == $opt->id)>{{ $opt->name }}</option>
@@ -93,9 +159,9 @@
           </div>
 
           <div class="md:col-span-3">
-            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Ciudad</label>
+            <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Ciudad</label>
             <select name="city"
-                    class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="w-full rounded-lg border-gray-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 text-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="">Todas</option>
               @foreach($citiesOptions as $c)
                 <option value="{{ $c }}" @selected($city === $c)>{{ $c }}</option>
@@ -110,7 +176,7 @@
             </button>
 
             <a href="{{ route('admin.reports.sales') }}"
-               class="bg-gray-200 text-gray-700 px-5 py-2 rounded-lg font-medium hover:bg-gray-300 transition">
+               class="bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-slate-100 px-5 py-2 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-slate-700 transition">
               Limpiar
             </a>
           </div>
@@ -125,43 +191,43 @@
     ======================================================= --}}
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
 
-      <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
-        <p class="text-xs font-semibold uppercase text-gray-500">Propiedades vendidas</p>
-        <p class="mt-3 text-3xl font-bold text-gray-900">
+      <div class="p-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Propiedades vendidas</p>
+        <p class="mt-3 text-3xl font-bold text-gray-900 dark:text-slate-100">
           {{ number_format($salesByAgent->sum('properties_count')) }}
         </p>
       </div>
 
-      <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
-        <p class="text-xs font-semibold uppercase text-gray-500">Valor total vendido</p>
+      <div class="p-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Valor total vendido</p>
         <p class="mt-3 text-3xl font-bold text-emerald-600">
           ${{ number_format($totalValueSold, 2, '.', ',') }}
         </p>
       </div>
 
-      <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
-        <p class="text-xs font-semibold uppercase text-gray-500">Reservas confirmadas</p>
-        <p class="mt-3 text-3xl font-bold text-gray-900">
+      <div class="p-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Reservas confirmadas</p>
+        <p class="mt-3 text-3xl font-bold text-gray-900 dark:text-slate-100">
           {{ number_format($totalRentalReservations) }}
         </p>
       </div>
 
-      <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
-        <p class="text-xs font-semibold uppercase text-gray-500">Ingresos por rentas</p>
+      <div class="p-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Ingresos por rentas</p>
         <p class="mt-3 text-3xl font-bold text-emerald-600">
           ${{ number_format($totalRentalRevenue, 2, '.', ',') }}
         </p>
       </div>
 
-      <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
-        <p class="text-xs font-semibold uppercase text-gray-500">Comisiones ventas</p>
+      <div class="p-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Comisiones ventas</p>
         <p class="mt-3 text-3xl font-bold text-indigo-600">
           ${{ number_format($salesCommissionTotal, 2, '.', ',') }}
         </p>
       </div>
 
-      <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
-        <p class="text-xs font-semibold uppercase text-gray-500">Comisiones rentas</p>
+      <div class="p-6 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <p class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Comisiones rentas</p>
         <p class="mt-3 text-3xl font-bold text-indigo-600">
           ${{ number_format($rentalCommissionTotal, 2, '.', ',') }}
         </p>
@@ -175,15 +241,15 @@
     ======================================================= --}}
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
 
-      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h4 class="text-sm font-semibold text-gray-700 mb-3">Ventas por agente (MXN)</h4>
+      <div class="rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-3">Ventas por agente (MXN)</h4>
         <div class="h-52 flex items-center justify-center">
           <canvas id="salesByAgentChart" class="max-h-52 w-full"></canvas>
         </div>
       </div>
 
-      <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h4 class="text-sm font-semibold text-gray-700 mb-3">Rentas por agente (MXN)</h4>
+      <div class="rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-3">Rentas por agente (MXN)</h4>
         <div class="h-52 flex items-center justify-center">
           <canvas id="rentalsByAgentChart" class="max-h-52 w-full"></canvas>
         </div>
@@ -195,7 +261,7 @@
     {{-- ======================================================
                         TABLAS (INCLUDE)
     ======================================================= --}}
-    <div class="table-wrapper overflow-x-auto border border-gray-200 rounded-xl shadow-sm p-0">
+    <div class="table-wrapper overflow-x-auto border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm p-0 bg-white dark:bg-slate-900">
       @include('admin.reports.partials.tables')
     </div>
 
@@ -219,7 +285,7 @@
 
     const makeChart = (ctx, label, labels, data, color) => {
       if (!labels.length || !data.some(v => v > 0)) {
-        ctx.parentNode.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">Sin datos disponibles</p>';
+        ctx.parentNode.innerHTML = '<p class="text-gray-400 dark:text-slate-400 text-sm text-center py-8">Sin datos disponibles</p>';
         return;
       }
 
@@ -251,6 +317,59 @@
 
     makeChart(document.getElementById('salesByAgentChart'), 'Ventas (MXN)', salesLabels, salesTotals, '#2563EB');
     makeChart(document.getElementById('rentalsByAgentChart'), 'Rentas (MXN)', rentalLabels, rentalTotals, '#059669');
+  </script>
+
+  {{-- Lógica del botón de tema --}}
+  <script>
+      (function () {
+          const html  = document.documentElement;
+          const btn   = document.getElementById('theme-toggle');
+          const icon  = document.getElementById('theme-toggle-icon');
+          const label = btn?.querySelector('span');
+
+          function setIconAndLabel() {
+              const isDark = html.classList.contains('dark');
+              if (!icon || !label) return;
+
+              icon.classList.remove('fa-sun', 'fa-moon');
+              icon.classList.add(isDark ? 'fa-moon' : 'fa-sun');
+              label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+          }
+
+          function startPageFade() {
+              html.classList.add('theme-fade');
+              setTimeout(() => html.classList.remove('theme-fade'), 400);
+          }
+
+          function animateButton() {
+              if (!btn || !icon) return;
+              btn.classList.add('theme-bounce');
+              icon.classList.add('theme-spin');
+              setTimeout(() => {
+                  btn.classList.remove('theme-bounce');
+                  icon.classList.remove('theme-spin');
+              }, 350);
+          }
+
+          function apply(mode) {
+              const isDark = mode === 'dark';
+              startPageFade();
+              html.classList.toggle('dark', isDark);
+              try {
+                  localStorage.setItem('theme', mode);
+              } catch (e) {}
+              setIconAndLabel();
+              animateButton();
+          }
+
+          // Estado inicial de icono/texto según clase actual del <html>
+          setIconAndLabel();
+
+          btn?.addEventListener('click', () => {
+              const next = html.classList.contains('dark') ? 'light' : 'dark';
+              apply(next);
+          });
+      })();
   </script>
 
 </body>
