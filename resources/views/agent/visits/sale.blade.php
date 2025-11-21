@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar venta - SIN BECA NO HAY RENTA</title>
+    <title>
+        {{ $sale ? 'Pagar comisión de venta' : 'Registrar venta - SIN BECA NO HAY RENTA' }}
+    </title>
 
     {{-- Anti-flash --}}
     <script>
@@ -43,9 +45,10 @@
     <main class="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
 
         <h1 class="text-3xl font-bold mb-8 flex items-center gap-3 text-gray-900 dark:text-gray-100">
-            <i class="fa-solid fa-receipt text-blue-500"></i>
-            Registrar venta de propiedad
-        </h1>
+    <i class="fa-solid fa-receipt text-blue-500"></i>
+    {{ $sale ? 'Pagar comisión de venta' : 'Registrar venta de propiedad' }}
+</h1>
+
 
         {{-- MENSAJES --}}
         @if(session('success'))
@@ -75,8 +78,14 @@
                     {{ $property->title }}
                 </h2>
 
-                @if($client)
-                    <p><strong>Cliente (visita):</strong> {{ $client->name }}</p>
+                @if(isset($client) && $client)
+                    <p>
+                        <strong>{{ $sale ? 'Comprador:' : 'Cliente (visita):' }}</strong>
+                        {{ $client->name }}
+                        @if($client->email)
+                            <span class="text-gray-400">({{ $client->email }})</span>
+                        @endif
+                    </p>
                 @elseif($allowClientSelection ?? false)
                     <p class="text-gray-500 dark:text-gray-400">
                         Esta venta no proviene de una visita con cliente registrado.
@@ -84,7 +93,10 @@
                     </p>
                 @endif
 
-                <p><strong>Fecha de visita:</strong> {{ $visit->visit_date->format('d/m/Y H:i') }}</p>
+                <p>
+                    <strong>Fecha de visita:</strong>
+                    {{ optional($visit->visit_date)->format('d/m/Y H:i') }}
+                </p>
             </div>
 
             <hr class="border-gray-300 dark:border-gray-700 my-6">
@@ -164,10 +176,22 @@
                    ========================= --}}
                 <h2 class="text-xl font-semibold mb-2">Pagar comisión</h2>
 
-                <p>
-                    Comisión a pagar:
-                    <strong>${{ number_format($sale->commission_amount, 2) }} MXN</strong>
-                </p>
+                <div class="space-y-2 text-sm">
+                    <p>
+                        <span class="font-semibold">Precio de venta (MXN): </span>
+                        ${{ number_format($sale->sale_price, 2) }}
+                    </p>
+                    <p>
+                        <span class="font-semibold">Comisión aplicada: </span>
+                        {{ $commission?->percentage ? $commission->percentage.'%' : '0%' }}
+                    </p>
+                    <p>
+                        <span class="font-semibold">Comisión a pagar: </span>
+                        <span class="text-blue-400 font-bold">
+                            ${{ number_format($sale->commission_amount, 2) }} MXN
+                        </span>
+                    </p>
+                </div>
 
                 @if (is_null($sale->commission_paid_at))
                     {{-- CONTENEDOR PAYPAL --}}
@@ -188,7 +212,10 @@
                                         'Content-Type': 'application/json',
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                         'Accept': 'application/json'
-                                    }
+                                    },
+                                    body: JSON.stringify({
+                                        sale_id: "{{ $sale->id }}"
+                                    })
                                 })
                                 .then(res => res.json())
                                 .then(function (data) {
@@ -206,7 +233,8 @@
                                         'Accept': 'application/json'
                                     },
                                     body: JSON.stringify({
-                                        order_id: data.orderID
+                                        order_id: data.orderID,
+                                        sale_id: "{{ $sale->id }}"
                                     })
                                 })
                                 .then(res => res.json())

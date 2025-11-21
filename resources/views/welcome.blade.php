@@ -194,9 +194,9 @@
     </button>
 
     {{-- Filtro principal --}}
-<section id="filter-panel"
-         class="bg-white dark:bg-gray-900 dark:text-gray-100 shadow-md w-full py-6
-                fixed md:static top-16 left-0 z-[999]">
+    <section id="filter-panel"
+             class="bg-white dark:bg-gray-900 dark:text-gray-100 shadow-md w-full py-6
+                    fixed md:static top-16 left-0 z-[999]">
 
         <div class="max-w-6xl mx-auto px-6">
             <form id="property-filter-form" method="GET" action="{{ route('home') }}"
@@ -269,9 +269,13 @@
     {{-- Contenido Principal --}}
     <main class="max-w-7xl mx-auto mt-10 px-6 space-y-12">
 
-        {{-- Propiedades basadas en tus preferencias --}}
+        {{-- Propiedades basadas en tus preferencias (sin vendidas) --}}
         @auth
-            @if ($userPreferences && $recommendedProperties->isNotEmpty())
+            @php
+                $recommendedVisible = collect($recommendedProperties ?? [])->where('status', '!=', 'sold');
+            @endphp
+
+            @if ($userPreferences && $recommendedVisible->isNotEmpty())
                 <section>
                     <h2 class="text-2xl font-semibold mb-1">
                         Propiedades basadas en tus preferencias
@@ -285,8 +289,9 @@
                             class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
                             <i class="fas fa-chevron-left text-gray-700 dark:text-gray-200 text-lg"></i>
                         </button>
+
                         <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-                            @foreach ($recommendedProperties as $property)
+                            @foreach ($recommendedVisible as $property)
                                 @php
                                     $favoriteIds = $favoriteIds ?? [];
                                     $isFav = in_array($property->id, $favoriteIds);
@@ -352,8 +357,8 @@
                                     </div>
                                 </a>
                             @endforeach
-
                         </div>
+
                         <button
                             class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
                             <i class="fas fa-chevron-right text-gray-700 dark:text-gray-200 text-lg"></i>
@@ -373,8 +378,16 @@
             {{-- aquí siguen los carouseles por ciudad --}}
         @endif
 
-        {{-- Propiedades por ciudad --}}
+        {{-- Propiedades por ciudad (sin vendidas) --}}
         @foreach($propertiesByCity as $city => $cityProperties)
+            @php
+                $cityPropertiesVisible = collect($cityProperties)->where('status', '!=', 'sold');
+            @endphp
+
+            @if ($cityPropertiesVisible->isEmpty())
+                @continue
+            @endif
+
             <section>
                 <h2 class="text-2xl font-semibold mb-4">Propiedades en {{ $city }}</h2>
                 <div class="relative group">
@@ -382,8 +395,9 @@
                         class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
                         <i class="fas fa-chevron-left text-gray-700 dark:text-gray-200 text-lg"></i>
                     </button>
+
                     <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-                        @foreach($cityProperties as $property)
+                        @foreach($cityPropertiesVisible as $property)
                             @php
                                 $favoriteIds = $favoriteIds ?? [];
                                 $isFav = in_array($property->id, $favoriteIds);
@@ -448,8 +462,8 @@
                                 </div>
                             </a>
                         @endforeach
-
                     </div>
+
                     <button
                         class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
                         <i class="fas fa-chevron-right text-gray-700 dark:text-gray-200 text-lg"></i>
@@ -458,7 +472,7 @@
             </section>
         @endforeach
 
-        {{-- Propiedades recientes --}}
+        {{-- Propiedades recientes (sin vendidas) --}}
         <section>
             <h2 class="text-2xl font-semibold mb-4">Propiedades Recientes</h2>
             <div class="relative group">
@@ -466,8 +480,13 @@
                     class="carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
                     <i class="fas fa-chevron-left text-gray-700 dark:text-gray-200 text-lg"></i>
                 </button>
+
+                @php
+                    $recentVisible = collect($properties)->where('status', '!=', 'sold');
+                @endphp
+
                 <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
-                    @forelse ($properties as $property)
+                    @forelse ($recentVisible as $property)
                         @php
                             $favoriteIds = $favoriteIds ?? [];
                             $isFav = in_array($property->id, $favoriteIds);
@@ -534,8 +553,8 @@
                     @empty
                         <p class="text-gray-500 dark:text-gray-300">Aún no hay propiedades para mostrar.</p>
                     @endforelse
-
                 </div>
+
                 <button
                     class="carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 bg-white dark:bg-gray-800 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100 z-10 border border-gray-200 dark:border-gray-700">
                     <i class="fas fa-chevron-right text-gray-700 dark:text-gray-200 text-lg"></i>

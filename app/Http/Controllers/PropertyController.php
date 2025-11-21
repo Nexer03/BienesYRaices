@@ -12,6 +12,10 @@ use Illuminate\Support\Arr;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\Rule;
 use App\Support\NotificationPresenter;
+use App\Models\Visit;
+use App\Models\Sale;
+use App\Models\SystemCommission;
+use App\Models\User;
 
 class PropertyController extends Controller
 {
@@ -345,38 +349,32 @@ class PropertyController extends Controller
     }
 
     public function redirectToSaleCommission(Property $property)
-    {
-        $this->authorize('update', $property);
+{
+    $agent = auth()->user();
 
-        if ($property->listing_type !== 'sale') {
-            return redirect()
-                ->route('properties.my')
-                ->with('error', 'Solo puedes registrar comisión de propiedades en venta.');
-        }
+    // Buscar última visita COMPLETADA para esta propiedad y este agente
+    $visit = Visit::where('property_id', $property->id)
+        ->where('agent_id', $agent->id)
+        ->where('status', 'completed')
+        ->orderByDesc('visit_date')
+        ->first();
 
-        // Buscar última visita COMPLETADA de este agente para esta propiedad
-        $visit = $property->visits()
-            ->where('agent_id', Auth::id())
-            ->where('status', 'completed')
-            ->latest('visit_date')
-            ->first();
-
-        if (!$visit) {
-            // Si no hay visita completada, creamos una automáticamente
-            $fallbackClientId = Auth::id(); // luego se puede cambiar en el formulario
-
-            $visit = $property->visits()->create([
-                'agent_id'   => Auth::id(),
-                'client_id'  => $fallbackClientId,
-                'visit_date' => now(),
-                'status'     => 'completed',
-                'notes'      => 'Visita generada automáticamente al marcar la propiedad como vendida para registrar la comisión.',
-            ]);
-        }
-
-        // 👉 Desde aquí SIEMPRE se va a VisitController@saleForm
-        return redirect()->route('agent.visits.sale', $visit);
+    // Si no hay visita, la creamos automáticamente
+    if (!$visit) {
+        $visit = Visit::create([
+            'property_id' => $property->id,
+            'agent_id'    => $agent->id,
+            'client_id'   => null, // luego podrás elegir comprador en el formulario
+            'visit_date'  => now(),
+            'status'      => 'completed',
+            'notes'       => 'Visita generada automáticamente al marcar la propiedad como vendida para registrar la comisión.',
+        ]);
     }
+
+    // Siempre redirigimos al flujo normal de venta (sale.blade)
+    return redirect()->route('agent.visits.sale', $visit);
+}
+
 
 
     /**

@@ -25,17 +25,12 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-300">
+<body
+    class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-300">
 
 <x-main-header />
 
 <main class="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
-
-    @php
-        // Garantizar que siempre existan $property y $client
-        $property = $property ?? ($sale->property ?? $visit->property ?? null);
-        $client   = $client   ?? ($sale->client   ?? $visit->client   ?? null);
-    @endphp
 
     <h1 class="text-3xl font-bold mb-8 flex items-center gap-3 text-gray-900 dark:text-gray-100">
         <i class="fa-solid fa-money-check-dollar text-blue-500"></i>
@@ -67,13 +62,14 @@
         {{-- Info propiedad / visita / comprador --}}
         <div class="space-y-1 text-sm">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {{ $property?->title ?? 'Propiedad sin título' }}
+                {{ $property->title }}
             </h2>
 
-            @if($client)
+            @if(!empty($client))
                 <p>
                     <strong>Comprador:</strong>
-                    {{ $client->name }} <span class="text-gray-400">({{ $client->email }})</span>
+                    {{ $client->name }}
+                    <span class="text-gray-400">({{ $client->email }})</span>
                 </p>
             @else
                 <p class="text-gray-400">
@@ -81,10 +77,12 @@
                 </p>
             @endif
 
-            <p>
-                <strong>Fecha de visita:</strong>
-                {{ optional($visit->visit_date)->format('d/m/Y H:i') }}
-            </p>
+            @if(!empty($visit) && $visit->visit_date)
+                <p>
+                    <strong>Fecha de visita:</strong>
+                    {{ $visit->visit_date->format('d/m/Y H:i') }}
+                </p>
+            @endif
         </div>
 
         <hr class="border-gray-300 dark:border-gray-700 my-6">
@@ -101,7 +99,7 @@
                 @php
                     $percent = $commission?->percentage ?? null;
                 @endphp
-                {{ $percent ? $percent.'%' : 'Sin configuración de comisión' }}
+                {{ $percent ? $percent . '%' : 'Sin configuración de comisión' }}
             </div>
 
             <div>
@@ -112,10 +110,15 @@
             </div>
         </div>
 
+        {{-- BLOQUE DE PAGO --}}
         @if(is_null($sale->commission_paid_at))
-            <div class="mt-6">
-                <h3 class="font-semibold mb-2">Pagar comisión</h3>
+            <div class="mt-6 space-y-3">
+                <h3 class="font-semibold text-base">Pagar comisión</h3>
                 <div id="paypal-button-container"></div>
+                <p id="paypal-error"
+                   class="hidden mt-2 text-sm text-red-500">
+                    No se pudo cargar el botón de PayPal. Revisa tu Client ID o vuelve a intentar.
+                </p>
             </div>
         @else
             <p class="mt-4 text-green-500 font-semibold">
@@ -128,65 +131,72 @@
 
 <x-main-footer />
 
-{{-- SDK de PayPal (solo si la comisión NO está pagada) --}}
+{{-- SDK + lógica PayPal (solo si NO está pagada) --}}
 @if(is_null($sale->commission_paid_at))
-    <script src="https://www.paypal.com/sdk/js?client-id={{ config('services.paypal.client_id') }}
-        &currency={{ config('services.paypal.currency', 'MXN') }}
-        &intent=capture
-        &components=buttons"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id={{ config('services.paypal.client_id') }}&currency={{ config('services.paypal.currency', 'MXN') }}&intent=capture&components=buttons"></script>
 
     <script>
-        paypal.Buttons({
-            createOrder: function () {
-                return fetch("{{ route('agent.paypal.commission.create', $visit->id) }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sale_id: "{{ $sale->id }}"
-                    })
-                })
-                    .then(res => res.json())
-                    .then(function (data) {
-                        if (data?.id) return data.id;
-                        throw new Error(data?.error || 'No se pudo crear la orden de PayPal.');
-                    });
-            },
+        (function () {
+            const containerId = '#paypal-button-container';
+            const errorEl = document.getElementById('paypal-error');
 
-            onApprove: function (data) {
-                return fetch("{{ route('agent.paypal.captureCommission', $visit->id) }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        order_id: data.orderID,
-                        sale_id: "{{ $sale->id }}"
-                    })
-                })
-                    .then(res => res.json())
-                    .then(function (response) {
-                        // Soporta tanto redirect_url como redirect
-                        if (response.redirect_url || response.redirect) {
-                            const url = response.redirect_url || response.redirect;
-                            return window.location.href = url;
-                        }
-
-                        if (response.success) {
-                            alert("Pago registrado correctamente.");
-                            return window.location.reload();
-                        }
-
-                        alert(response.error || "Error en el registro del pago.");
-                    })
-                    .catch(() => alert("Error al comunicar con el servidor"));
+            if (typeof paypal === 'undefined') {
+                if (errorEl) errorEl.classList.remove('hidden');
+                return;
             }
-        }).render('#paypal-button-container');
+
+            paypal.Buttons({
+                createOrder: function () {
+                    return fetch("{{ route('agent.paypal.commission.create', $visit->id) }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            sale_id: "{{ $sale->id }}"
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(function (data) {
+                            if (data && data.id) {
+                                return data.id;
+                            }
+                            throw new Error(data?.error || 'No se pudo crear la orden de PayPal.');
+                        });
+                },
+
+                onApprove: function (data) {
+                    return fetch("{{ route('agent.paypal.captureCommission', $visit->id) }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            order_id: data.orderID,
+                            sale_id: "{{ $sale->id }}"
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(function (response) {
+                            if (response.redirect) {
+                                return window.location.href = response.redirect;
+                            }
+                            if (response.success) {
+                                alert("Pago registrado correctamente.");
+                                return window.location.reload();
+                            }
+                            alert(response.error || "Error en el registro del pago.");
+                        })
+                        .catch(function () {
+                            alert("Error al comunicar con el servidor");
+                        });
+                }
+            }).render(containerId);
+        })();
     </script>
 @endif
 
