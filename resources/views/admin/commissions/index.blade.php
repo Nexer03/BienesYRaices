@@ -37,6 +37,15 @@
     html.dark input[type="date"] {
       color-scheme: dark;
     }
+
+    /* Transición SUAVE al cambiar de tema */
+    .theme-transition,
+    .theme-transition * {
+      transition:
+        background-color 0.4s ease,
+        color 0.4s ease,
+        border-color 0.4s ease;
+    }
   </style>
 </head>
 
@@ -252,7 +261,7 @@
   <x-main-footer />
 
   <script>
-    // Toggle de modo oscuro
+    // Toggle de modo oscuro con transición suave
     (function () {
       const html  = document.documentElement;
       const btn   = document.getElementById('theme-toggle');
@@ -269,9 +278,19 @@
 
       function apply(mode) {
         const isDark = mode === 'dark';
+
+        // Activar clase de transición
+        html.classList.add('theme-transition');
+
         html.classList.toggle('dark', isDark);
         try { localStorage.setItem('theme', mode); } catch (e) {}
+
         setIconAndLabel();
+
+        // Quitar transición después de 400 ms
+        setTimeout(() => {
+          html.classList.remove('theme-transition');
+        }, 400);
       }
 
       // Estado inicial

@@ -30,6 +30,17 @@
   <!-- Iconos -->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Transición SUAVE al cambiar de tema */
+    .theme-transition,
+    .theme-transition * {
+      transition:
+        background-color 0.4s ease,
+        color 0.4s ease,
+        border-color 0.4s ease;
+    }
+  </style>
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col">
@@ -180,7 +191,7 @@
   <x-main-footer />
 
   <script>
-    // Toggle de modo oscuro
+    // Toggle de modo oscuro con transición suave
     (function () {
       const html  = document.documentElement;
       const btn   = document.getElementById('theme-toggle');
@@ -197,12 +208,22 @@
 
       function apply(mode) {
         const isDark = mode === 'dark';
+
+        // Activar clase de transición
+        html.classList.add('theme-transition');
+
         html.classList.toggle('dark', isDark);
         try { localStorage.setItem('theme', mode); } catch (e) {}
+
         setIconAndLabel();
+
+        // Quitar transición después de 400 ms para no afectar otras cosas
+        setTimeout(() => {
+          html.classList.remove('theme-transition');
+        }, 400);
       }
 
-      // Estado inicial
+      // Estado inicial (solo icono/texto)
       setIconAndLabel();
 
       btn?.addEventListener('click', () => {
