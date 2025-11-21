@@ -68,39 +68,6 @@
         </div>
       </div>
 
-      {{-- TOOLBAR / BÚSQUEDA --}}
-      <div class="chat-toolbar">
-        <form id="chat-search-form" class="chat-search" role="search">
-          <label for="chat-search-input" class="visually-hidden">Buscar en la conversación</label>
-          <input
-            type="search"
-            id="chat-search-input"
-            name="q"
-            placeholder="Buscar mensajes o archivos"
-            autocomplete="off"
-          >
-          <button type="submit" class="chat-search__submit">Buscar</button>
-          <button
-            type="button"
-            class="chat-search__clear"
-            id="chat-search-clear"
-            aria-label="Limpiar búsqueda"
-          >
-            ✕
-          </button>
-        </form>
-
-        <div id="chat-search-results" class="chat-search-results" hidden>
-          <div class="chat-search-results__header">
-            <strong id="chat-search-summary">Resultados</strong>
-            <button type="button" id="chat-search-close" aria-label="Cerrar resultados">
-              Cerrar
-            </button>
-          </div>
-
-          <ul id="chat-search-list" class="chat-search-results__list"></ul>
-        </div>
-      </div>
 
       {{-- HILO DE MENSAJES --}}
       <div
