@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon; // <-- nuevo
 use App\Models\PropertyReservation;
 use App\Models\Review;
+use App\Events\PropertyPublishedOrUpdated;
 
 class Property extends Model
 {
@@ -144,6 +145,19 @@ class Property extends Model
         if ($this->isRented() && $this->rented_until && now()->gte($this->rented_until)) {
             $this->markAvailable();
         }
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (Property $property) {
+            event(new PropertyPublishedOrUpdated($property, 'created'));
+        });
+
+        static::updated(function (Property $property) {
+            if ($property->wasChanged(['status', 'price', 'city', 'bedrooms', 'bathrooms', 'listing_type'])) {
+                event(new PropertyPublishedOrUpdated($property, 'updated'));
+            }
+        });
     }
 
 }

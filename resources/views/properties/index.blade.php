@@ -26,7 +26,7 @@
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    {{-- Necesario para AJAX si usas layout --}}
+    {{-- Necesario para AJAX --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen
@@ -136,12 +136,14 @@
                                 <span class="w-2 h-2 rounded-full {{ $dotClass }}"></span>
                                 {{ $property->status_label }}
                             </span>
-                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">${{ number_format($property->price, 2) }}</p>
-                            {{-- (Opcional) Si está rentada y tienes fecha de término, muéstrala pequeñita: --}}
+                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+                                ${{ number_format($property->price, 2) }}
+                            </p>
+
                             @php
                               // Busca una reserva vigente como fallback (end_date >= ahora, status pagado/confirmado)
                               $activeReservation = $property->reservations()
-                                  ->whereIn('status', ['paid','confirmed','completed'])  // ajusta a tus statuses reales
+                                  ->whereIn('status', ['paid','confirmed','completed'])
                                   ->whereDate('end_date', '>=', now())
                                   ->orderByDesc('end_date')
                                   ->first();
@@ -165,21 +167,51 @@
                                 <i class="fas fa-edit"></i>
                                 <span>Editar</span>
                             </a>
-                            {{-- BOTÓN TOGGLE STATUS (solo si no está sold/rented) --}}
+
+                            {{-- CAMBIAR ESTADO (solo si no está sold/rented) --}}
                             @if(!in_array($property->status, ['sold','rented']))
-                              @php $isAvail = $property->status === 'available'; @endphp
-                              <button type="button"
-                                      class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-colors whitespace-nowrap font-medium text-sm w-full md:w-auto justify-center prop-toggle-btn
-                                             {{ $isAvail
-                                                ? 'bg-orange-100 hover:bg-orange-200 text-orange-700 dark:bg-orange-900/40 dark:hover:bg-orange-900 dark:text-orange-200'
-                                                : 'bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/40 dark:hover:bg-green-900 dark:text-green-200' }}"
-                                      data-url="{{ route('properties.toggleStatus', $property) }}"
-                                      data-next="{{ $isAvail ? 'no disponible' : 'disponible' }}"
-                                      data-title="{{ $property->title }}">
-                                <i class="fas {{ $isAvail ? 'fa-ban' : 'fa-check' }}"></i>
-                                <span>{{ $isAvail ? 'Marcar no disponible' : 'Marcar disponible' }}</span>
-                              </button>
+                                @if($property->listing_type === 'sale')
+                                    {{-- Para propiedades en VENTA: select con Disponible / No disponible / Vendida --}}
+                                    <div class="relative w-full md:w-auto">
+                                        <label class="sr-only" for="status-select-{{ $property->id }}">Cambiar estado</label>
+                                        <select
+                                            id="status-select-{{ $property->id }}"
+                                            class="prop-status-select inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium
+                                                   bg-white text-gray-700 hover:bg-gray-50
+                                                   dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 w-full md:w-auto"
+                                            data-toggle-url="{{ route('properties.toggleStatus', $property) }}"
+                                            data-sold-url="{{ route('properties.sale.redirect', $property) }}"
+                                            data-current-status="{{ $property->status }}"
+                                            data-title="{{ $property->title }}"
+                                        >
+                                            <option value="available" {{ $property->status === 'available' ? 'selected' : '' }}>
+                                                Disponible
+                                            </option>
+                                            <option value="unavailable" {{ $property->status === 'unavailable' ? 'selected' : '' }}>
+                                                No disponible
+                                            </option>
+                                            <option value="sold">
+                                                Vendida
+                                            </option>
+                                        </select>
+                                    </div>
+                                @else
+                                    {{-- Para propiedades en RENTA: botón toggle clásico --}}
+                                    @php $isAvail = $property->status === 'available'; @endphp
+                                    <button type="button"
+                                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-colors whitespace-nowrap font-medium text-sm w-full md:w-auto justify-center prop-toggle-btn
+                                                   {{ $isAvail
+                                                        ? 'bg-orange-100 hover:bg-orange-200 text-orange-700 dark:bg-orange-900/40 dark:hover:bg-orange-900 dark:text-orange-200'
+                                                        : 'bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/40 dark:hover:bg-green-900 dark:text-green-200' }}"
+                                            data-url="{{ route('properties.toggleStatus', $property) }}"
+                                            data-next="{{ $isAvail ? 'no disponible' : 'disponible' }}"
+                                            data-title="{{ $property->title }}">
+                                        <i class="fas {{ $isAvail ? 'fa-ban' : 'fa-check' }}"></i>
+                                        <span>{{ $isAvail ? 'Marcar no disponible' : 'Marcar disponible' }}</span>
+                                    </button>
+                                @endif
                             @endif
+
                             {{-- BOTÓN ELIMINAR (llama a JS para modal) --}}
                             <button type="button"
                                     onclick="openDeletePropertyModal(this)"
@@ -269,7 +301,7 @@
             <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Confirmar Eliminación</h3>
             <p class="mb-6 text-gray-600 dark:text-gray-400">¿Estás seguro de que quieres eliminar la propiedad <strong id="deletePropertyName"></strong>? Esta acción no se puede deshacer y borrará sus imágenes asociadas.</p>
 
-            <form id="deletePropertyConfirmForm" method="POST" action=""> {{-- Action set by JS --}}
+            <form id="deletePropertyConfirmForm" method="POST" action="">
                 @csrf
                 @method('DELETE')
                 <div class="flex justify-end gap-4">
@@ -305,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function () {
     },
   };
 
-  // ---- CAMBIAR ESTADO ----
+  // ---- CAMBIAR ESTADO (BOTÓN TOGGLE PARA RENTA) ----
   document.querySelectorAll('.prop-toggle-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const el   = e.currentTarget;
@@ -357,7 +389,98 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ---- ELIMINAR CON EL MISMO DISEÑO ----
+  // ---- CAMBIAR ESTADO (SELECT PARA VENTA) ----
+  document.querySelectorAll('.prop-status-select').forEach(select => {
+    select.addEventListener('change', async (e) => {
+      const el = e.currentTarget;
+      const newStatus = el.value;                      // available | unavailable | sold
+      const current   = el.dataset.currentStatus;      // estado actual
+      const name      = el.dataset.title || 'la propiedad';
+      const toggleUrl = el.dataset.toggleUrl;
+      const soldUrl   = el.dataset.soldUrl;
+
+      if (!newStatus || newStatus === current) {
+        return;
+      }
+
+      // Si selecciona "Vendida" => lo mandamos al flujo de comisión
+      if (newStatus === 'sold') {
+        const res = await Swal.fire({
+          ...swalOpts,
+          icon: 'question',
+          title: 'Marcar como vendida',
+          html: `Al continuar, te llevaremos a la pantalla para <b>registrar la venta y pagar la comisión</b> de <b>${name}</b>.`,
+          confirmButtonText: 'Continuar',
+        });
+
+        if (!res.isConfirmed) {
+          el.value = current;
+          return;
+        }
+
+        window.location.href = soldUrl;
+        return;
+      }
+
+      // available / unavailable => PATCH a toggleStatus con "status"
+      const label =
+        newStatus === 'available'   ? 'disponible' :
+        newStatus === 'unavailable' ? 'no disponible' :
+        newStatus;
+
+      const res = await Swal.fire({
+        ...swalOpts,
+        icon: 'question',
+        title: 'Cambiar estado',
+        html: `¿Seguro que quieres marcar <b>${name}</b> como <b>${label}</b>?`,
+      });
+
+      if (!res.isConfirmed) {
+        el.value = current;
+        return;
+      }
+
+      try {
+        const resp = await fetch(toggleUrl, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          },
+          body: new URLSearchParams({
+            _method: 'PATCH',
+            status: newStatus
+          })
+        });
+
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+        await Swal.fire({
+          ...swalOpts,
+          showCancelButton: false,
+          icon: 'success',
+          title: 'Actualizado',
+          text: 'El estado se cambió correctamente.',
+          confirmButtonText: 'Aceptar'
+        });
+
+        window.location.reload();
+      } catch (err) {
+        await Swal.fire({
+          ...swalOpts,
+          showCancelButton: false,
+          icon: 'error',
+          title: 'Ups',
+          text: 'No se pudo cambiar el estado. Intenta de nuevo.',
+          confirmButtonText: 'Entendido'
+        });
+        el.value = current;
+      }
+    });
+  });
+
+  // ---- ELIMINAR PROPIEDAD ----
   document.querySelectorAll('[data-delete-url]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const name = btn.dataset.propertyName || 'la propiedad';

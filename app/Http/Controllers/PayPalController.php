@@ -240,22 +240,32 @@ class PayPalController extends Controller
             if (!empty($data['sale_id'])) {
                 $sale = Sale::with('property')->findOrFail($data['sale_id']);
 
+                // Marcar la comisión como pagada (una sola vez)
                 if (is_null($sale->commission_paid_at)) {
                     $sale->commission_paid_at = now();
                     $sale->save();
                 }
 
-                if ($sale->property && is_null($sale->property->sold_at)) {
-                    $sale->property->sold_at = now();
-                    $sale->property->save();
+                // Actualizar la propiedad SOLO cuando el pago se completó
+                if ($sale->property) {
+                    $property = $sale->property;
+
+                    if (is_null($property->sold_at)) {
+                        $property->sold_at = now();
+                    }
+
+                    // Aquí se marca definitivamente como vendida
+                    if ($property->status !== 'sold') {
+                        $property->status = 'sold';
+                    }
+
+                    $property->save();
                 }
 
-                // 👇 Evitar excepción si la ruta no existe
                 $redirectUrl = Route::has('agent.analytics')
                     ? route('agent.analytics')
-                    : url('/agent'); // aquí puedes poner la URL que quieras como fallback
+                    : route('home');
             }
-
 
             return response()->json([
                 'success'      => true,
@@ -490,14 +500,21 @@ class PayPalController extends Controller
                 ], 400);
             }
 
-            // Marcar comisión pagada
+            // ✅ Marcar comisión como pagada
             $sale->commission_paid_at = now();
             $sale->save();
 
-            // Marcar propiedad vendida si no lo estaba
-            if ($sale->property && is_null($sale->property->sold_at)) {
-                $sale->property->sold_at = now();
-                $sale->property->save();
+            // ✅ Marcar la propiedad como vendida SOLO cuando la comisión se haya pagado
+            $property = $sale->property;
+
+            if ($property) {
+                $property->status = 'sold';
+
+                if (!$property->sold_at) {
+                    $property->sold_at = now();
+                }
+
+                $property->save();
             }
 
             // 🔁 Redirección después del pago (si existe la ruta)

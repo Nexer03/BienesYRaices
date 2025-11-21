@@ -24,6 +24,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatReservationController;
 use App\Http\Controllers\ChatVisitController;
+use App\Http\Controllers\AlertController;
+
 
 
 
@@ -51,6 +53,9 @@ Route::get('/properties-map', function () {
     $properties = Property::with('images')->get();
     return view('properties.Properties', ['properties' => $properties]);
 })->name('properties.map');
+
+Route::get('/alerts/{alert}/{channel}/unsubscribe', [AlertController::class, 'unsubscribe'])
+    ->name('alerts.unsubscribe');
 
 // Formulario para convertirse en agente
 Route::get('/agent-register', function () {
@@ -169,6 +174,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/preferences', [UserPreferenceController::class, 'update'])
         ->name('preferences.update');
 
+    Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
+    Route::post('/alerts', [AlertController::class, 'store'])->name('alerts.store');
+    Route::patch('/alerts/{alert}', [AlertController::class, 'update'])->name('alerts.update');
+    Route::patch('/alerts/{alert}/pause', [AlertController::class, 'pause'])->name('alerts.pause');
+    Route::patch('/alerts/{alert}/resume', [AlertController::class, 'resume'])->name('alerts.resume');
+    Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
+    Route::get('/alerts/metrics', [AlertController::class, 'metrics'])->name('alerts.metrics');
+
     // Favoritos del usuario logeado
     Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
     Route::post('/favorites/{property}', [FavoriteController::class, 'store'])->name('favorites.store');
@@ -201,7 +214,7 @@ Route::middleware(['auth', 'agent'])->group(function () {
     Route::prefix('properties')->group(function () {
 
         Route::get('/', [PropertyController::class, 'index'])->name('properties.index');
-        Route::get('/my', [PropertyController::class, 'myProperties'])->name('properties.my');
+        Route::get('my', [PropertyController::class, 'myProperties'])->name('properties.my');
         Route::get('/create', [PropertyController::class, 'create'])->name('properties.create');
         Route::post('/', [PropertyController::class, 'store'])->name('properties.store');
         Route::get('/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
@@ -215,6 +228,10 @@ Route::middleware(['auth', 'agent'])->group(function () {
         // ⬇ CAMBIA SOLO ESTA LÍNEA
         Route::get('agent/visits/feed', [VisitController::class, 'feed'])
             ->name('properties.agent.visits.feed'); // nombre único, ya no choca
+
+        Route::get('/{property}/sale-redirect', [PropertyController::class, 'redirectToSaleCommission'])
+            ->name('properties.sale.redirect');
+
     });
 
 

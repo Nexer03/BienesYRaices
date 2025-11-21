@@ -157,9 +157,10 @@ class AppServiceProvider extends ServiceProvider
 
                 // 2.e) Nueva propiedad recomendada para el usuario
                 if ($type === NewPropertyMatchNotification::class) {
-                    $propertyTitle = $data['property_title'] ?? null;
+                    $propertyTitle = $data['property_title'] ?? $data['title'] ?? null;
                     $city          = $data['city']           ?? null;
                     $price         = $data['price']          ?? null;
+                    $matchScore    = $data['match_score']    ?? null;
 
                     if (!$title) {
                         $title = 'Nueva propiedad recomendada';
@@ -180,6 +181,10 @@ class AppServiceProvider extends ServiceProvider
 
                         if ($price) {
                             $parts[] = "con un precio de $" . number_format($price, 2);
+                        }
+
+                        if ($matchScore !== null) {
+                            $parts[] = "Nivel de coincidencia: {$matchScore}%";
                         }
 
                         $description = implode(' ', $parts) . '.';

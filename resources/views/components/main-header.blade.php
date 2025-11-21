@@ -12,61 +12,57 @@
 
     {{-- Acciones móviles (solo <md) --}}
     <div class="flex items-center gap-3 md:hidden">
-      {{-- Campanita móvil (solo agent/admin) --}}
-      @auth
-        @if(in_array(auth()->user()->role, ['agent','admin']))
-          <div class="relative" id="header-notifications-mobile">
-            <button id="notifyBtnMobile"
-                    class="relative inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-100"
-                    aria-label="Notificaciones">
-              <i class="fa-regular fa-bell text-lg"></i>
-              @if(($unreadNotificationCount ?? 0) > 0)
-                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] leading-[18px] text-white bg-red-500 rounded-full text-center">
-                  {{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}
-                </span>
-              @endif
-            </button>
-
-            @if(isset($headerNotifications))
-              <div id="notifyMenuMobile"
-                   class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
-                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Notificaciones</h4>
-                  <form method="POST" action="{{ route('notifications.markAllRead') }}">
-                    @csrf
-                    <button type="submit" class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
-                      Marcar todas como leídas
-                    </button>
-                  </form>
-                </div>
-
-                <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
-                  @forelse($headerNotifications as $n)
-                    <a href="{{ route('notifications.redirect', $n['id']) }}"
-                       class="flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                      <span class="text-indigo-500 dark:text-indigo-400 text-lg">
-                        <i class="{{ $n['icon'] }}"></i>
-                      </span>
-                      <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ $n['title'] }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-300">{{ $n['description'] }}</p>
-                        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{{ $n['time'] }}</p>
-                      </div>
-                      @if(!$n['read'])
-                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
-                      @endif
-                    </a>
-                  @empty
-                    <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-300">
-                      Sin notificaciones por ahora.
-                    </div>
-                  @endforelse
-                </div>
-              </div>
-            @endif
-          </div>
+      {{-- Campanita móvil (usuarios autenticados) --}}
+    @auth
+    <div class="relative" id="header-notifications-mobile">
+        <button id="notifyBtnMobile"
+                class="relative inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-100"
+                aria-label="Notificaciones">
+        <i class="fa-regular fa-bell text-lg"></i>
+        @if(($unreadNotificationCount ?? 0) > 0)
+            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-[11px] leading-[18px] text-white bg-red-500 rounded-full text-center">
+            {{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}
+            </span>
         @endif
-      @endauth
+        </button>
+
+        @if(isset($headerNotifications))
+        <div id="notifyMenuMobile"
+            class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
+            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Notificaciones</h4>
+            <form method="POST" action="{{ route('notifications.markAllRead') }}">
+                @csrf
+                <button type="submit" class="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+                Marcar todas como leídas
+                </button>
+            </form>
+            </div>
+
+            <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+            @forelse($headerNotifications as $n)
+                <a href="{{ route('notifications.redirect', $n['id']) }}"
+                class="flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                <span class="text-indigo-500 dark:text-indigo-400 text-lg">
+                    <i class="{{ $n['icon'] }}"></i>
+                </span>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ $n['title'] }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-300">{{ $n['description'] }}</p>
+                    <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{{ $n['time'] }}</p>
+                </div>
+                </a>
+            @empty
+                <p class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                No tienes notificaciones por ahora.
+                </p>
+            @endforelse
+            </div>
+        </div>
+        @endif
+    </div>
+    @endauth
+
 
       {{-- Lupa móvil: Home y Mapa --}}
       @if(request()->routeIs('home') || request()->routeIs('properties.map'))
@@ -87,58 +83,58 @@
 
     {{-- Navegación DESKTOP (md+) --}}
     <nav class="hidden md:flex items-center gap-6 text-gray-700 dark:text-gray-100 font-medium">
-      {{-- Campanita desktop (solo agent/admin) --}}
-      @auth
-        @if(in_array(auth()->user()->role, ['agent','admin']))
-          <div class="relative" id="header-notifications-desktop">
+      {{-- Campanita desktop (usuarios autenticados) --}}
+        @auth
+        <div class="relative" id="header-notifications-desktop">
             <button id="notifyBtnDesktop"
                     class="relative inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                     aria-label="Notificaciones">
-              <i class="fa-regular fa-bell text-lg text-gray-700 dark:text-gray-100"></i>
-              @if(($unreadNotificationCount ?? 0) > 0)
-                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] leading-[18px] text-white bg-red-500 rounded-full text-center">
-                  {{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}
+            <i class="fa-regular fa-bell text-lg text-gray-700 dark:text-gray-100"></i>
+            @if(($unreadNotificationCount ?? 0) > 0)
+                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-[11px] leading-[18px] text-white bg-red-500 rounded-full text-center">
+                {{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}
                 </span>
-              @endif
+            @endif
             </button>
 
             @if(isset($headerNotifications))
-              <div id="notifyMenuDesktop"
-                   class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
+            <div id="notifyMenuDesktop"
+                class="hidden absolute right-0 mt-2 w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Notificaciones</h4>
-                  <form method="POST" action="{{ route('notifications.markAllRead') }}">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Notificaciones</h4>
+                <form method="POST" action="{{ route('notifications.markAllRead') }}">
                     @csrf
-                    <button type="submit" class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
-                      Marcar todas como leídas
+                    <button type="submit" class="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+                    Marcar todas como leídas
                     </button>
-                  </form>
+                </form>
                 </div>
+
                 <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
-                  @forelse($headerNotifications as $n)
+                @forelse($headerNotifications as $n)
                     <a href="{{ route('notifications.redirect', $n['id']) }}"
-                       class="flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                      <span class="text-indigo-500 dark:text-indigo-400 text-lg"><i class="{{ $n['icon'] }}"></i></span>
-                      <div class="flex-1">
+                    class="flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <span class="text-indigo-500 dark:text-indigo-400 text-lg"><i class="{{ $n['icon'] }}"></i></span>
+                    <div class="flex-1">
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ $n['title'] }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-300">{{ $n['description'] }}</p>
                         <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{{ $n['time'] }}</p>
-                      </div>
-                      @if(!$n['read'])
-                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
-                      @endif
-                    </a>
-                  @empty
-                    <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-300">
-                      Sin notificaciones por ahora.
                     </div>
-                  @endforelse
+                    @if(!$n['read'])
+                        <span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>
+                    @endif
+                    </a>
+                @empty
+                    <p class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                    No tienes notificaciones por ahora.
+                    </p>
+                @endforelse
                 </div>
-              </div>
+            </div>
             @endif
-          </div>
-        @endif
-      @endauth
+        </div>
+        @endauth
+
 
       {{-- Links según estado/rol (desktop) --}}
       @guest
