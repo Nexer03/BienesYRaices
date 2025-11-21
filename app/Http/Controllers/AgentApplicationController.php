@@ -54,7 +54,7 @@ class AgentApplicationController extends Controller
             Notification::send($admins, new NewAgentApplicationSubmitted($application));
         }
 
-        return redirect()->route('dashboard')->with(
+        return redirect()->route('agent.view')->with(
             'success',
             'Tu solicitud ha sido enviada correctamente. En breve será revisada por un administrador.'
         );
