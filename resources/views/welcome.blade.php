@@ -80,7 +80,7 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-300">
+<body class="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
     {{-- Prompt de preferencias --}}
     @auth
