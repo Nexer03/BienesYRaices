@@ -429,6 +429,25 @@
   document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', updatePriceLabel));
   updatePriceLabel();
 
+  // === Estilos del mapa (claro/oscuro) ===
+  const lightMapStyle = [
+    {featureType:"poi",stylers:[{visibility:"off"}]},
+    {featureType:"transit",stylers:[{visibility:"off"}]},
+    {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]}
+  ];
+  const darkMapStyle = [
+    {elementType:"geometry",stylers:[{color:"#1f2937"}]},
+    {elementType:"labels.text.fill",stylers:[{color:"#93a4b8"}]},
+    {elementType:"labels.text.stroke",stylers:[{color:"#1f2937"}]},
+    {featureType:"administrative",elementType:"geometry",stylers:[{color:"#334155"}]},
+    {featureType:"poi",stylers:[{visibility:"off"}]},
+    {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]},
+    {featureType:"road",elementType:"geometry",stylers:[{color:"#2b3647"}]},
+    {featureType:"road",elementType:"geometry.stroke",stylers:[{color:"#374151"}]},
+    {featureType:"water",elementType:"geometry",stylers:[{color:"#0b1220"}]},
+    {featureType:"transit",stylers:[{visibility:"off"}]}
+  ];
+
   fetch('/maps-key')
     .then(res => res.json())
     .then(data => {
@@ -448,7 +467,17 @@
       lng: parseFloat(lonInput.value) || -105.28472026684265
     };
 
-    const map = new google.maps.Map(document.getElementById("map"), { center: start, zoom: 16 });
+    const isDark = document.documentElement.classList.contains('dark');
+
+    const map = new google.maps.Map(document.getElementById("map"), {
+      center: start,
+      zoom: 16,
+      styles: isDark ? darkMapStyle : lightMapStyle
+    });
+    // Exponer para que el toggle de tema pueda actualizar estilos sin recrear el mapa
+    window._editMap = map;
+    window._editMapStyles = { light: lightMapStyle, dark: darkMapStyle };
+
     const marker = new google.maps.Marker({ map, draggable: true, position: start });
     const geocoder = new google.maps.Geocoder();
 
@@ -491,15 +520,15 @@
 
   /* ---------- Mostrar/ocultar amenidades por propósito ---------- */
   function toggleAmenities() {
-  const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
+    const selectedType = document.querySelector('input[name="listing_type"]:checked')?.value;
 
-  document.querySelectorAll('.amenity-category').forEach(cat => {
-    const show = cat.dataset.type === selectedType;
-    cat.style.display = show ? 'block' : 'none';
-  });
-}
-toggleAmenities();
-document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', toggleAmenities));
+    document.querySelectorAll('.amenity-category').forEach(cat => {
+      const show = cat.dataset.type === selectedType;
+      cat.style.display = show ? 'block' : 'none';
+    });
+  }
+  toggleAmenities();
+  document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', toggleAmenities));
 
   toggleAmenities();
   document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventListener('change', toggleAmenities));
@@ -526,6 +555,13 @@ document.querySelectorAll('input[name="listing_type"]').forEach(r => r.addEventL
         html.classList.toggle('dark', isDark);
         try { localStorage.setItem('theme', mode); } catch (e) {}
         setIconAndLabel();
+
+        // Actualiza el estilo del MAPA sin recrearlo
+        if (window._editMap && window._editMapStyles) {
+          window._editMap.setOptions({
+            styles: isDark ? window._editMapStyles.dark : window._editMapStyles.light
+          });
+        }
       }
 
       // Al cargar, usamos la clase ya puesta por el script del <head>

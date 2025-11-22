@@ -21,9 +21,7 @@
   </script>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' };
-  </script>
+  <script> tailwind.config = { darkMode: 'class' }; </script>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
@@ -32,7 +30,17 @@
     .step-panel { transition: transform .35s ease, opacity .35s ease; }
     .step-hidden { transform: translateX(4rem); opacity: 0; pointer-events: none; }
     .step-active { transform: translateX(0); opacity: 1; }
-    #map { height: 360px; width: 100%; border-radius: .75rem; }
+
+    /* Mapa */
+    #map { height: 360px; width: 100%; border-radius: .75rem; position: relative; }
+    /* Capa de fade para transición suave del estilo del mapa */
+    #map .map-style-fader{
+      position:absolute; inset:0;
+      background:#0b1220; /* un tono oscuro que combina con dark */
+      opacity:0; pointer-events:none;
+      transition: opacity .25s ease;
+      border-radius: inherit;
+    }
 
     /* 🔹 Estilo moderno para campos del formulario (modo claro) */
     input[type="text"],
@@ -80,9 +88,7 @@
     }
     html.dark ::placeholder { color:#6b7280; }
 
-    html.dark #map {
-      background-color: #020617;
-    }
+    html.dark #map { background-color: #020617; }
   </style>
 </head>
 
@@ -605,8 +611,28 @@
     }
   </script>
 
-  <!-- JS: Google Maps + Autocomplete -->
+  <!-- JS: Google Maps + Autocomplete (con estilo claro/oscuro y fade suave) -->
   <script>
+    // Estilos de mapa
+    const lightMapStyle = [
+      {featureType:"poi",stylers:[{visibility:"off"}]},
+      {featureType:"transit",stylers:[{visibility:"off"}]},
+      {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]}
+    ];
+    const darkMapStyle = [
+      {elementType:"geometry",stylers:[{color:"#1f2937"}]},
+      {elementType:"labels.text.fill",stylers:[{color:"#93a4b8"}]},
+      {elementType:"labels.text.stroke",stylers:[{color:"#1f2937"}]},
+      {featureType:"administrative",elementType:"geometry",stylers:[{color:"#334155"}]},
+      {featureType:"poi",stylers:[{visibility:"off"}]},
+      {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]},
+      {featureType:"road",elementType:"geometry",stylers:[{color:"#2b3647"}]},
+      {featureType:"road",elementType:"geometry.stroke",stylers:[{color:"#374151"}]},
+      {featureType:"water",elementType:"geometry",stylers:[{color:"#0b1220"}]},
+      {featureType:"transit",stylers:[{visibility:"off"}]}
+    ];
+
+    // Cargar API
     fetch('/maps-key')
       .then(res => res.json())
       .then(data => {
@@ -616,9 +642,39 @@
         document.head.appendChild(script);
       });
 
+    // Referencia global del mapa para actualizar estilos al cambiar tema
+    window.__newPropMap = null;
+
+    function createMapFadeLayer() {
+      const mapEl = document.getElementById('map');
+      if (!mapEl) return null;
+      let layer = mapEl.querySelector('.map-style-fader');
+      if (!layer) {
+        layer = document.createElement('div');
+        layer.className = 'map-style-fader';
+        mapEl.appendChild(layer);
+      }
+      return layer;
+    }
+
+    function triggerMapFade() {
+      const layer = createMapFadeLayer();
+      if (!layer) return;
+      layer.style.opacity = '1';
+      setTimeout(() => { layer.style.opacity = '0'; }, 220);
+    }
+
     function initMap() {
       const defaultLocation = { lat: 20.709810580434393, lng: -105.28472026684265 };
-      const map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 14 });
+      const isDark = document.documentElement.classList.contains('dark');
+
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: defaultLocation, zoom: 14,
+        styles: isDark ? darkMapStyle : lightMapStyle,
+        mapTypeControl: false, streetViewControl: true
+      });
+      window.__newPropMap = map;
+
       const marker = new google.maps.Marker({ map: map, draggable: true, position: defaultLocation });
       const geocoder = new google.maps.Geocoder();
       const addressInput = document.getElementById("address-input");
@@ -626,6 +682,7 @@
       const latInput = document.getElementById('latitude');
       const lonInput = document.getElementById('longitude');
 
+      // Autocomplete
       const autocomplete = new google.maps.places.Autocomplete(addressInput);
       autocomplete.bindTo("bounds", map);
 
@@ -646,6 +703,7 @@
         document.getElementById('city-hidden').value = city;
       });
 
+      // Drag del marcador
       marker.addListener('dragend', function() {
         const pos = marker.getPosition();
         latInput.value = pos.lat();
@@ -664,6 +722,7 @@
           .catch(e => console.log("Geocoder failed:", e));
       });
 
+      // Evitar submit con Enter si no hay sugerencias abiertas
       addressInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
           const container = document.querySelector('.pac-container');
@@ -672,6 +731,7 @@
         }
       });
     }
+    window.initMap = initMap;
   </script>
 
   <!-- JS: Amenidades por tipo + etiqueta de precio + validación final submit -->
@@ -761,7 +821,7 @@
     @endif
   </script>
 
-  {{-- Toggle de tema (sincronizado con localStorage, igual que en otras vistas) --}}
+  {{-- Toggle de tema (sincronizado con localStorage) + actualización de estilo del mapa con fade --}}
   <script>
     (function () {
       const html  = document.documentElement;
@@ -782,6 +842,27 @@
         html.classList.toggle('dark', isDark);
         try { localStorage.setItem('theme', mode); } catch (e) {}
         setIconAndLabel();
+
+        // Si el mapa ya está cargado, actualizamos su estilo y hacemos fade
+        if (window.__newPropMap && window.google) {
+          try {
+            // pequeña capa para suavizar el cambio de tiles
+            (function triggerMapFade(){
+              const mapEl = document.getElementById('map');
+              if (!mapEl) return;
+              let layer = mapEl.querySelector('.map-style-fader');
+              if (!layer) {
+                layer = document.createElement('div');
+                layer.className = 'map-style-fader';
+                mapEl.appendChild(layer);
+              }
+              layer.style.opacity = '1';
+              setTimeout(()=>{ layer.style.opacity = '0'; }, 220);
+            })();
+
+            window.__newPropMap.setOptions({ styles: isDark ? darkMapStyle : lightMapStyle });
+          } catch(e) {}
+        }
       }
 
       // Inicializar según clase actual (puesta por el script del <head>)

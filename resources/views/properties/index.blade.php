@@ -320,7 +320,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-  // Reutilizable: estilo Tailwind para botones del Swal
+  // Reutilizable: estilo Tailwind para botones del Swal (oscuro/claro)
   const swalOpts = {
     buttonsStyling: false,
     reverseButtons: true,
@@ -328,12 +328,12 @@ document.addEventListener('DOMContentLoaded', function () {
     cancelButtonText: 'Cancelar',
     confirmButtonText: 'Sí, cambiar',
     customClass: {
-      popup: 'rounded-xl',
-      title: 'text-gray-900',
-      htmlContainer: 'text-gray-700',
+      popup: 'rounded-xl bg-white text-gray-900 border border-gray-200 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700',
+      title: 'text-gray-900 dark:text-gray-100',
+      htmlContainer: 'text-gray-700 dark:text-gray-300',
       actions: 'gap-3',
       confirmButton: 'px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none',
-      cancelButton: 'px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none',
+      cancelButton: 'px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
     },
   };
 
