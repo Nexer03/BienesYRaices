@@ -617,7 +617,7 @@
       });
 
     function initMap() {
-      const defaultLocation = { lat: 20.749757, lng: -105.258849 };
+      const defaultLocation = { lat: 20.709810580434393, lng: -105.28472026684265 };
       const map = new google.maps.Map(document.getElementById("map"), { center: defaultLocation, zoom: 14 });
       const marker = new google.maps.Marker({ map: map, draggable: true, position: defaultLocation });
       const geocoder = new google.maps.Geocoder();

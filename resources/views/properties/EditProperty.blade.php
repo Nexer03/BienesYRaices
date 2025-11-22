@@ -444,8 +444,8 @@
     const cityInput= document.getElementById('city');
 
     const start = {
-      lat: parseFloat(latInput.value)  || 20.749757,
-      lng: parseFloat(lonInput.value) || -105.258849
+      lat: parseFloat(latInput.value)  || 20.709810580434393,
+      lng: parseFloat(lonInput.value) || -105.28472026684265
     };
 
     const map = new google.maps.Map(document.getElementById("map"), { center: start, zoom: 16 });
