@@ -632,6 +632,70 @@
     </h2>
     <div id="map" class="overflow-hidden"></div>
   </section>
+    {{-- Información del vendedor --}}
+    <section class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 md:p-6">
+      <h2 class="text-xl md:text-2xl font-semibold border-b border-gray-100 dark:border-gray-800 pb-2 mb-4 text-gray-900 dark:text-gray-50 flex items-center gap-2">
+        <i class="fa-solid fa-id-card-clip text-blue-500"></i>
+        <span>Información del vendedor</span>
+      </h2>
+
+      @php
+        $seller = $property->user;
+        $sellerAvatar = $seller?->avatar
+          ? asset('storage/' . $seller->avatar)
+          : 'https://ui-avatars.com/api/?name=' . urlencode($seller->name ?? 'Nombre del vendedor') . '&background=0EA5E9&color=fff';
+        $listedDate = optional($property->created_at)->format('d/m/Y');
+        $sellerPhone = $seller?->phone;
+      @endphp
+
+      <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        
+        {{-- Avatar --}}
+        <div class="flex-shrink-0">
+          <img src="{{ $sellerAvatar }}" alt="Avatar de {{ $seller->name ?? 'nombre del vendedor' }}" 
+            class="w-20 h-20 rounded-full object-cover border border-gray-200 dark:border-gray-700 shadow-sm">
+        </div>
+
+        <div class="flex-1 space-y-3">
+
+          {{-- Nombre + Fecha --}}
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+
+            {{-- Nombre --}}
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Nombre del vendedor</p>
+              <p class="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                {{ $seller->name ?? 'Información no disponible' }}
+              </p>
+            </div>
+
+            {{-- Fecha --}}
+            @if($listedDate)
+              <div class="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-800">
+                <span class="font-semibold">Publicado:</span>
+                <span>{{ $listedDate }}</span>
+              </div>
+            @endif
+
+          </div>
+
+          {{-- Teléfono DEBAJO de fecha --}}
+          @if($sellerPhone)
+            <div class="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-800">
+              <i class="fa-solid fa-phone text-blue-500"></i>
+              <span>{{ $sellerPhone }}</span>
+            </div>
+          @endif
+
+          {{-- Bio --}}
+          <p class="text-gray-700 dark:text-gray-200 leading-relaxed text-sm sm:text-base">
+            {{ $seller?->bio ?: 'Biografía no disponible.' }}
+          </p>
+
+        </div>
+      </div>
+    </section>
+
 </main>
 
 {{-- Modal visita --}}
