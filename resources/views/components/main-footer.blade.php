@@ -42,7 +42,7 @@
     {{-- Línea inferior --}}
     <div class="border-t border-gray-800 mt-10 pt-6 text-center text-sm text-gray-500">
         <div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-6">
-            <p>© {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.</p>
+            <p>© {{ date('Y') }} SIN BECA NO HAY RENTA. </p>
             <div class="flex gap-6 mt-4 md:mt-0">
                 <button type="button" data-modal-target="privacy-modal" class="hover:text-blue-400 transition-colors">Privacidad</button>
                 <button type="button" data-modal-target="terms-modal" class="hover:text-blue-400 transition-colors">Términos</button>
@@ -64,15 +64,28 @@
                 </button>
             </div>
             <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto text-sm leading-relaxed">
-                <p>
-                    Respetamos tu privacidad y protegemos tus datos personales. Solo recopilamos la información necesaria para ofrecer nuestros servicios y la tratamos con la máxima confidencialidad.
+               <p>
+                    En SIN BECA NO HAY RENTA valoramos tu privacidad y tratamos tus datos personales 
+                    con responsabilidad. La información que recopilamos se utiliza exclusivamente 
+                    para brindarte una experiencia segura, eficiente y personalizada dentro de la 
+                    plataforma. Esto incluye la administración de tu cuenta, la gestión de 
+                    propiedades, visitas, reservas y la comunicación necesaria entre usuarios, 
+                    agentes y propietarios.
                 </p>
                 <p>
-                    Tus datos se utilizan para crear y administrar tu cuenta, procesar operaciones inmobiliarias y brindarte soporte. No compartimos tu información con terceros sin tu consentimiento, salvo obligación legal.
+                    No compartimos tu información con terceros, salvo cuando sea estrictamente 
+                    necesario para cumplir con obligaciones legales o cuando tú lo autorices de 
+                    manera explícita. Todos los datos son procesados bajo medidas técnicas y 
+                    organizativas destinadas a proteger su confidencialidad, integridad y 
+                    disponibilidad.
                 </p>
                 <p>
-                    Puedes acceder, actualizar o eliminar tus datos en cualquier momento desde tu perfil o escribiendo a soporte@sinbeca.com. Implementamos medidas de seguridad técnicas y organizativas para mantenerlos protegidos.
+                    Puedes solicitar el acceso, corrección o eliminación de tus datos personales en 
+                    cualquier momento desde tu cuenta o escribiendo directamente a 
+                    <strong>ti1901032@academica.utbb.edu.mx</strong>. Nuestro compromiso es mantener 
+                    tus datos seguros y brindarte total transparencia sobre su uso.
                 </p>
+
             </div>
             <div class="flex justify-end gap-3 px-6 pb-6">
                 <button type="button" data-modal-close class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-100 font-medium">Cerrar</button>
@@ -93,15 +106,28 @@
                 </button>
             </div>
             <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto text-sm leading-relaxed">
-                <p>
-                    Al usar la plataforma aceptas cumplir con nuestras políticas de publicación y conducta. Nos reservamos el derecho de moderar contenido y suspender cuentas que incumplan estos términos o intenten actividades fraudulentas.
-                </p>
-                <p>
-                    El uso del sitio se ofrece "tal cual", sin garantías de disponibilidad continua. Nos esforzamos por mantener la plataforma estable y segura, pero no somos responsables por pérdidas derivadas de interrupciones o errores de terceros.
-                </p>
-                <p>
-                    Cualquier disputa se resolverá conforme a la legislación local aplicable. Si tienes dudas, contáctanos para recibir atención personalizada.
-                </p>
+              <p>
+                Al utilizar SIN BECA NO HAY RENTA aceptas nuestros lineamientos de uso, 
+                publicación y conducta dentro de la plataforma. Esperamos que todos los usuarios 
+                actúen con responsabilidad y de buena fe, evitando cualquier intento de fraude, 
+                suplantación de identidad, manipulación de información o abuso hacia otros 
+                usuarios o agentes.
+            </p>
+            <p>
+                Aunque trabajamos constantemente para ofrecer una plataforma estable y segura, 
+                los servicios se proporcionan “tal cual”, por lo que no garantizamos la 
+                disponibilidad continua del sistema ni la ausencia de interrupciones, fallos o 
+                errores causados por factores externos, proveedores de servicios o situaciones 
+                fuera de nuestro control.
+            </p>
+            <p>
+                Nos reservamos el derecho de suspender cuentas, remover contenido o intervenir 
+                en casos donde se detecten actividades irregulares o incumplimiento de estos 
+                términos. El uso del sitio y cualquier disputa relacionada se regirán según la 
+                legislación mexicana aplicable. Para asistencia adicional puedes contactarnos en 
+                <strong>ti1901032@academica.utbb.edu.mx</strong>.
+            </p>
+
             </div>
             <div class="flex justify-end gap-3 px-6 pb-6">
                 <button type="button" data-modal-close class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-100 font-medium">Cerrar</button>
@@ -123,14 +149,25 @@
             </div>
             <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto text-sm leading-relaxed">
                 <p>
-                    Utilizamos cookies propias y de terceros para recordar tus preferencias, analizar el uso del sitio y mejorar tu experiencia de navegación.
+                    Utilizamos cookies propias y de terceros para mejorar tu experiencia en la 
+                    plataforma. Estas cookies nos permiten recordar tus preferencias, optimizar el 
+                    rendimiento del sitio, analizar el uso general del sistema y ofrecerte 
+                    contenido más relevante según tu actividad.
                 </p>
                 <p>
-                    Puedes configurar tu navegador para rechazar cookies o recibir avisos antes de guardarlas. Algunas funciones pueden verse afectadas si las desactivas.
+                    Algunas cookies son esenciales para el funcionamiento del sitio, mientras que 
+                    otras pueden ser desactivadas desde la configuración de tu navegador. Ten en 
+                    cuenta que deshabilitar ciertas cookies podría limitar funcionalidades como 
+                    guardado de preferencias, navegación personalizada o acceso rápido a ciertos 
+                    módulos.
                 </p>
                 <p>
-                    Al continuar navegando aceptas el uso de cookies según esta política. Para más información o ajustar tu consentimiento, escríbenos a ti1901032@academica.utbb.edu.mx.
+                    Al continuar navegando en SIN BECA NO HAY RENTA aceptas el uso de cookies bajo 
+                    esta política. Si deseas más información o necesitas asistencia para ajustar tu 
+                    consentimiento, puedes comunicarte con nosotros al correo 
+                    <strong>ti1901032@academica.utbb.edu.mx</strong>.
                 </p>
+
             </div>
             <div class="flex justify-end gap-3 px-6 pb-6">
                 <button type="button" data-modal-close class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-100 font-medium">Cerrar</button>
