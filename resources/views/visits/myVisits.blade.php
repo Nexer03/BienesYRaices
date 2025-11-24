@@ -51,6 +51,14 @@
   <!-- CONTENIDO PRINCIPAL -->
   <main class="max-w-4xl mx-auto mt-12 px-6 mb-16 text-center flex-1" x-data="{ tab: '{{ $activeTab }}' }">
 
+    @if (session('status'))
+      <div class="mb-6 text-left">
+        <div class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100 px-4 py-3 rounded-lg text-sm font-semibold">
+          {{ session('status') }}
+        </div>
+      </div>
+    @endif
+
     <!-- Encabezado visual -->
     <div class="flex flex-col items-center mb-8">
       <div class="flex items-center justify-center bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200 w-16 h-16 rounded-full mb-3 shadow-inner">
@@ -140,6 +148,31 @@
                 <strong>Notas:</strong> <span class="text-gray-700 dark:text-gray-200">{{ $visit->notes }}</span>
               </div>
             @endif
+
+            <div class="mt-4 text-left" x-data="{ open: false }">
+              <button type="button"
+                      @click="open = !open"
+                      class="px-4 py-2 text-sm font-semibold rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-100 dark:bg-blue-900/30">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Dejar sugerencia al agente
+              </button>
+
+              <form x-show="open" x-transition method="POST" action="{{ route('suggestions.store') }}" class="mt-3 space-y-3" x-cloak>
+                @csrf
+                <input type="hidden" name="type" value="visit">
+                <input type="hidden" name="visit_id" value="{{ $visit->id }}">
+
+                <label class="block text-left">
+                  <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tu sugerencia</span>
+                  <textarea name="message" rows="3" required
+                            class="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Cuéntale al agente qué podría mejorar en tus visitas"></textarea>
+                </label>
+
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+                  Enviar sugerencia
+                </button>
+              </form>
+            </div>
           </div>
           @endforeach
         </div>
@@ -164,6 +197,31 @@
               <div><strong>Salida:</strong> {{ \Carbon\Carbon::parse($res->end_date)->format('d/m/Y') }}</div>
               <div><strong>Noches:</strong> {{ $res->nights }}</div>
               <div><strong>Total:</strong> ${{ number_format($res->total_price, 2) }} MXN</div>
+            </div>
+
+            <div class="mt-4 text-left" x-data="{ open: false }">
+              <button type="button"
+                      @click="open = !open"
+                      class="px-4 py-2 text-sm font-semibold rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-100 dark:bg-blue-900/30">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Dejar sugerencia al agente
+              </button>
+
+              <form x-show="open" x-transition method="POST" action="{{ route('suggestions.store') }}" class="mt-3 space-y-3" x-cloak>
+                @csrf
+                <input type="hidden" name="type" value="reservation">
+                <input type="hidden" name="reservation_id" value="{{ $res->id }}">
+
+                <label class="block text-left">
+                  <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Tu sugerencia</span>
+                  <textarea name="message" rows="3" required
+                            class="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Comparte qué podría mejorar el agente en tu experiencia de renta"></textarea>
+                </label>
+
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+                  Enviar sugerencia
+                </button>
+              </form>
             </div>
           </div>
           @endforeach

@@ -114,7 +114,10 @@ class AdminReportController extends Controller
 
         // ====== Ventas (inmuebles vendidos) ======
         $soldQuery = Property::with('user')
-            ->whereNotNull('sold_at');
+            ->where(function ($query) {
+                $query->whereNotNull('sold_at')
+                    ->orWhere('status', 'sold');
+            });
 
         if ($filters['agent']) {
             $soldQuery->where('user_id', $filters['agent']);
@@ -135,7 +138,10 @@ class AdminReportController extends Controller
         $salesByAgent = User::where('role', 'agent')
             ->when($filters['agent'], fn($q) => $q->where('id', $filters['agent']))
             ->withCount(['properties' => function ($q) use ($filters) {
-                $q->whereNotNull('sold_at');
+                $q->where(function ($query) {
+                    $query->whereNotNull('sold_at')
+                        ->orWhere('status', 'sold');
+                });
                 if ($filters['city']) {
                     $q->where('city', $filters['city']);
                 }
