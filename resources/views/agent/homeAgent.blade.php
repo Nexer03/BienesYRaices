@@ -125,6 +125,23 @@
                 </a>
             </div>
 
+            <!-- Mis sugerencias -->
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
+                <div class="text-blue-500 text-3xl mb-4">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Mis sugerencias
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                    Revisa y administra las sugerencias que has enviado
+                </p>
+                <a href="{{ route('agent.suggestions.index') }}"
+                   class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
+                    Ver sugerencias →
+                </a>
+            </div>
+
             <!-- Estadísticas -->
             <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
                 <div class="text-blue-500 text-3xl mb-4 relative inline-block">
