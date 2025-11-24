@@ -224,27 +224,36 @@ class AdminReportController extends Controller
         $salesCommissionTotal  = $salesCommissionByAgent->sum('commission');
 
         // ====== Comparativa por zona ======
+        [$salesDateFilter, $salesDateBindings] = $this->dateFilterSql('sold_at', $filters);
+        [$rentalDateFilter, $rentalDateBindings] = $this->dateFilterSql('created_at', $filters);
+
         $zoneQuery = Property::query()
             ->select('city')
             ->whereNotNull('city')
             ->selectRaw('COUNT(*) as total_properties')
-            ->selectRaw("SUM(CASE WHEN sold_at IS NOT NULL THEN 1 ELSE 0 END) as sold_count")
-            ->selectRaw("SUM(CASE WHEN status = 'rented' THEN 1 ELSE 0 END) as rented_count")
+            ->selectRaw(
+                "SUM(CASE WHEN listing_type = 'sale' AND sold_at IS NOT NULL{$salesDateFilter} THEN 1 ELSE 0 END) as sold_count",
+                $salesDateBindings
+            )
+            ->selectRaw(
+                "SUM(CASE WHEN listing_type = 'rent' AND status = 'rented'{$rentalDateFilter} THEN 1 ELSE 0 END) as rented_count",
+                $rentalDateBindings
+            )
             ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_count")
-              ->selectRaw("AVG(CASE WHEN sold_at IS NOT NULL THEN price END) as average_sale_price")
-            ->selectRaw("AVG(CASE WHEN status = 'rented' THEN price END) as average_rent_price");
+            ->selectRaw(
+                "AVG(CASE WHEN listing_type = 'sale' AND sold_at IS NOT NULL{$salesDateFilter} THEN price END) as average_sale_price",
+                $salesDateBindings
+            )
+            ->selectRaw(
+                "AVG(CASE WHEN listing_type = 'rent'{$rentalDateFilter} THEN price END) as average_rent_price",
+                $rentalDateBindings
+            );
 
         if ($filters['agent']) {
             $zoneQuery->where('user_id', $filters['agent']);
         }
         if ($filters['city']) {
             $zoneQuery->where('city', $filters['city']);
-        }
-        if ($filters['from']) {
-            $zoneQuery->whereDate('sold_at', '>=', $filters['from']);
-        }
-        if ($filters['to']) {
-            $zoneQuery->whereDate('sold_at', '<=', $filters['to']);
         }
 
         $zoneComparison = $zoneQuery
@@ -265,5 +274,23 @@ class AdminReportController extends Controller
             'salesCommissionTotal'    => $salesCommissionTotal,
             'rentalCommissionTotal'   => $rentalCommissionTotal,
         ];
+    }
+
+    private function dateFilterSql(string $column, array $filters): array
+    {
+        $sql      = '';
+        $bindings = [];
+
+        if ($filters['from']) {
+            $sql        .= " AND DATE({$column}) >= ?";
+            $bindings[] = $filters['from'];
+        }
+
+        if ($filters['to']) {
+            $sql        .= " AND DATE({$column}) <= ?";
+            $bindings[] = $filters['to'];
+        }
+
+        return [$sql, $bindings];
     }
 }
