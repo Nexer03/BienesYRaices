@@ -349,31 +349,32 @@ class PropertyController extends Controller
     }
 
     public function redirectToSaleCommission(Property $property)
-{
-    $agent = auth()->user();
+    {
+        $agent = auth()->user();
 
-    // Buscar última visita COMPLETADA para esta propiedad y este agente
-    $visit = Visit::where('property_id', $property->id)
-        ->where('agent_id', $agent->id)
-        ->where('status', 'completed')
-        ->orderByDesc('visit_date')
-        ->first();
+        // Buscar última visita COMPLETADA para esta propiedad y este agente
+        $visit = Visit::where('property_id', $property->id)
+            ->where('agent_id', $agent->id)
+            ->where('status', 'completed')
+            ->orderByDesc('visit_date')
+            ->first();
 
-    // Si no hay visita, la creamos automáticamente
-    if (!$visit) {
-        $visit = Visit::create([
-            'property_id' => $property->id,
-            'agent_id'    => $agent->id,
-            'client_id'   => null, // luego podrás elegir comprador en el formulario
-            'visit_date'  => now(),
-            'status'      => 'completed',
-            'notes'       => 'Visita generada automáticamente al marcar la propiedad como vendida para registrar la comisión.',
-        ]);
+        // Si no hay visita, la creamos automáticamente SIN cliente todavía
+        if (!$visit) {
+            $visit = Visit::create([
+                'property_id' => $property->id,
+                'agent_id'    => $agent->id,
+                'client_id'   => null, // 👈 se asignará después al registrar la comisión
+                'visit_date'  => now(),
+                'status'      => 'completed',
+                'notes'       => 'Visita generada automáticamente al marcar la propiedad como vendida para registrar la comisión.',
+            ]);
+        }
+
+        // Redirigir al flujo normal de venta (formulario de comisión)
+        return redirect()->route('agent.visits.sale', $visit);
     }
 
-    // Siempre redirigimos al flujo normal de venta (sale.blade)
-    return redirect()->route('agent.visits.sale', $visit);
-}
 
 
 

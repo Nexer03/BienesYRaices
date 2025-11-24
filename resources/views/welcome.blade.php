@@ -272,7 +272,7 @@
         {{-- Propiedades basadas en tus preferencias (sin vendidas) --}}
         @auth
             @php
-                $recommendedVisible = collect($recommendedProperties ?? [])->where('status', '!=', 'sold');
+                $recommendedVisible = collect($recommendedProperties ?? [])->whereNotIn('status', ['sold', 'unavailable']);
             @endphp
 
             @if ($userPreferences && $recommendedVisible->isNotEmpty())
@@ -381,7 +381,8 @@
         {{-- Propiedades por ciudad (sin vendidas) --}}
         @foreach($propertiesByCity as $city => $cityProperties)
             @php
-                $cityPropertiesVisible = collect($cityProperties)->where('status', '!=', 'sold');
+                $cityPropertiesVisible = collect($cityProperties)
+                    ->whereNotIn('status', ['sold', 'unavailable']);
             @endphp
 
             @if ($cityPropertiesVisible->isEmpty())
@@ -482,7 +483,7 @@
                 </button>
 
                 @php
-                    $recentVisible = collect($properties)->where('status', '!=', 'sold');
+                    $recentVisible = collect($properties)->whereNotIn('status', ['sold', 'unavailable']);
                 @endphp
 
                 <div class="carousel-container flex space-x-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth mx-2">
