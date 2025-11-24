@@ -228,25 +228,24 @@ class AdminReportController extends Controller
         [$rentalDateFilter, $rentalDateBindings] = $this->dateFilterSql('created_at', $filters);
 
         $zoneQuery = Property::query()
-            ->leftJoin('sales', 'sales.property_id', '=', 'properties.id')
-            ->select('properties.city as city')
-            ->whereNotNull('properties.city')
-            ->selectRaw('COUNT(DISTINCT properties.id) as total_properties')
+            ->select('city')
+            ->whereNotNull('city')
+            ->selectRaw('COUNT(*) as total_properties')
             ->selectRaw(
-                "SUM(CASE WHEN properties.listing_type = 'sale' AND properties.sold_at IS NOT NULL{$salesDateFilter} THEN 1 ELSE 0 END) as sold_count",
+                "SUM(CASE WHEN listing_type = 'sale' AND sold_at IS NOT NULL{$salesDateFilter} THEN 1 ELSE 0 END) as sold_count",
                 $salesDateBindings
             )
             ->selectRaw(
-                "SUM(CASE WHEN properties.listing_type = 'rent' AND properties.status = 'rented'{$rentalDateFilter} THEN 1 ELSE 0 END) as rented_count",
+                "SUM(CASE WHEN listing_type = 'rent' AND status = 'rented'{$rentalDateFilter} THEN 1 ELSE 0 END) as rented_count",
                 $rentalDateBindings
             )
-            ->selectRaw("SUM(CASE WHEN properties.status = 'available' THEN 1 ELSE 0 END) as available_count")
+            ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_count")
             ->selectRaw(
-                "AVG(CASE WHEN properties.listing_type = 'sale' AND properties.sold_at IS NOT NULL{$salesDateFilter} THEN COALESCE(sales.sale_price, properties.price) END) as average_sale_price",
+                "AVG(CASE WHEN listing_type = 'sale' AND sold_at IS NOT NULL{$salesDateFilter} THEN price END) as average_sale_price",
                 $salesDateBindings
             )
             ->selectRaw(
-                "AVG(CASE WHEN properties.listing_type = 'rent'{$rentalDateFilter} THEN properties.price END) as average_rent_price",
+                "AVG(CASE WHEN listing_type = 'rent'{$rentalDateFilter} THEN price END) as average_rent_price",
                 $rentalDateBindings
             );
 
@@ -254,7 +253,7 @@ class AdminReportController extends Controller
             $zoneQuery->where('properties.user_id', $filters['agent']);
         }
         if ($filters['city']) {
-            $zoneQuery->where('properties.city', $filters['city']);
+            $zoneQuery->where('city', $filters['city']);
         }
 
         $zoneComparison = $zoneQuery
