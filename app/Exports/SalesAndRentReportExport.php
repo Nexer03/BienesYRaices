@@ -52,9 +52,9 @@ class SummarySheet implements FromArray, WithTitle
             ],
             ['Ciudad', $this->filters['city'] ?: 'Todas'],
             [],
-            ['Indicador', 'Valor'],
+            ['Indicador', 'Total'],
             ['Propiedades vendidas', $this->data['totalSoldProperties']],
-            ['Valor total vendido', $this->formatCurrency($this->data['totalValueSold'])],
+            ['Monto total vendido', $this->formatCurrency($this->data['totalValueSold'])],
             ['Reservas confirmadas', $this->data['totalRentalReservations']],
             ['Ingresos por rentas', $this->formatCurrency($this->data['totalRentalRevenue'])],
             ['Comisiones ventas', $this->formatCurrency($this->data['salesCommissionTotal'])],
@@ -91,7 +91,7 @@ class SalesSheet implements FromCollection, WithTitle, WithHeadings, WithMapping
             (int) $row->properties_count,
             (float) $row->total_sales_amount,
             $row->commission_rate !== null
-                ? number_format((float) $row->commission_rate * 100, 2, '.', '') . '%'
+                ? number_format((float) $row->commission_rate, 2, '.', '') . '%'
                 : 'N/D',
             (float) $row->commission_total,
         ];
@@ -132,7 +132,7 @@ class RentalsSheet implements FromCollection, WithTitle, WithHeadings, WithMappi
             (int) $row->total_reservations,
             (float) $row->total_revenue,
             $row->commission_rate !== null
-                ? number_format((float) $row->commission_rate * 100, 2, '.', '') . '%'
+                ? number_format((float) $row->commission_rate, 2, '.', '') . '%'
                 : 'N/D',
             (float) $row->commission_total,
         ];
