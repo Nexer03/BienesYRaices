@@ -15,7 +15,9 @@
         "maatwebsite/excel": "^3.1",
         "paypal/paypal-checkout-sdk": "^1.0",
         "pusher/pusher-php-server": "^7.2",
-        "srmklive/paypal": "^3.0"
+        "srmklive/paypal": "^3.0",
+        "symfony/http-client": "^7.3",
+        "symfony/mailgun-mailer": "^7.3"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",
