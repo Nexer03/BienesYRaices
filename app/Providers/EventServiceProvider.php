@@ -13,6 +13,7 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\ReservationPaid::class => [
             \App\Listeners\SetPropertyRentedOnPaid::class,
             \App\Listeners\NotifyAdminsOfReservationPaid::class,
+            \App\Listeners\NotifyGuestOfReservationPaid::class,
         ],
 
         \App\Events\PropertyPublishedOrUpdated::class => [

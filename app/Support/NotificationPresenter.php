@@ -6,6 +6,8 @@ use App\Notifications\NewAgentApplicationSubmitted;
 use App\Notifications\NewMessageNotification;
 use App\Notifications\NewPropertyMatchNotification;
 use App\Notifications\ReservationPaidNotification;
+use App\Notifications\AgentSuggestionNotification;
+use App\Notifications\ReservationConfirmationNotification;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
 
@@ -31,6 +33,8 @@ class NotificationPresenter
         return match ($notification->type) {
             NewMessageNotification::class => $this->messageUrl($data),
             ReservationPaidNotification::class => $this->reservationUrl($user),
+            ReservationConfirmationNotification::class => route('visits.my', ['tab' => 'reservations']),
+            AgentSuggestionNotification::class => route('agent.suggestions.index'),
             NewAgentApplicationSubmitted::class => route('admin.agent-applications.index'),
             NewPropertyMatchNotification::class => $this->propertyUrl($data),
             default => route('dashboard'),
@@ -42,6 +46,8 @@ class NotificationPresenter
         return match ($notification->type) {
             NewMessageNotification::class => 'Nuevo mensaje recibido',
             ReservationPaidNotification::class => 'Reserva confirmada',
+            ReservationConfirmationNotification::class => 'Tu reserva está lista',
+            AgentSuggestionNotification::class => 'Nueva sugerencia de cliente',
             NewAgentApplicationSubmitted::class => 'Nueva solicitud de agente',
             NewPropertyMatchNotification::class => 'Nueva propiedad recomendada',
             default => 'Notificación',
@@ -55,6 +61,8 @@ class NotificationPresenter
         return match ($notification->type) {
             NewMessageNotification::class => trim(($data['sender_name'] ?? 'Un usuario') . ' te ha escrito.'),
             ReservationPaidNotification::class => 'Se registró un pago para ' . ($data['property_title'] ?? 'una propiedad'),
+            ReservationConfirmationNotification::class => 'Tu reserva está confirmada para ' . ($data['property_title'] ?? 'una propiedad'),
+            AgentSuggestionNotification::class => 'Un cliente dejó sugerencias sobre ' . ($data['property_title'] ?? 'tu propiedad'),
             NewAgentApplicationSubmitted::class => ($data['applicant_name'] ?? 'Un usuario') . ' desea convertirse en agente.',
             NewPropertyMatchNotification::class => $this->propertyDescription($data),
             default => 'Tienes novedades en la plataforma.',
@@ -66,6 +74,8 @@ class NotificationPresenter
         return match ($notification->type) {
             NewMessageNotification::class => 'fa-regular fa-message',
             ReservationPaidNotification::class => 'fa-solid fa-receipt',
+            ReservationConfirmationNotification::class => 'fa-solid fa-calendar-check',
+            AgentSuggestionNotification::class => 'fa-solid fa-lightbulb',
             NewAgentApplicationSubmitted::class => 'fa-solid fa-user-tie',
             NewPropertyMatchNotification::class => 'fa-solid fa-house-circle-check',
             default => 'fa-regular fa-bell',
