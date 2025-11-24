@@ -71,11 +71,11 @@
             </a>
         </div>
 
-        <!-- Grid de acciones -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+               <!-- Grid de acciones -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 mb-12">
 
             <!-- Mis Propiedades -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center lg:col-span-2">
                 <div class="text-blue-500 text-3xl mb-4">
                     <i class="fas fa-building"></i>
                 </div>
@@ -92,7 +92,7 @@
             </div>
 
             <!-- Agendas -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center lg:col-span-2">
                 <div class="text-blue-500 text-3xl mb-4">
                     <i class="fas fa-calendar-alt"></i>
                 </div>
@@ -109,7 +109,7 @@
             </div>
 
             <!-- Mensajería -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center lg:col-span-2">
                 <div class="text-blue-500 text-3xl mb-4">
                     <i class="fas fa-comments"></i>
                 </div>
@@ -125,8 +125,8 @@
                 </a>
             </div>
 
-            <!-- Mis sugerencias -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
+            <!-- Mis sugerencias (fila de abajo, centrada) -->
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center lg:col-span-2 lg:col-start-2">
                 <div class="text-blue-500 text-3xl mb-4">
                     <i class="fas fa-lightbulb"></i>
                 </div>
@@ -137,16 +137,15 @@
                     Revisa y administra las sugerencias que has enviado
                 </p>
                 <a href="{{ route('agent.suggestions.index') }}"
-                   class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duration-200">
+                   class="inline-block text-blue-500 hover:text-blue-600 font-medium transition-colors duración-200">
                     Ver sugerencias →
                 </a>
             </div>
 
-            <!-- Estadísticas -->
-            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center">
+            <!-- Estadísticas (fila de abajo, centrada) -->
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 text-center lg:col-span-2 lg:col-start-4">
                 <div class="text-blue-500 text-3xl mb-4 relative inline-block">
                     <i class="fas fa-chart-line"></i>
-
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Estadísticas
@@ -161,6 +160,7 @@
             </div>
 
         </div>
+
     </main>
 
     <!-- Footer -->
