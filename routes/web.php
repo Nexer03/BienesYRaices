@@ -31,7 +31,7 @@ use App\Http\Controllers\AlertController;
 
 /*
 |--------------------------------------------------------------------------
-| Rutas Públicas
+| Rutas Públicas (No requieren auth)
 |--------------------------------------------------------------------------
 */
 // Página principal (listado general de propiedades)
