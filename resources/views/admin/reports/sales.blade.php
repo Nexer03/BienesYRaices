@@ -127,7 +127,7 @@
 
           <button type="submit"
                   class="bg-emerald-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-emerald-700 transition">
-            <i class="fa-solid fa-file-excel"></i> Exportar Excel
+            <i class="fa-solid fa-file-excel"></i> Exportar ventas y rentas en Excel
           </button>
         </form>
       </div>
