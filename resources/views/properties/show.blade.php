@@ -5,10 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{{ $property->title }}</title>
 
+  {{-- Anti-flash: aplica el tema guardado ANTES de cargar Tailwind --}}
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
+  {{-- Tailwind --}}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+
   {{-- Estilos externos --}}
   <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet"/>
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -48,7 +67,7 @@
       background:#fff;
     }
 
-    /* ====== LOOK tipo Airbnb (con mayor especificidad) ====== */
+    /* ====== LOOK tipo Airbnb (modo claro) ====== */
     .fp-shell .flatpickr-months{display:flex;background:#fff;padding:10px 0 0;}
     .fp-shell .flatpickr-months .flatpickr-month{flex:1;color:#222;height:50px;line-height:50px;text-align:center;position:relative;}
     .fp-shell .flatpickr-months .flatpickr-prev-month,
@@ -194,12 +213,160 @@
       padding: 20px;
       box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
     }
+
+    /* ========== Tema oscuro footer ========== */
+    .dark footer {
+      background-color: #020617 !important; /* slate-950 */
+    }
+
+    /* Fade suave para todo al cambiar de tema */
+    html.theme-fade * {
+      transition:
+        background-color .35s ease,
+        color .35s ease,
+        border-color .35s ease,
+        fill .35s ease;
+    }
+
+    /* Botón de tema: animación */
+    #theme-toggle {
+      transition: background-color .25s ease,
+                  color .25s ease,
+                  transform .25s ease,
+                  box-shadow .25s ease;
+    }
+
+    #theme-toggle.theme-bounce {
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(0,0,0,.18);
+    }
+
+    #theme-toggle-icon {
+      transition: transform .35s ease, opacity .2s ease;
+    }
+
+    #theme-toggle-icon.theme-spin {
+      transform: rotate(180deg);
+    }
+
+    /* ========== Modo oscuro para ventana MODAL de calendario completo ========== */
+    .dark #reservationModal {
+      background: rgba(15,23,42,0.85);
+    }
+
+    .dark #reservationModal > div {
+      background-color: #020617 !important; /* slate-950 */
+      color: #e5e7eb; /* slate-200 */
+      border: 1px solid #1f2937; /* slate-800 */
+    }
+
+    .dark #reservationModal h2 {
+      color: #e5e7eb;
+    }
+
+    .dark #reservationModal #modalDateHint {
+      color: #9ca3af;
+    }
+
+    .dark #reservationModal label {
+      color: #e5e7eb;
+    }
+
+    .dark #reservationModal input {
+      background-color: #020617;
+      color: #e5e7eb;
+    }
+
+    .dark #reservationModal .border {
+      border-color: #1f2937 !important;
+    }
+
+    .dark #priceSummary {
+      background-color: #020617;
+      border-color: #1f2937;
+      color: #e5e7eb;
+    }
+
+    .dark #reservationModal .text-gray-500 {
+      color: #9ca3af !important;
+    }
+
+    /* ========== Modo oscuro para el calendario Flatpickr dentro del modal ========== */
+    .dark .fp-shell .flatpickr-calendar {
+      background:#020617;
+      color:#e5e7eb;
+      border-color:#1f2937;
+    }
+
+    .dark .fp-shell .flatpickr-months {
+      background:#020617;
+    }
+
+    .dark .fp-shell .flatpickr-months .flatpickr-current-month .cur-month,
+    .dark .fp-shell .flatpickr-months .flatpickr-current-month .cur-year {
+      color:#e5e7eb;
+    }
+
+    .dark .fp-shell span.flatpickr-weekday {
+      color:#9ca3af !important;
+    }
+
+    .dark .fp-shell .flatpickr-day {
+      color:#e5e7eb;
+    }
+
+    .dark .fp-shell .flatpickr-day:hover,
+    .dark .fp-shell .flatpickr-day:focus {
+      background:#1f2937;
+      border-color:#1f2937;
+    }
+
+    .dark .fp-shell .flatpickr-day.today {
+      border-color:#e5e7eb;
+      color:#e5e7eb;
+    }
+
+    .dark .fp-shell .flatpickr-day.today:hover {
+      background:#e5e7eb;
+      color:#020617;
+    }
+
+    .dark .fp-shell .flatpickr-day.selected,
+    .dark .fp-shell .flatpickr-day.startRange,
+    .dark .fp-shell .flatpickr-day.endRange {
+      background:#2563eb !important;  /* azul */
+      border-color:#2563eb !important;
+      color:#f9fafb !important;
+    }
+
+    .dark .fp-shell .flatpickr-day.inRange {
+      background:#111827 !important;
+      border-color:#111827 !important;
+      box-shadow:-5px 0 0 #111827, 5px 0 0 #111827;
+    }
+
+    .dark .fp-shell .flatpickr-day.flatpickr-disabled,
+    .dark .fp-shell .flatpickr-day.disabled {
+      background-color:#111827 !important;
+      color:#6b7280 !important;
+    }
+
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-950 text-gray-800 dark:text-gray-100">
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
 <x-main-header />
+
+{{-- Botón Tema --}}
+<button id="theme-toggle"
+        class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg
+               bg-white text-gray-800 hover:bg-gray-100
+               dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+        aria-label="Cambiar tema">
+  <i id="theme-toggle-icon" class="fa-solid"></i>
+  <span class="text-sm font-medium"></span>
+</button>
 
 @php
   $isRent = $property->listing_type === 'rent';
@@ -632,6 +799,7 @@
     </h2>
     <div id="map" class="overflow-hidden"></div>
   </section>
+
     {{-- Información del vendedor --}}
     <section class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 md:p-6">
       <h2 class="text-xl md:text-2xl font-semibold border-b border-gray-100 dark:border-gray-800 pb-2 mb-4 text-gray-900 dark:text-gray-50 flex items-center gap-2">
@@ -679,7 +847,7 @@
 
           </div>
 
-          {{-- Teléfono DEBAJO de fecha --}}
+          {{-- Teléfono --}}
           @if($sellerPhone)
             <div class="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-800">
               <i class="fa-solid fa-phone text-blue-500"></i>
@@ -864,15 +1032,40 @@
   const propertyPrice = {{ $property->price }};
   const blockedRanges = @json($blocked);
 
-  // ================== Google Maps ==================
+  // ================== Google Maps con modo oscuro ==================
+  const lightMapStyle = [
+    {featureType:"poi",stylers:[{visibility:"off"}]},
+    {featureType:"transit",stylers:[{visibility:"off"}]},
+    {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]}
+  ];
+  const darkMapStyle = [
+    {elementType:"geometry",stylers:[{color:"#1f2937"}]},
+    {elementType:"labels.text.fill",stylers:[{color:"#93a4b8"}]},
+    {elementType:"labels.text.stroke",stylers:[{color:"#1f2937"}]},
+    {featureType:"administrative",elementType:"geometry",stylers:[{color:"#334155"}]},
+    {featureType:"poi",stylers:[{visibility:"off"}]},
+    {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]},
+    {featureType:"road",elementType:"geometry",stylers:[{color:"#2b3647"}]},
+    {featureType:"road",elementType:"geometry.stroke",stylers:[{color:"#374151"}]},
+    {featureType:"water",elementType:"geometry",stylers:[{color:"#0b1220"}]},
+    {featureType:"transit",stylers:[{visibility:"off"}]}
+  ];
+
   fetch('/maps-key').then(res=>res.json()).then(data=>{
     const script=document.createElement('script');
     script.src=`https://maps.googleapis.com/maps/api/js?key=${data.key}&callback=initMap`;
     script.async=true; document.head.appendChild(script);
   });
   function initMap(){
-    const map=new google.maps.Map(document.getElementById("map"),{center:propertyLocation,zoom:16});
+    const isDark = document.documentElement.classList.contains('dark');
+    const map=new google.maps.Map(document.getElementById("map"),{
+      center:propertyLocation,
+      zoom:16,
+      styles: isDark ? darkMapStyle : lightMapStyle
+    });
     new google.maps.Marker({map,position:propertyLocation,title:"{{ $property->title }}"});
+    window._propertyMap = map;
+    window._propertyMapStyles = { light: lightMapStyle, dark: darkMapStyle };
   }
 
   // ================== VISITAS ==================
@@ -892,6 +1085,7 @@
       return;
     }
     fetch('/visits',{
+
       method:'POST',
       headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
       body:JSON.stringify({ property_id:propertyId, agent_id:{{ $property->user_id }}, visit_date:visitDate })
@@ -927,7 +1121,7 @@
 
     const esLocale={
       weekdays:{ shorthand:['D','L','M','M','J','V','S'], longhand:['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] },
-      months:{ shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'], longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] },
+      months:{ shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'], longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Diciembre'] },
       firstDayOfWeek:1, rangeSeparator:' a '
     };
 
@@ -1074,5 +1268,64 @@
     ev.preventDefault(); if(window.fetch) toggleFavorite(); else document.getElementById('fav-fallback-form').submit();
   });
 </script>
+
+{{-- Toggle de tema con animación + sincronizado con mapa --}}
+<script>
+  (function () {
+    const html  = document.documentElement;
+    const btn   = document.getElementById('theme-toggle');
+    const icon  = document.getElementById('theme-toggle-icon');
+    const label = btn?.querySelector('span');
+
+    function setIconAndLabel() {
+      const isDark = html.classList.contains('dark');
+      if (!icon || !label) return;
+
+      icon.classList.remove('fa-sun', 'fa-moon');
+      icon.classList.add(isDark ? 'fa-moon' : 'fa-sun');
+      label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+    }
+
+    function startPageFade() {
+      html.classList.add('theme-fade');
+      setTimeout(() => html.classList.remove('theme-fade'), 400);
+    }
+
+    function animateButton() {
+      if (!btn || !icon) return;
+      btn.classList.add('theme-bounce');
+      icon.classList.add('theme-spin');
+      setTimeout(() => {
+        btn.classList.remove('theme-bounce');
+        icon.classList.remove('theme-spin');
+      }, 350);
+    }
+
+    function apply(mode) {
+      const isDark = mode === 'dark';
+      startPageFade();
+      html.classList.toggle('dark', isDark);
+      try { localStorage.setItem('theme', mode); } catch (e) {}
+      setIconAndLabel();
+      animateButton();
+
+      // Actualizar estilos del mapa si existe
+      if (window._propertyMap && window._propertyMapStyles) {
+        window._propertyMap.setOptions({
+          styles: isDark ? window._propertyMapStyles.dark : window._propertyMapStyles.light
+        });
+      }
+    }
+
+    // Estado inicial según clase actual del <html>
+    setIconAndLabel();
+
+    btn?.addEventListener('click', () => {
+      const next = html.classList.contains('dark') ? 'light' : 'dark';
+      apply(next);
+    });
+  })();
+</script>
+
 </body>
 </html>
