@@ -402,11 +402,24 @@
     });
   })();
 
-  /* ---------- UX: bloquear Enter en Dirección/Precio ---------- */
+   /* ---------- UX: bloquear Enter en Dirección/Precio ---------- */
   const addressInput = document.getElementById('address-input');
   const priceInput   = document.getElementById('price');
   if (addressInput) addressInput.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
   if (priceInput)   priceInput.addEventListener('keydown',   e => { if (e.key === 'Enter') e.preventDefault(); });
+
+  // 🔹 Nuevo: si cambian manualmente la dirección, limpiamos ciudad y coords
+  if (addressInput) {
+    addressInput.addEventListener('input', () => {
+      const cityInput  = document.getElementById('city');
+      const latInput   = document.getElementById('latitude');
+      const longInput  = document.getElementById('longitude');
+
+      if (cityInput)  cityInput.value  = '';
+      if (latInput)   latInput.value   = '';
+      if (longInput)  longInput.value  = '';
+    });
+  }
 
   /* ---------- Validación submit: requiere coords y ciudad si hay dirección ---------- */
   document.getElementById('property-edit-form').addEventListener('submit', (e) => {
@@ -419,6 +432,7 @@
       addressInput.focus();
     }
   });
+
 
   /* ---------- Google Maps (Autocomplete + drag) ---------- */
   function updatePriceLabel() {
