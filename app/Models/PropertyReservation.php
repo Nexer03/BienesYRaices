@@ -46,6 +46,11 @@ class PropertyReservation extends Model
         return $this->belongsTo(Property::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     // Calcula noches en tiempo real
     public function getNightsAttribute(): int
     {

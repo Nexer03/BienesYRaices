@@ -38,8 +38,10 @@ class VisitController extends Controller
                 return $res;
             });
 
+        $activeTab = $request->get('tab', 'visits');
+
         return view('visits.myVisits', compact('visits', 'reservations'))
-            ->with('activeTab', 'visits');
+            ->with('activeTab', $activeTab);
     }
 
     /**

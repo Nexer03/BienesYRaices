@@ -25,6 +25,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatReservationController;
 use App\Http\Controllers\ChatVisitController;
 use App\Http\Controllers\AlertController;
+use App\Http\Controllers\AgentSuggestionController;
 
 
 
@@ -192,6 +193,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Visitas
     Route::get('/my-visits', [VisitController::class, 'myVisits'])->name('visits.my');
+    Route::post('/suggestions', [AgentSuggestionController::class, 'store'])->name('suggestions.store');
 
     // Panel de agentes (solo si el usuario tiene rol agent)
     Route::get('/agent-home', function () {
@@ -256,6 +258,9 @@ Route::middleware(['auth', 'agent'])->group(function () {
             ->name('reservations.index');
         Route::get('reservations/feed', [AgentReservationController::class, 'feed'])
             ->name('reservations.feed');
+
+        Route::get('suggestions', [AgentSuggestionController::class, 'index'])
+            ->name('suggestions.index');
 
         // ---- Venta / Comisión ----
         Route::get('visits/{visit}/sale', [VisitController::class, 'saleForm'])

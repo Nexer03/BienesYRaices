@@ -107,6 +107,8 @@ public function store(Request $request)
 
         $reservation->save();
 
+        event(new \App\Events\ReservationPaid($reservation));
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
