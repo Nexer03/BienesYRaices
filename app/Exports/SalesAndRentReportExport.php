@@ -54,7 +54,7 @@ class SummarySheet implements FromArray, WithTitle
             [],
             ['Indicador', 'Total'],
             ['Propiedades vendidas', $this->data['totalSoldProperties']],
-            ['Monto total vendido', $this->formatCurrency($this->data['totalValueSold'])],
+            ['Valor total vendido', $this->formatCurrency($this->data['totalValueSold'])],
             ['Reservas confirmadas', $this->data['totalRentalReservations']],
             ['Ingresos por rentas', $this->formatCurrency($this->data['totalRentalRevenue'])],
             ['Comisiones ventas', $this->formatCurrency($this->data['salesCommissionTotal'])],
@@ -174,7 +174,8 @@ class ZoneSheet implements FromCollection, WithTitle, WithHeadings, WithMapping
             (int) $row->sold_count,
             (int) $row->rented_count,
             (int) $row->available_count,
-            number_format((float) $row->average_price, 2, '.', ''),
+            number_format((float) $row->average_sale_price, 2, '.', ''),
+            number_format((float) $row->average_rent_price, 2, '.', ''),
         ];
     }
 
@@ -186,7 +187,8 @@ class ZoneSheet implements FromCollection, WithTitle, WithHeadings, WithMapping
             'Vendidas',
             'Rentadas',
             'Disponibles',
-            'Precio Promedio (MXN)',
+            'Precio Promedio Venta (MXN)',
+            'Precio Promedio Renta (MXN)',
         ];
     }
 
