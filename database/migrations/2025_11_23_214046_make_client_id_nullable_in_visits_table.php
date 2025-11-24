@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    public function up(): void
-    {
-        // Ajusta el tipo EXACTO al que tienes en la tabla
-        DB::statement('ALTER TABLE visits MODIFY client_id BIGINT UNSIGNED NULL;');
-    }
+    public function up()
+{
+    Schema::table('visits', function (Blueprint $table) {
+        $table->unsignedBigInteger('client_id')->nullable()->change();
+    });
+}
+
 
     public function down(): void
     {
