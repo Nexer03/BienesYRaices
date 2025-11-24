@@ -34,7 +34,6 @@ use App\Http\Controllers\AlertController;
 | Rutas Públicas
 |--------------------------------------------------------------------------
 */
-
 // Página principal (listado general de propiedades)
 Route::get('/', [PropertyController::class, 'index'])->name('home');
 
