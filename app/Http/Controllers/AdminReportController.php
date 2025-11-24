@@ -231,7 +231,8 @@ class AdminReportController extends Controller
             ->selectRaw("SUM(CASE WHEN sold_at IS NOT NULL THEN 1 ELSE 0 END) as sold_count")
             ->selectRaw("SUM(CASE WHEN status = 'rented' THEN 1 ELSE 0 END) as rented_count")
             ->selectRaw("SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_count")
-            ->selectRaw('AVG(price) as average_price');
+              ->selectRaw("AVG(CASE WHEN sold_at IS NOT NULL THEN price END) as average_sale_price")
+            ->selectRaw("AVG(CASE WHEN status = 'rented' THEN price END) as average_rent_price");
 
         if ($filters['agent']) {
             $zoneQuery->where('user_id', $filters['agent']);
