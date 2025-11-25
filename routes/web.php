@@ -51,7 +51,19 @@ Route::get('/maps-key', function () {
 // Vista del mapa con todas las propiedades
 Route::get('/properties-map', function () {
     $properties = Property::with('images')->get();
-    return view('properties.Properties', ['properties' => $properties]);
+    $favoriteIds = auth()->check()
+        ? auth()->user()->favoriteProperties()->pluck('properties.id')->toArray()
+        : [];
+    $favoriteToggleUrls = $properties->mapWithKeys(fn ($property) => [
+        $property->id => route('favorites.toggle', $property),
+    ]);
+
+    return view('properties.Properties', [
+        'favoriteIds' => $favoriteIds,
+        'favoriteToggleUrls' => $favoriteToggleUrls,
+        'loginUrl' => route('login'),
+        'properties' => $properties,
+    ]);
 })->name('properties.map');
 
 Route::get('/alerts/{alert}/{channel}/unsubscribe', [AlertController::class, 'unsubscribe'])
