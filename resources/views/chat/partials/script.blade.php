@@ -8,6 +8,57 @@
     return;
   }
 
+  const html = document.documentElement;
+  const themeBtn = document.getElementById('chat-theme-toggle');
+  const themeIcon = document.getElementById('chat-theme-toggle-icon');
+  const themeLabel = document.querySelector('.chat-theme-toggle__label');
+
+  const syncThemeUi = (isDark) => {
+    if (themeIcon) {
+      themeIcon.classList.remove('fa-sun', 'fa-moon');
+      themeIcon.classList.add(isDark ? 'fa-moon' : 'fa-sun');
+    }
+    if (themeLabel) {
+      themeLabel.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
+    }
+  };
+
+  const applyTheme = (mode, animate = false) => {
+    const isDark = mode === 'dark';
+    html.classList.toggle('dark', isDark);
+    html.dataset.bsTheme = isDark ? 'dark' : 'light';
+
+    try {
+      localStorage.setItem('theme', mode);
+    } catch (error) {}
+
+    syncThemeUi(isDark);
+
+    if (animate && themeBtn && themeIcon) {
+      themeBtn.classList.add('is-pressed');
+      themeIcon.classList.add('is-rotating');
+      setTimeout(() => {
+        themeBtn.classList.remove('is-pressed');
+        themeIcon.classList.remove('is-rotating');
+      }, 350);
+    }
+  };
+
+  const initialTheme = (() => {
+    try {
+      return localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+    } catch (error) {
+      return 'light';
+    }
+  })();
+
+  applyTheme(initialTheme, false);
+
+  themeBtn?.addEventListener('click', () => {
+    const next = html.classList.contains('dark') ? 'light' : 'dark';
+    applyTheme(next, true);
+  });
+
   // === Panel lateral de visita (HTML parcial) ===
   // Asegúrate de tener un contenedor con id="chat-visit-panel"
   // y en el div de #messages algo como:

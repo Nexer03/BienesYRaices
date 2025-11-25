@@ -5,12 +5,80 @@
     --chat-border: rgba(15, 23, 42, 0.08);
     --chat-primary: #2563eb;
     --chat-primary-soft: #eff6ff;
-    --chat-muted: #94a3b8;
+    --chat-muted: #64748b;
   }
 
-    /* ================== Calendario de reservas (Flatpickr) ================== */
-    /* Ocultamos el input “host” de flatpickr (el que se ve arriba en el chat) */
-    .fp-hidden-input{
+  /* Variables en modo oscuro (cuando <html> tiene la clase .dark) */
+  .dark {
+    --chat-bg: #020617;                     /* slate-950 */
+    --chat-surface: rgba(15, 23, 42, 0.96); /* slate-900 */
+    --chat-border: rgba(148, 163, 184, 0.45); /* slate-400 */
+    --chat-primary: #60a5fa;                /* blue-400 */
+    --chat-primary-soft: rgba(37, 99, 235, 0.16);
+    --chat-muted: #9ca3af;                  /* gray-400 */
+  }
+
+  /* Botón de tema (dark / light) */
+  .chat-theme-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 200;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 999px;
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .chat-theme-toggle:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  }
+
+  .chat-theme-toggle.is-pressed {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 22px 45px rgba(15, 23, 42, 0.16);
+  }
+
+  .chat-theme-toggle__icon {
+    transition: transform 0.35s ease, opacity 0.2s ease;
+  }
+
+  .chat-theme-toggle__icon.is-rotating {
+    transform: rotate(180deg);
+  }
+
+  /* Modo oscuro para el botón: funciona tanto con Bootstrap (data-bs-theme)
+     como con Tailwind (.dark en <html>) */
+  [data-bs-theme="dark"] .chat-theme-toggle,
+  .dark .chat-theme-toggle {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+  }
+
+  [data-bs-theme="dark"] .chat-theme-toggle:hover,
+  .dark .chat-theme-toggle:hover {
+    background: #111827;
+    color: #e2e8f0;
+  }
+
+  /* ================== Calendario de reservas (Flatpickr) ================== */
+  .fp-hidden-input{
     position:absolute !important;
     width:1px !important;
     height:1px !important;
@@ -20,34 +88,33 @@
     clip:rect(0 0 0 0) !important;
     overflow:hidden !important;
     white-space:nowrap !important;
-    }
+  }
 
-    /* Calendario embebido en el shell */
-    .fp-shell .flatpickr-calendar{
+  .fp-shell .flatpickr-calendar{
     position:static !important;
     border:0 !important;
     box-shadow:none !important;
     width:100% !important;
     max-width:100%;
     background:#fff;
-    }
+  }
 
-    /* ====== LOOK tipo Airbnb ====== */
-    .fp-shell .flatpickr-months{
+  /* ====== LOOK tipo Airbnb ====== */
+  .fp-shell .flatpickr-months{
     display:flex;
     background:#fff;
     padding:10px 0 0;
-    }
-    .fp-shell .flatpickr-months .flatpickr-month{
+  }
+  .fp-shell .flatpickr-months .flatpickr-month{
     flex:1;
     color:#222;
     height:50px;
     line-height:50px;
     text-align:center;
     position:relative;
-    }
-    .fp-shell .flatpickr-months .flatpickr-prev-month,
-    .fp-shell .flatpickr-months .flatpickr-next-month{
+  }
+  .fp-shell .flatpickr-months .flatpickr-prev-month,
+  .fp-shell .flatpickr-months .flatpickr-next-month{
     position:absolute;
     top:50%;
     width:20px;
@@ -57,54 +124,54 @@
     color:#717171;
     fill:#717171;
     cursor:pointer;
-    }
-    .fp-shell .flatpickr-months .flatpickr-prev-month{ left:3px; }
-    .fp-shell .flatpickr-months .flatpickr-next-month{ right:3px; }
-    .fp-shell .flatpickr-months .flatpickr-prev-month:hover,
-    .fp-shell .flatpickr-months .flatpickr-next-month:hover{
+  }
+  .fp-shell .flatpickr-months .flatpickr-prev-month{ left:3px; }
+  .fp-shell .flatpickr-months .flatpickr-next-month{ right:3px; }
+  .fp-shell .flatpickr-months .flatpickr-prev-month:hover,
+  .fp-shell .flatpickr-months .flatpickr-next-month:hover{
     color:#222;
     fill:#222;
-    }
-    .fp-shell .flatpickr-months .flatpickr-current-month{
+  }
+  .fp-shell .flatpickr-months .flatpickr-current-month{
     font-size:110%;
-    }
-    .fp-shell .flatpickr-months .flatpickr-current-month .cur-month{
+  }
+  .fp-shell .flatpickr-months .flatpickr-current-month .cur-month{
     font-weight:700;
     color:#222;
-    }
-    .fp-shell .flatpickr-months .flatpickr-current-month .cur-year{
+  }
+  .fp-shell .flatpickr-months .flatpickr-current-month .cur-year{
     font-weight:400;
     color:#717171;
     background:transparent;
-    }
+  }
 
-    .fp-shell .flatpickr-weekdays{
+  .fp-shell .flatpickr-weekdays{
     display:flex;
     align-items:center;
     height:28px;
     margin-bottom:5px;
-    }
-    .fp-shell .flatpickr-weekdays .flatpickr-weekdaycontainer{
+  }
+  .fp-shell .flatpickr-weekdays .flatpickr-weekdaycontainer{
     flex:1;
     display:flex;
-    }
-    .fp-shell span.flatpickr-weekday{
+  }
+  .fp-shell span.flatpickr-weekday{
     flex:1;
     text-align:center;
     font-size:11px;
     color:#717171!important;
     font-weight:600;
     text-transform:uppercase;
-    }
+  }
 
-    .fp-shell .flatpickr-days{
+  .fp-shell .flatpickr-days{
     width:100%;
-    }
-    .fp-shell .dayContainer{
+  }
+  .fp-shell .dayContainer{
     padding:1px 0 10px;
     min-width:315px;
-    }
-    .fp-shell .flatpickr-day{
+  }
+  .fp-shell .flatpickr-day{
     color:#222;
     border:1px solid transparent;
     background:none;
@@ -115,75 +182,72 @@
     flex:0 0 14.2857143%;
     text-align:center;
     cursor:pointer;
-    }
-    .fp-shell .flatpickr-day:hover,
-    .fp-shell .flatpickr-day:focus{
+  }
+  .fp-shell .flatpickr-day:hover,
+  .fp-shell .flatpickr-day:focus{
     background:#f7f7f7;
     border-color:#f7f7f7;
     outline:0;
-    }
-    .fp-shell .flatpickr-day.today{
+  }
+  .fp-shell .flatpickr-day.today{
     border-color:#222;
     color:#222;
-    }
-    .fp-shell .flatpickr-day.today:hover{
+  }
+  .fp-shell .flatpickr-day.today:hover{
     background:#222;
     border-color:#222;
     color:#fff;
-    }
+  }
 
-    .fp-shell .flatpickr-day.selected,
-    .fp-shell .flatpickr-day.startRange,
-    .fp-shell .flatpickr-day.endRange{
+  .fp-shell .flatpickr-day.selected,
+  .fp-shell .flatpickr-day.startRange,
+  .fp-shell .flatpickr-day.endRange{
     background:#222!important;
     color:#fff!important;
     border-color:#222!important;
-    }
-    .fp-shell .flatpickr-day.inRange{
+  }
+  .fp-shell .flatpickr-day.inRange{
     background:#f7f7f7!important;
     border-color:#f7f7f7!important;
     box-shadow:-5px 0 0 #f7f7f7,5px 0 0 #f7f7f7;
-    }
-    .fp-shell .flatpickr-day.startRange{
+  }
+  .fp-shell .flatpickr-day.startRange{
     border-radius:50% 0 0 50%;
-    }
-    .fp-shell .flatpickr-day.endRange{
+  }
+  .fp-shell .flatpickr-day.endRange{
     border-radius:0 50% 50% 0;
-    }
-    .fp-shell .flatpickr-day.startRange.endRange{
+  }
+  .fp-shell .flatpickr-day.startRange.endRange{
     border-radius:50%;
-    }
+  }
 
-    /* ==== Fechas no disponibles (forzado, siempre gris) ==== */
-    .fp-shell .flatpickr-day.flatpickr-disabled,
-    .fp-shell .flatpickr-day.flatpickr-disabled:hover,
-    .fp-shell .flatpickr-day.disabled,
-    .fp-shell .flatpickr-day.disabled:hover{
-    background-color:#f3f4f6 !important; /* gris claro */
-    color:#9ca3af !important;            /* texto gris medio */
+  /* ==== Fechas no disponibles ==== */
+  .fp-shell .flatpickr-day.flatpickr-disabled,
+  .fp-shell .flatpickr-day.flatpickr-disabled:hover,
+  .fp-shell .flatpickr-day.disabled,
+  .fp-shell .flatpickr-day.disabled:hover{
+    background-color:#f3f4f6 !important;
+    color:#9ca3af !important;
     border-color:transparent !important;
     cursor:not-allowed !important;
     opacity:1 !important;
     text-decoration:none !important;
-    }
+  }
 
-    /* Dentro de rangos deshabilitados */
-    .fp-shell .flatpickr-day.flatpickr-disabled.inRange,
-    .fp-shell .flatpickr-day.disabled.inRange{
-    background-color:#e5e7eb !important; /* gris un poco más oscuro */
+  .fp-shell .flatpickr-day.flatpickr-disabled.inRange,
+  .fp-shell .flatpickr-day.disabled.inRange{
+    background-color:#e5e7eb !important;
     color:#9ca3af !important;
-    }
+  }
 
-    /* Línea divisoria sutil entre meses en desktop */
-    @media (min-width:640px){
+  @media (min-width:640px){
     .fp-shell .flatpickr-days .dayContainer:nth-child(1){
-        border-right:1px solid #e5e7eb;
+      border-right:1px solid #e5e7eb;
     }
-    }
+  }
 
-    /* ==================Aqui termina Calendario de reservas (Flatpickr) ================== */
+  /* ==================Aqui termina Flatpickr ================== */
 
-  /* IMPORTANTE: que todo pueda usar 100vh correctamente */
   html,
   body {
     height: 100%;
@@ -196,12 +260,11 @@
     border-radius: 32px;
     padding: clamp(1rem, 2vw, 2rem);
     margin-bottom: 2rem;
-
-    /* contenedor a pantalla completa */
     height: 100vh;
     max-height: 100vh;
     display: flex;
     flex-direction: column;
+    color: #0f172a;
   }
 
   .visually-hidden {
@@ -217,7 +280,6 @@
   }
 
   .chat-app__surface {
-    /* grid para main + aside, pero ocupando toda la altura disponible */
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
     gap: clamp(1.5rem, 3vw, 2.5rem);
@@ -226,17 +288,15 @@
     border: 1px solid var(--chat-border);
     box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
     padding: clamp(1.25rem, 3vw, 2rem);
-
     flex: 1 1 auto;
-    min-height: 0;   /* clave para que hijos puedan usar overflow */
+    min-height: 0;
   }
 
   .chat-app__main {
     display: flex;
     flex-direction: column;
-    /* antes tenías min-height: 500px; eso hacía crecer la página */
     flex: 1 1 auto;
-    min-height: 0;   /* permite que .chat-thread scrollee */
+    min-height: 0;
   }
 
   .chat-app__header {
@@ -419,7 +479,7 @@
 
   .chat-thread {
     flex: 1 1 auto;
-    min-height: 0;           /* para que pueda hacer overflow en el contenedor */
+    min-height: 0;
     padding: 1.25rem 0;
     overflow-y: auto;
     display: flex;
@@ -619,7 +679,6 @@
 
   .chat-app__aside {
     position: relative;
-    /* que el panel lateral también tenga su propio scroll */
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -643,8 +702,6 @@
     .chat-app {
       border-radius: 0;
       padding: 1rem 0;
-
-      /* en móvil dejamos que el contenido crezca normal */
       height: auto;
       max-height: none;
     }
@@ -757,5 +814,257 @@
   @keyframes pulse {
     from { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.25); }
     to { box-shadow: 0 0 0 12px transparent; }
+  }
+
+  /* ================== MODO OSCURO: chat ================== */
+  .dark .chat-app {
+    background:
+      radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.18), transparent 45%),
+      radial-gradient(circle at 80% 0%, rgba(16, 185, 129, 0.18), transparent 40%),
+      var(--chat-bg);
+    color: #e5e7eb;
+  }
+
+  .dark .chat-app__surface {
+    background: var(--chat-surface);
+    border-color: var(--chat-border);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.8);
+  }
+
+  .dark .chat-thread {
+    background-color: #020617;
+  }
+
+  .dark .chat-thread__empty {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(148, 163, 184, 0.6);
+  }
+
+  .dark .chat-search {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: var(--chat-border);
+  }
+
+  .dark .chat-search input {
+    color: #e5e7eb;
+  }
+
+  .dark .chat-search-results {
+    background: rgba(15, 23, 42, 0.98);
+  }
+
+  .dark .chat-search-results__item:hover {
+    background: rgba(37, 99, 235, 0.2);
+  }
+
+  .dark .message-in {
+    background: #020617;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+  }
+
+  .dark .message-attachment {
+    border-color: rgba(148, 163, 184, 0.5);
+    background: rgba(15, 23, 42, 0.9);
+  }
+
+  .dark .chat-composer {
+    background-color: #020617;
+    border-top-color: var(--chat-border);
+  }
+
+  .dark .chat-input {
+    color: #e5e7eb;
+  }
+
+  .dark .composer-btn {
+    background: rgba(148, 163, 184, 0.18);
+    color: #e5e7eb;
+  }
+
+  .dark .composer-btn.is-recording {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fecaca;
+  }
+
+  .dark .chat-app__aside .card {
+    background: linear-gradient(145deg, #020617, #020617);
+  }
+
+  .dark .emoji-picker {
+    background: rgba(15, 23, 42, 0.9);
+  }
+
+  .dark .quick-reply {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.6);
+  }
+
+  .dark .chat-load-more {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(148, 163, 184, 0.6);
+  }
+
+  /* ================== MODO OSCURO: Flatpickr ================== */
+  .dark .fp-shell .flatpickr-calendar{
+    background:#020617;
+    color:#e5e7eb;
+  }
+
+  .dark .fp-shell .flatpickr-months{
+    background:transparent;
+  }
+
+  .dark .fp-shell .flatpickr-months .flatpickr-month{
+    color:#e5e7eb;
+  }
+
+  .dark .fp-shell .flatpickr-months .flatpickr-prev-month,
+  .dark .fp-shell .flatpickr-months .flatpickr-next-month{
+    color:#cbd5f5;
+    fill:#cbd5f5;
+  }
+
+  .dark .fp-shell .flatpickr-months .flatpickr-prev-month:hover,
+  .dark .fp-shell .flatpickr-months .flatpickr-next-month:hover{
+    color:#fff;
+    fill:#fff;
+  }
+
+  .dark .fp-shell span.flatpickr-weekday{
+    color:#9ca3af!important;
+  }
+
+  .dark .fp-shell .flatpickr-day{
+    color:#e5e7eb;
+  }
+
+  .dark .fp-shell .flatpickr-day:hover,
+  .dark .fp-shell .flatpickr-day:focus{
+    background:#020617;
+    border-color:#111827;
+  }
+
+  .dark .fp-shell .flatpickr-day.today{
+    border-color:#e5e7eb;
+    color:#e5e7eb;
+  }
+
+  .dark .fp-shell .flatpickr-day.today:hover{
+    background:#e5e7eb;
+    border-color:#e5e7eb;
+    color:#020617;
+  }
+
+  .dark .fp-shell .flatpickr-day.selected,
+  .dark .fp-shell .flatpickr-day.startRange,
+  .dark .fp-shell .flatpickr-day.endRange{
+    background:#3b82f6!important;
+    color:#fff!important;
+    border-color:#3b82f6!important;
+  }
+
+  .dark .fp-shell .flatpickr-day.inRange{
+    background:#0f172a!important;
+    border-color:#0f172a!important;
+    box-shadow:-5px 0 0 #0f172a,5px 0 0 #0f172a;
+  }
+
+  .dark .fp-shell .flatpickr-day.flatpickr-disabled,
+  .dark .fp-shell .flatpickr-day.flatpickr-disabled:hover,
+  .dark .fp-shell .flatpickr-day.disabled,
+  .dark .fp-shell .flatpickr-day.disabled:hover{
+    background-color:#0f172a !important;
+    color:#6b7280 !important;
+  }
+
+  .dark .fp-shell .flatpickr-day.flatpickr-disabled.inRange,
+  .dark .fp-shell .flatpickr-day.disabled.inRange{
+    background-color:#020617 !important;
+    color:#6b7280 !important;
+  }
+
+  @media (min-width:640px){
+    .dark .fp-shell .flatpickr-days .dayContainer:nth-child(1){
+      border-right:1px solid #1f2937;
+    }
+  }
+
+  /* ================= AJUSTES EXTRA MODO OSCURO ================= */
+
+  /* Textos "muted" (subtítulos, estados, etc.) */
+  .dark .chat-app .text-muted {
+    color: #9ca3af !important;
+  }
+
+  /* Estado vacío "Rompe el hielo" */
+  .dark .chat-thread__empty,
+  .dark .chat-thread__empty p,
+  .dark .chat-thread__empty .fw-semibold {
+    color: #e5e7eb !important;
+  }
+
+  /* Cards del panel derecho (propiedad / reservación / agenda) */
+  .dark .chat-app__aside .card,
+  .dark .chat-app__aside .card-body,
+  .dark .chat-app__aside .card-header {
+    color: #e5e7eb !important;
+  }
+
+  /* Cabecera blanca ("Reservación", etc.) en modo oscuro */
+  .dark .chat-app__aside .card-header.bg-white {
+    background-color: transparent !important;
+    color: #e5e7eb !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+  }
+
+  /* Fondo y borde más fancy para cards laterales en dark (incluye Reservación) */
+  .dark .chat-app__aside .card {
+    background:
+      radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.22), transparent 60%),
+      #020617;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.9);
+  }
+
+  /* Fade suave del cambio de tema (si en JS añades html.classList.add('theme-fade')) */
+  html.theme-fade * {
+    transition:
+      background-color .35s ease,
+      color .35s ease,
+      border-color .35s ease,
+      fill .35s ease;
+  }
+
+  /* Botón de tema general (#theme-toggle) */
+  #theme-toggle {
+    transition:
+      background-color .25s ease,
+      color .25s ease,
+      transform .25s ease,
+      box-shadow .25s ease;
+  }
+
+  #theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.55);
+  }
+
+  #theme-toggle.theme-bounce {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.75);
+  }
+
+  #theme-toggle-icon {
+    transition: transform .35s ease;
+  }
+
+  #theme-toggle-icon.theme-spin {
+    transform: rotate(180deg);
+  }
+
+  /* Forced dark styles por si Tailwind no alcanza a aplicar dark:bg... */
+  .dark #theme-toggle {
+    background-color: #020617 !important;
+    color: #e5e7eb !important;
   }
 </style>

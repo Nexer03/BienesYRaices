@@ -293,3 +293,13 @@
 
   </div>
 </div>
+
+<button
+  id="chat-theme-toggle"
+  class="chat-theme-toggle"
+  type="button"
+  aria-label="Cambiar tema"
+>
+  <i id="chat-theme-toggle-icon" class="fa-solid chat-theme-toggle__icon"></i>
+  <span class="chat-theme-toggle__label">Tema</span>
+</button>
