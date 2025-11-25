@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear cuenta - SIN BECA NO HAY RENTA</title>
 
+    <style>
+  /* Quitar flechas SOLO al input del teléfono */
+  input[type="number"].phone-input::-webkit-inner-spin-button,
+  input[type="number"].phone-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+  }
+
+  input[type="number"].phone-input {
+      -moz-appearance: textfield;
+      appearance: textfield; /* estándar */
+  }
+</style>
+
+
     {{-- Anti-flash --}}
     <script>
         (function () {
@@ -87,26 +102,28 @@
                     </div>
 
                     {{-- Phone --}}
-                    <div>
-                        <label for="phone" class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                            Teléfono
-                        </label>
-                        <input
-                            id="phone"
-                            type="number"
-                            name="phone"
-                            value="{{ old('phone') }}"
-                            required
-                            autocomplete="tel"
-                            class="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900
-                                   px-3 py-2 text-sm text-slate-900 dark:text-slate-100
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                        @error('phone')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
+                   <div>
+    <label for="phone" class="block text-sm font-medium text-slate-700 dark:text-slate-200">
+        Teléfono
+    </label>
+    <input
+        id="phone"
+        type="number"
+        name="phone"
+        value="{{ old('phone') }}"
+        required
+        autocomplete="tel"
+        min="0"
+        step="1"
+        oninput="if (this.value.length > 10) this.value = this.value.slice(0, 10);"
+        class="phone-input mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900
+               px-3 py-2 text-sm text-slate-900 dark:text-slate-100
+               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    >
+    @error('phone')
+        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+    @enderror
+</div>
                     {{-- Email --}}
                     <div>
                         <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-200">
