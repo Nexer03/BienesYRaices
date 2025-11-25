@@ -505,22 +505,33 @@
         html.classList.add('theme-fade');
         setTimeout(()=>html.classList.remove('theme-fade'), 420);
       }
-      function apply(mode){
+      function apply(mode, { animate = true, persist = true } = {}){
         const dark = mode==='dark';
-        startFade();
+        if (animate) {
+          startFade();
+        }
         html.classList.toggle('dark', dark);
-        try{ localStorage.setItem('theme', mode); }catch(e){}
+        if (persist) {
+          try{ localStorage.setItem('theme', mode); }catch(e){}
+        }
         setIconAndLabel();
         // Actualiza estilo del mapa sin recrearlo
         if(window.google && map){
           map.setOptions({styles: dark ? darkMapStyle : lightMapStyle});
         }
       }
-      setIconAndLabel();
+
+      function syncFromStorage(){
+        const stored = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+        apply(stored, { animate: false, persist: false });
+      }
+      syncFromStorage();
       btn?.addEventListener('click', ()=>{
         const next = html.classList.contains('dark') ? 'light' : 'dark';
         apply(next);
       });
+      window.addEventListener('pageshow', syncFromStorage);
+      window.addEventListener('storage', syncFromStorage);
     })();
   </script>
 </body>

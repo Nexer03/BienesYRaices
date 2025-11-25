@@ -1,3 +1,42 @@
+@once
+  <script>
+    (() => {
+      const root = document.documentElement;
+
+      const readStored = () => (localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
+
+      const apply = (mode) => {
+        const dark = mode === 'dark';
+        root.classList.toggle('dark', dark);
+
+        const btn = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-toggle-icon');
+        const label = btn?.querySelector('span');
+
+        if (icon) {
+          icon.classList.remove('fa-sun', 'fa-moon');
+          icon.classList.add(dark ? 'fa-moon' : 'fa-sun');
+        }
+        if (label) {
+          label.textContent = dark ? 'Modo oscuro' : 'Modo claro';
+        }
+      };
+
+      const sync = () => apply(readStored());
+
+      sync();
+      window.addEventListener('pageshow', sync);
+      window.addEventListener('storage', (event) => {
+        if (!event.key || event.key === 'theme') {
+          sync();
+        }
+      });
+
+      document.addEventListener('theme:sync', (event) => apply(event.detail?.mode ?? readStored()));
+    })();
+  </script>
+@endonce
+
 <header class="sticky top-0 bg-white dark:bg-gray-900 dark:text-gray-100 shadow-sm z-50">
   {{-- Barra superior: logo + acciones móviles --}}
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
