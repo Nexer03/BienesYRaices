@@ -24,7 +24,6 @@
                     class="hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
                         <i class="fab fa-instagram"></i>
                     </a>
-                <a href="#" class="hover:text-blue-500 dark:hover:text-blue-400 transition-colors"><i class="fab fa-x-twitter"></i></a>
             </div>
         </div>
 
