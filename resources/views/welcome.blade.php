@@ -245,7 +245,7 @@
     {{-- Filtro principal --}}
     <section id="filter-panel"
              class="bg-white dark:bg-gray-900 dark:text-gray-100 shadow-md w-full py-6
-                    fixed md:static top-16 left-0 z-[30]">
+                    fixed md:static top-16 left-0 z-[50]">
 
         <div class="max-w-6xl mx-auto px-6">
             <form id="property-filter-form" method="GET" action="{{ route('home') }}"
@@ -281,7 +281,7 @@
                     </button>
 
                     <div id="price-dropdown"
-                         class="hidden absolute top-full mt-2 w-full bg-white dark:bg-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 p-4">
+                         class="hidden absolute top-full mt-2 w-full bg-white dark:bg-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-60 p-4">
                         <p class="font-semibold text-gray-800 dark:text-gray-100 mb-4">Rango de Precio</p>
                         <div id="price-slider" class="mb-4 mx-3"></div>
                         <div class="flex justify-between items-center text-sm text-gray-700 dark:text-gray-300">
