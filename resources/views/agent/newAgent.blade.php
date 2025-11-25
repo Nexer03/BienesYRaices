@@ -125,7 +125,7 @@
       </form>
     </div>
   </main>
-
+ <br><br>
   {{-- FOOTER --}}
   <x-main-footer />
 
