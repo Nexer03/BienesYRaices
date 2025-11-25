@@ -34,10 +34,10 @@ class AgentReservationController extends Controller
                 'status' => $r->status,
                 'client' => $r->user->name ?? 'Cliente no disponible',
                 'color' => match($r->status) {
-                    'pending'   => '#fbbf24',
-                    'confirmed' => '#3b82f6',
+                    'pending'   => '#10b981',
+                    'confirmed' => '#10b981',
                     'completed' => '#10b981',
-                    'cancelled' => '#ef4444',
+                    'cancelled' => '#10b981',
                     default     => '#9ca3af',
                 },
             ];
