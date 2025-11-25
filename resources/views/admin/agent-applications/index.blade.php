@@ -143,22 +143,22 @@
                 </td>
                 <td class="px-6 py-4 text-right">
 
-    <div class="flex flex-col items-end gap-3">
+    <div class="flex flex-col items-stretch gap-3 w-full sm:w-64 ml-auto">
 
-        {{-- Ver detalles --}}
+        {{-- Ver detalles --}} 
         <a href="{{ route('admin.agent-applications.show', $application) }}"
-           class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition">
+           class="inline-flex items-center justify-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition">
             <i class="fa-solid fa-eye"></i>
             Ver detalles
         </a>
 
         @if ($application->status === \App\Models\AgentApplication::STATUS_PENDING)
 
-            {{-- Botón Aprobar (moderno) --}}
-            <form method="POST" action="{{ route('admin.agent-applications.approve', $application) }}">
+            {{-- Botón Aprobar (moderno) --}} 
+            <form method="POST" action="{{ route('admin.agent-applications.approve', $application) }}" class="w-full">
                 @csrf
                 <button type="submit"
-                    class="inline-flex items-center gap-2
+                    class="w-full inline-flex items-center justify-center gap-2
                            bg-emerald-600/90 hover:bg-emerald-500
                            text-white font-semibold text-sm
                            px-4 py-2 rounded-full shadow-md transition">
@@ -167,28 +167,28 @@
                 </button>
             </form>
 
-            {{-- Rechazar con input --}}
+            {{-- Rechazar con input --}} 
             <form method="POST" action="{{ route('admin.agent-applications.reject', $application) }}"
                   class="flex flex-col w-full gap-2">
 
                 @csrf
 
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-comment text-red-400"></i>
-                    <input type="text" name="rejection_reason" required placeholder="Motivo..."
-                        class="flex-1 px-3 py-2 text-sm rounded-full border border-gray-300 dark:border-slate-700
-                               bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-100
-                               focus:ring-2 focus:ring-red-400 transition shadow-sm">
-                </div>
-
                 <button type="submit"
-                    class="inline-flex items-center gap-2
+                    class="w-full inline-flex items-center justify-center gap-2
                            bg-red-600/90 hover:bg-red-500
                            text-white font-semibold text-sm
                            px-4 py-2 rounded-full shadow-md transition">
                     <i class="fa-solid fa-circle-xmark text-lg"></i>
                     Rechazar
                 </button>
+
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-comment text-red-400 pt-1"></i>
+                    <textarea name="rejection_reason" required placeholder="Describe el motivo de rechazo" rows="2"
+                        class="flex-1 px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-slate-700
+                               bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-100
+                               focus:ring-2 focus:ring-red-400 transition shadow-sm"></textarea>
+                </div>
             </form>
 
         @endif
