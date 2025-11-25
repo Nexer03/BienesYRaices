@@ -604,24 +604,39 @@
                 }, 350);
             }
 
-            function apply(mode) {
+            function apply(mode, { animate = true, persist = true } = {}) {
                 const isDark = mode === 'dark';
-                startPageFade();
+                if (animate) {
+                    startPageFade();
+                }
                 html.classList.toggle('dark', isDark);
-                try {
-                    localStorage.setItem('theme', mode);
-                } catch (e) {}
+                if (persist) {
+                    try {
+                        localStorage.setItem('theme', mode);
+                    } catch (e) {}
+                }
                 setIconAndLabel();
-                animateButton();
+                if (animate) {
+                    animateButton();
+                }
+            }
+
+            function syncFromStorage() {
+                const stored = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+                apply(stored, { animate: false, persist: false });
             }
 
             // Estado inicial de icono/texto según clase actual del <html>
-            setIconAndLabel();
+            syncFromStorage();
 
             btn?.addEventListener('click', () => {
                 const next = html.classList.contains('dark') ? 'light' : 'dark';
                 apply(next);
             });
+
+            // Re-aplica tema al volver con el botón de atrás (BFCache)
+            window.addEventListener('pageshow', syncFromStorage);
+            window.addEventListener('storage', syncFromStorage);
         })();
 
         // Prompt de preferencias
