@@ -26,7 +26,7 @@
   'oldestMessageId' => $oldestMessageId ?? null,
 ])
 
-{
+
 
 {{-- Lógica JS del chat en tiempo real --}}
 @include('chat.partials.script', ['conversation' => $conversation])
