@@ -652,23 +652,40 @@
                 }, 350);
             }
 
-            function apply(mode) {
+            function apply(mode, { animate = true, persist = true } = {}) {
                 const isDark = mode === 'dark';
-                fadeAllStart();                         // activa transiciones en todos los elementos
-                html.classList.toggle('dark', isDark);  // el overlay del body hace el fade del fondo
-                try { localStorage.setItem('theme', mode); } catch (e) {}
+                if (animate) {
+                    startPageFade();
+                }
+                html.classList.toggle('dark', isDark);
+                if (persist) {
+                    try {
+                        localStorage.setItem('theme', mode);
+                    } catch (e) {}
+                }
                 setIconAndLabel();
-                animateButton();
+                if (animate) {
+                    animateButton();
+                }
             }
 
-            // Estado inicial (según la clase dark que se puso en el anti-flash)
-            setIconAndLabel();
+            function syncFromStorage() {
+                const stored = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+                apply(stored, { animate: false, persist: false });
+            }
+
+            // Estado inicial de icono/texto según clase actual del <html>
+            syncFromStorage();
 
             // Toggle
             btn?.addEventListener('click', () => {
                 const next = html.classList.contains('dark') ? 'light' : 'dark';
                 apply(next);
             });
+
+            // Re-aplica tema al volver con el botón de atrás (BFCache)
+            window.addEventListener('pageshow', syncFromStorage);
+            window.addEventListener('storage', syncFromStorage);
         })();
 
         // Prompt de preferencias

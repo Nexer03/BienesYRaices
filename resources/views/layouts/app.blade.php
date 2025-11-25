@@ -4,6 +4,16 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+    (() => {
+      try {
+        const mode = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+        document.documentElement.classList.toggle('dark', mode === 'dark');
+      } catch (e) {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
 
   {{-- Anti-flash: aplica el tema guardado ANTES de cargar CSS --}}
   <script>
