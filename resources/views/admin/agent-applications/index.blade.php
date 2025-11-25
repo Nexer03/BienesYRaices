@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es" class="scroll-smooth">
 <head>
   <meta charset="utf-8" />
@@ -39,6 +39,33 @@
         background-color 0.4s ease,
         color 0.4s ease,
         border-color 0.4s ease;
+    }
+
+    /* Animación del botón de tema (igual que en la home) */
+    #theme-toggle {
+      transition:
+        background-color .25s ease,
+        color .25s ease,
+        transform .25s ease,
+        box-shadow .25s ease;
+    }
+
+    #theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.55);
+    }
+
+    #theme-toggle.theme-bounce {
+      transform: translateY(-1px) scale(1.04);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.75);
+    }
+
+    #theme-toggle-icon {
+      transition: transform .35s ease, opacity .2s ease;
+    }
+
+    #theme-toggle-icon.theme-spin {
+      transform: rotate(180deg);
     }
   </style>
 </head>
@@ -219,7 +246,7 @@
   <x-main-footer />
 
   <script>
-    // Toggle de modo oscuro con transición suave
+    // Toggle de modo oscuro con transición suave + animación de botón
     (function () {
       const html  = document.documentElement;
       const btn   = document.getElementById('theme-toggle');
@@ -234,6 +261,16 @@
         label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
       }
 
+      function animateButton() {
+        if (!btn || !icon) return;
+        btn.classList.add('theme-bounce');
+        icon.classList.add('theme-spin');
+        setTimeout(() => {
+          btn.classList.remove('theme-bounce');
+          icon.classList.remove('theme-spin');
+        }, 350);
+      }
+
       function apply(mode) {
         const isDark = mode === 'dark';
 
@@ -244,6 +281,7 @@
         try { localStorage.setItem('theme', mode); } catch (e) {}
 
         setIconAndLabel();
+        animateButton();
 
         // Quitar transición después de 400 ms para no afectar otras cosas
         setTimeout(() => {
