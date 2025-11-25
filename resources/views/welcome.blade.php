@@ -637,7 +637,7 @@
                 label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
             }
 
-            function fadeAllStart() {
+             function startPageFade() {
                 html.classList.add('theme-fade');
                 setTimeout(() => html.classList.remove('theme-fade'), 500);
             }
@@ -654,9 +654,7 @@
 
             function apply(mode, { animate = true, persist = true } = {}) {
                 const isDark = mode === 'dark';
-                if (animate) {
-                    startPageFade();
-                }
+                 if (animate) { startPageFade(); }
                 html.classList.toggle('dark', isDark);
                 if (persist) {
                     try {
