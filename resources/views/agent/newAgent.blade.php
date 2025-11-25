@@ -127,18 +127,7 @@
   </main>
 
   {{-- FOOTER --}}
-  <footer class="bg-gray-800 dark:bg-gray-950 text-white py-6 mt-auto">
-    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
-      <p class="text-sm text-gray-300">
-        &copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.
-      </p>
-      <div class="flex space-x-4 mt-3 md:mt-0">
-        <a href="#" class="hover:text-blue-400"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" class="hover:text-blue-400"><i class="fab fa-twitter"></i></a>
-        <a href="#" class="hover:text-blue-400"><i class="fab fa-instagram"></i></a>
-      </div>
-    </div>
-  </footer>
+  <x-main-footer />
 
   {{-- VALIDACIONES --}}
   <script>
