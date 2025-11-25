@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienes Raíces</title>
 
-    {{-- Anti-flash: aplica tema guardado ANTES de pintar la página --}}
+    {{-- Anti-flash: tema guardado (CLARO por defecto) --}}
     <script>
         (function () {
             try {
-                if (localStorage.getItem('theme') === 'dark') {
+                var saved = localStorage.getItem('theme');
+                if (!saved) { localStorage.setItem('theme', 'light'); saved = 'light'; }
+                if (saved === 'dark') {
                     document.documentElement.classList.add('dark');
                 } else {
                     document.documentElement.classList.remove('dark');
@@ -23,9 +25,7 @@
     {{-- Tailwind --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class'
-        };
+        tailwind.config = { darkMode: 'class' };
     </script>
 
     {{-- Iconos --}}
@@ -48,39 +48,88 @@
             background-color: #111827 !important; /* gray-900 */
         }
 
-        /* Fade suave para todo al cambiar de tema */
+        /* ===== Fondo base (claro) + overlay oscuro que hace fade (igual que Mensajes del Agente) ===== */
+        :root {
+            /* Colores inspirados en tu gradiente slate */
+            --bg1-light:#f8fafc; /* slate-50 */
+            --bg2-light:#e2e8f0; /* slate-200 */
+            --bg1-dark:#020617;  /* slate-950 */
+            --bg2-dark:#0f172a;  /* slate-900 */
+            --text-light:#111827;/* gray-900 */
+            --text-dark:#e5e7eb; /* gray-200 */
+        }
+
+        /* Base: gradiente claro */
+        body {
+            position: relative;
+            min-height: 100vh;
+            background-image: linear-gradient(180deg, var(--bg1-light) 0%, var(--bg2-light) 100%);
+            color: var(--text-light);
+            transition:
+                color .45s ease,
+                border-color .45s ease;
+        }
+
+        /* Texto en dark */
+        html.dark body {
+            color: var(--text-dark);
+        }
+
+        /* Overlay oscuro que se ANIMA con opacity */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image: linear-gradient(180deg, var(--bg1-dark) 0%, var(--bg2-dark) 100%);
+            opacity: 0;
+            transition: opacity .65s ease;
+            pointer-events: none; /* no bloquea clics */
+        }
+        html.dark body::before {
+            opacity: 1;
+        }
+
+        /* Suaviza cambios en elementos cuando se cambia el tema */
         html.theme-fade * {
             transition:
-                background-color .35s ease,
-                color .35s ease,
-                border-color .35s ease,
-                fill .35s ease;
+                background-color .45s ease,
+                color .45s ease,
+                border-color .45s ease,
+                box-shadow .45s ease;
         }
 
-        /* Botón de tema: animación */
+        /* Botón de tema: misma animación que el otro script */
         #theme-toggle {
-            transition: background-color .25s ease,
-                        color .25s ease,
-                        transform .25s ease,
-                        box-shadow .25s ease;
+            transition:
+                transform .25s ease,
+                box-shadow .25s ease,
+                background-color .25s ease,
+                color .25s ease;
         }
-
-        #theme-toggle.theme-bounce {
+        #theme-toggle.bounce {
             transform: translateY(-1px) scale(1.03);
-            box-shadow: 0 15px 30px rgba(0,0,0,.18);
+            box-shadow: 0 18px 35px rgba(0,0,0,.18);
         }
-
         #theme-toggle-icon {
             transition: transform .35s ease, opacity .2s ease;
         }
-
-        #theme-toggle-icon.theme-spin {
+        #theme-toggle-icon.spin {
             transform: rotate(180deg);
+        }
+
+        /* Respeto a usuarios con movimiento reducido */
+        @media (prefers-reduced-motion: reduce) {
+            body,
+            body::before,
+            html.theme-fade * {
+                transition: none !important;
+            }
         }
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="text-gray-800 dark:text-gray-100">
 
     {{-- Prompt de preferencias --}}
     @auth
@@ -183,7 +232,7 @@
     {{-- HEADER --}}
     <x-main-header />
 
-    {{-- Botón Tema (solo aquí) --}}
+    {{-- Botón Tema (sol = claro, luna = oscuro) --}}
     <button id="theme-toggle"
             class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg
                    bg-white text-gray-800 hover:bg-gray-100
@@ -573,7 +622,7 @@
 
     {{-- Lógica principal de la página --}}
     <script>
-        // ===== Tema (claro/oscuro) + toggle + icono + animación + fade =====
+        // ===== Tema (claro/oscuro) + toggle + icono + animación + overlay fade (igual a Mensajes del Agente) =====
         (function () {
             const html  = document.documentElement;
             const btn   = document.getElementById('theme-toggle');
@@ -583,41 +632,39 @@
             function setIconAndLabel() {
                 const isDark = html.classList.contains('dark');
                 if (!icon || !label) return;
-
                 icon.classList.remove('fa-sun', 'fa-moon');
-                icon.classList.add(isDark ? 'fa-moon' : 'fa-sun');
+                icon.classList.add(isDark ? 'fa-moon' : 'fa-sun'); // luna = oscuro, sol = claro
                 label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
             }
 
-            function startPageFade() {
+            function fadeAllStart() {
                 html.classList.add('theme-fade');
-                setTimeout(() => html.classList.remove('theme-fade'), 400);
+                setTimeout(() => html.classList.remove('theme-fade'), 500);
             }
 
             function animateButton() {
                 if (!btn || !icon) return;
-                btn.classList.add('theme-bounce');
-                icon.classList.add('theme-spin');
+                btn.classList.add('bounce');
+                icon.classList.add('spin');
                 setTimeout(() => {
-                    btn.classList.remove('theme-bounce');
-                    icon.classList.remove('theme-spin');
+                    btn.classList.remove('bounce');
+                    icon.classList.remove('spin');
                 }, 350);
             }
 
             function apply(mode) {
                 const isDark = mode === 'dark';
-                startPageFade();
-                html.classList.toggle('dark', isDark);
-                try {
-                    localStorage.setItem('theme', mode);
-                } catch (e) {}
+                fadeAllStart();                         // activa transiciones en todos los elementos
+                html.classList.toggle('dark', isDark);  // el overlay del body hace el fade del fondo
+                try { localStorage.setItem('theme', mode); } catch (e) {}
                 setIconAndLabel();
                 animateButton();
             }
 
-            // Estado inicial de icono/texto según clase actual del <html>
+            // Estado inicial (según la clase dark que se puso en el anti-flash)
             setIconAndLabel();
 
+            // Toggle
             btn?.addEventListener('click', () => {
                 const next = html.classList.contains('dark') ? 'light' : 'dark';
                 apply(next);

@@ -28,6 +28,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {{-- Necesario para AJAX --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <style>
+      /* Fade suave global al cambiar de tema */
+      html.theme-transition,
+      html.theme-transition * {
+        transition:
+          background-color .35s ease,
+          color .35s ease,
+          border-color .35s ease,
+          fill .35s ease;
+      }
+
+      /* Animación del botón de tema (rebote + sombra) */
+      #theme-toggle {
+        transition:
+          background-color .25s ease,
+          color .25s ease,
+          transform .25s ease,
+          box-shadow .25s ease;
+      }
+
+      #theme-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.55);
+      }
+
+      #theme-toggle.theme-bounce {
+        transform: translateY(-1px) scale(1.04);
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.75);
+      }
+
+      #theme-toggle-icon {
+        transition: transform .35s ease, opacity .2s ease;
+      }
+
+      #theme-toggle-icon.theme-spin {
+        transform: rotate(180deg);
+      }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen
              dark:bg-gray-950 dark:text-gray-100 transition-colors duration-300">
@@ -41,7 +80,7 @@
                    bg-white text-gray-800 hover:bg-gray-100
                    dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
             aria-label="Cambiar tema">
-      <i class="fa-solid"></i>
+      <i id="theme-toggle-icon" class="fa-solid"></i>
       <span class="text-sm font-medium"></span>
     </button>
 
@@ -533,12 +572,12 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-{{-- Toggle de tema sincronizado con localStorage --}}
+{{-- Toggle de tema sincronizado con localStorage + animación --}}
 <script>
   (function () {
     const html  = document.documentElement;
     const btn   = document.getElementById('theme-toggle');
-    const icon  = btn?.querySelector('i');
+    const icon  = document.getElementById('theme-toggle-icon');
     const label = btn?.querySelector('span');
 
     function setIconAndLabel() {
@@ -549,14 +588,34 @@ document.addEventListener('DOMContentLoaded', function () {
       label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
     }
 
-    function apply(mode) {
-      const isDark = mode === 'dark';
-      html.classList.toggle('dark', isDark);
-      try { localStorage.setItem('theme', mode); } catch (e) {}
-      setIconAndLabel();
+    function animateButton() {
+      if (!btn || !icon) return;
+      btn.classList.add('theme-bounce');
+      icon.classList.add('theme-spin');
+      setTimeout(() => {
+        btn.classList.remove('theme-bounce');
+        icon.classList.remove('theme-spin');
+      }, 350);
     }
 
-    // Inicializar según clase actual
+    function apply(mode) {
+      const isDark = mode === 'dark';
+
+      // activar fade global
+      html.classList.add('theme-transition');
+
+      html.classList.toggle('dark', isDark);
+      try { localStorage.setItem('theme', mode); } catch (e) {}
+
+      setIconAndLabel();
+      animateButton();
+
+      setTimeout(() => {
+        html.classList.remove('theme-transition');
+      }, 400);
+    }
+
+    // Inicializar según clase actual aplicada por el anti-flash
     setIconAndLabel();
 
     btn?.addEventListener('click', () => {
