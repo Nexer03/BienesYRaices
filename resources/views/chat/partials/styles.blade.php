@@ -61,8 +61,7 @@
     transform: rotate(180deg);
   }
 
-  /* Modo oscuro para el botón: funciona tanto con Bootstrap (data-bs-theme)
-     como con Tailwind (.dark en <html>) */
+  /* Modo oscuro para el botón */
   [data-bs-theme="dark"] .chat-theme-toggle,
   .dark .chat-theme-toggle {
     background: #0f172a;
@@ -99,7 +98,7 @@
     background:#fff;
   }
 
-  /* ====== LOOK tipo Airbnb ====== */
+  /* ====== LOOK tipo Airbnb (modo claro) ====== */
   .fp-shell .flatpickr-months{
     display:flex;
     background:#fff;
@@ -246,7 +245,7 @@
     }
   }
 
-  /* ==================Aqui termina Flatpickr ================== */
+  /* ==================Aqui termina Flatpickr (base) ================== */
 
   html,
   body {
@@ -297,6 +296,10 @@
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
+    background: rgba(248, 250, 252, 0.96);
+    border-radius: 24px;
+    padding: 1.25rem 1.5rem 1.5rem;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
   }
 
   .chat-app__header {
@@ -485,7 +488,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    background-color: #f9fafb;
+    background-color: transparent; /* antes #f9fafb */
   }
 
   .chat-thread__empty {
@@ -597,7 +600,7 @@
     border-top: 1px solid var(--chat-border);
     padding-top: 1rem;
     flex: 0 0 auto;
-    background-color: #ffffff;
+    background-color: transparent; /* antes #ffffff */
   }
 
   .chat-composer form {
@@ -720,6 +723,11 @@
     .message-bubble {
       max-width: 90%;
     }
+
+    /* un poco menos de radio en mobile */
+    .chat-app__main {
+      border-radius: 20px;
+    }
   }
 
   .emoji-picker {
@@ -831,8 +839,17 @@
     box-shadow: 0 25px 60px rgba(15, 23, 42, 0.8);
   }
 
+  .dark .chat-app__main {
+    background:
+      radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.24), transparent 55%),
+      radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.18), transparent 55%),
+      #020617;
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+  }
+
   .dark .chat-thread {
-    background-color: #020617;
+    background-color: transparent;
   }
 
   .dark .chat-thread__empty {
@@ -868,7 +885,7 @@
   }
 
   .dark .chat-composer {
-    background-color: #020617;
+    background-color: transparent;
     border-top-color: var(--chat-border);
   }
 
@@ -905,9 +922,16 @@
   }
 
   /* ================== MODO OSCURO: Flatpickr ================== */
-  .dark .fp-shell .flatpickr-calendar{
-    background:#020617;
-    color:#e5e7eb;
+
+  /* fondo sólido en TODOS los contenedores para evitar “parpadeos” blancos */
+  .dark .fp-shell .flatpickr-calendar,
+  .dark .fp-shell .flatpickr-innerContainer,
+  .dark .fp-shell .flatpickr-rContainer,
+  .dark .fp-shell .flatpickr-weekdays,
+  .dark .fp-shell .flatpickr-days,
+  .dark .fp-shell .dayContainer{
+    background:#020617 !important;
+    border-color:#020617 !important;
   }
 
   .dark .fp-shell .flatpickr-months{
@@ -916,6 +940,13 @@
 
   .dark .fp-shell .flatpickr-months .flatpickr-month{
     color:#e5e7eb;
+  }
+
+  /* Mes y año más visibles en dark */
+  .dark .fp-shell .flatpickr-months .flatpickr-current-month .cur-month,
+  .dark .fp-shell .flatpickr-months .flatpickr-current-month .cur-year{
+    color:#f9fafb;
+    font-weight:700;
   }
 
   .dark .fp-shell .flatpickr-months .flatpickr-prev-month,
@@ -936,6 +967,8 @@
 
   .dark .fp-shell .flatpickr-day{
     color:#e5e7eb;
+    border-color:transparent;
+    background:#020617;
   }
 
   .dark .fp-shell .flatpickr-day:hover,
@@ -963,10 +996,11 @@
     border-color:#3b82f6!important;
   }
 
+  /* SIN box-shadow para evitar rayas blancas al mover rápido el cursor */
   .dark .fp-shell .flatpickr-day.inRange{
-    background:#0f172a!important;
-    border-color:#0f172a!important;
-    box-shadow:-5px 0 0 #0f172a,5px 0 0 #0f172a;
+    background:#0b1120!important;
+    border-color:#0b1120!important;
+    box-shadow:none !important;
   }
 
   .dark .fp-shell .flatpickr-day.flatpickr-disabled,
@@ -975,49 +1009,96 @@
   .dark .fp-shell .flatpickr-day.disabled:hover{
     background-color:#0f172a !important;
     color:#6b7280 !important;
+    border-color:transparent !important;
   }
 
   .dark .fp-shell .flatpickr-day.flatpickr-disabled.inRange,
   .dark .fp-shell .flatpickr-day.disabled.inRange{
     background-color:#020617 !important;
     color:#6b7280 !important;
+    box-shadow:none !important;
   }
 
   @media (min-width:640px){
+    /* sin línea divisoria clara entre meses en dark */
     .dark .fp-shell .flatpickr-days .dayContainer:nth-child(1){
-      border-right:1px solid #1f2937;
+      border-right:none !important;
     }
+  }
+
+  /* ============ MODO OSCURO: modales de reserva del CHAT ============ */
+
+  .dark #chat-reservation-modal > div {
+    background-color:#020617 !important;
+    color:#e5e7eb;
+    border:1px solid #1f2937;
+  }
+
+  /* Resumen de reserva dentro del modal */
+  .dark #chat-priceSummary,
+  .dark #priceSummary {
+    background-color:#020617 !important;
+    border-color:#1f2937 !important;
+    color:#e5e7eb !important;
+  }
+
+  .dark #chat-priceSummary p,
+  .dark #priceSummary p {
+    color:#e5e7eb !important;
+  }
+
+  .dark #chat-reservation-modal .text-muted {
+    color:#9ca3af !important;
+  }
+
+  .dark #chat-reservation-modal .border {
+    border-color:#1f2937 !important;
+  }
+
+  .dark #chat-reservation-modal input.form-control {
+    background-color:#020617;
+    color:#e5e7eb;
+    border-color:#1f2937;
+  }
+
+  .dark #chat-reservation-modal input.form-control::placeholder {
+    color:#6b7280;
+  }
+
+  .dark #chat-reservation-modal .btn-outline-secondary {
+    color:#e5e7eb;
+    border-color:#4b5563;
+  }
+
+  .dark #chat-reservation-modal .btn-outline-secondary:hover {
+    background-color:#111827;
+    border-color:#6b7280;
   }
 
   /* ================= AJUSTES EXTRA MODO OSCURO ================= */
 
-  /* Textos "muted" (subtítulos, estados, etc.) */
   .dark .chat-app .text-muted {
     color: #9ca3af !important;
   }
 
-  /* Estado vacío "Rompe el hielo" */
   .dark .chat-thread__empty,
   .dark .chat-thread__empty p,
   .dark .chat-thread__empty .fw-semibold {
     color: #e5e7eb !important;
   }
 
-  /* Cards del panel derecho (propiedad / reservación / agenda) */
   .dark .chat-app__aside .card,
   .dark .chat-app__aside .card-body,
   .dark .chat-app__aside .card-header {
     color: #e5e7eb !important;
   }
 
-  /* Cabecera blanca ("Reservación", etc.) en modo oscuro */
   .dark .chat-app__aside .card-header.bg-white {
     background-color: transparent !important;
     color: #e5e7eb !important;
     border-bottom: 1px solid rgba(148, 163, 184, 0.5);
   }
 
-  /* Fondo y borde más fancy para cards laterales en dark (incluye Reservación) */
   .dark .chat-app__aside .card {
     background:
       radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.22), transparent 60%),
@@ -1026,7 +1107,6 @@
     box-shadow: 0 20px 45px rgba(15, 23, 42, 0.9);
   }
 
-  /* Fade suave del cambio de tema (si en JS añades html.classList.add('theme-fade')) */
   html.theme-fade * {
     transition:
       background-color .35s ease,
@@ -1035,7 +1115,6 @@
       fill .35s ease;
   }
 
-  /* Botón de tema general (#theme-toggle) */
   #theme-toggle {
     transition:
       background-color .25s ease,
@@ -1062,7 +1141,6 @@
     transform: rotate(180deg);
   }
 
-  /* Forced dark styles por si Tailwind no alcanza a aplicar dark:bg... */
   .dark #theme-toggle {
     background-color: #020617 !important;
     color: #e5e7eb !important;

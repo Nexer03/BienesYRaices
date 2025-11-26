@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -82,16 +82,50 @@
     .fp-shell .flatpickr-months .flatpickr-current-month .cur-month{font-weight:700;color:#222;}
     .fp-shell .flatpickr-months .flatpickr-current-month .cur-year{font-weight:400;color:#717171;background:transparent;}
 
-    .fp-shell .flatpickr-weekdays{display:flex;align-items:center;height:28px;margin-bottom:5px}
-    .fp-shell .flatpickr-weekdays .flatpickr-weekdaycontainer{flex:1;display:flex}
-    .fp-shell span.flatpickr-weekday{flex:1;text-align:center;font-size:11px;color:#717171!important;font-weight:600;text-transform:uppercase}
-
-    .fp-shell .flatpickr-days{width:100%}
-    .fp-shell .dayContainer{padding:1px 0 10px;min-width:315px}
-    .fp-shell .flatpickr-day{
-      color:#222;border:1px solid transparent;background:none;border-radius:50%;
-      height:38px;line-height:38px;max-width:38px;flex:0 0 14.2857143%;text-align:center;cursor:pointer;
+    /* Cabecera L M M J V S D en una sola fila por mes */
+    .fp-shell .flatpickr-weekdays{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:28px;
+      margin-bottom:5px;
     }
+    .fp-shell .flatpickr-weekdays .flatpickr-weekdaycontainer{
+      flex:1;
+      display:flex;
+    }
+    .fp-shell span.flatpickr-weekday{
+      display:block;
+      flex:1;
+      text-align:center;
+      font-size:11px;
+      color:#717171!important;
+      font-weight:600;
+      text-transform:uppercase;
+    }
+
+    /* Cada mes (dayContainer) = grid de 7 columnas, así no hay 8 días por fila */
+    .fp-shell .flatpickr-days{width:100%;}
+    .fp-shell .dayContainer{
+      display:grid;
+      grid-template-columns:repeat(7,minmax(0,1fr));
+      padding:1px 0 10px;
+      min-width:315px;
+    }
+    .fp-shell .flatpickr-day{
+      color:#222;
+      border:1px solid transparent;
+      background:none;
+      border-radius:50%;
+      height:38px;
+      line-height:38px;
+      width:38px;
+      max-width:100%;
+      margin:0 auto;
+      text-align:center;
+      cursor:pointer;
+    }
+
     .fp-shell .flatpickr-day:hover,
     .fp-shell .flatpickr-day:focus{background:#f7f7f7;border-color:#f7f7f7;outline:0}
     .fp-shell .flatpickr-day.today{border-color:#222;color:#222}
@@ -924,12 +958,16 @@
 
     <div class="flex justify-between items-center mt-6 pt-4 border-t">
       <button id="clearDatesBtn" type="button"
-              class="font-semibold underline text-sm hover:bg-gray-100 px-2 py-1 rounded">
+              class="font-semibold text-sm px-3 py-2 rounded-lg border border-transparent
+                     text-gray-600 hover:bg-gray-100 hover:text-gray-900
+                     dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50">
         Borrar fechas
       </button>
       <div class="flex gap-2">
         <button type="button" onclick="closeReservationModal()"
-                class="font-semibold px-4 py-2 rounded-lg hover:bg-gray-100 text-sm">
+                class="font-semibold text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-700
+                       hover:bg-gray-100 hover:text-gray-900
+                       dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-gray-50">
           Cancelar
         </button>
         <button type="button" id="confirmReservationBtn"
@@ -1121,7 +1159,7 @@
 
     const esLocale={
       weekdays:{ shorthand:['D','L','M','M','J','V','S'], longhand:['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] },
-      months:{ shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'], longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Diciembre'] },
+      months:{ shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'], longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] },
       firstDayOfWeek:1, rangeSeparator:' a '
     };
 
