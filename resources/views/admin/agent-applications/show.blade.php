@@ -51,8 +51,8 @@
                     Información del solicitante
                 </h2>
 
-                <p><span class="font-medium">Nombre:</span> Juan Pérez</p>
-                <p><span class="font-medium">Email:</span> juan@example.com</p>
+                <p><span class="font-medium">Nombre:</span> {{ $application->user->name }}</p>
+                <p><span class="font-medium">Email:</span> {{ $application->user->email }}</p>
             </section>
 
             <!-- Documentación -->
@@ -62,8 +62,8 @@
                     Documentación
                 </h2>
 
-                <p><span class="font-medium">RFC:</span> PEJX920120AB1</p>
-                <p><span class="font-medium">CURP:</span> PEJX920120HDFRBN07</p>
+                <p><span class="font-medium">RFC:</span> {{ $application->rfc }}</p>
+                <p><span class="font-medium">CURP:</span> {{ $application->curp }}</p>
 
                 <!-- INE -->
                 <div class="mt-5">
@@ -74,7 +74,7 @@
                         <!-- Frontal -->
                         <div class="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                             <p class="font-medium text-sm text-gray-600 dark:text-gray-300 mb-2">Frontal:</p>
-                            <img src="https://via.placeholder.com/450x300"
+                            <img src="{{ asset('storage/' . $application->ine_front) }}"
                                  alt="INE frontal"
                                  class="block w-full rounded-lg border border-gray-300 dark:border-gray-700 shadow-sm object-cover">
                         </div>
@@ -82,7 +82,7 @@
                         <!-- Reverso -->
                         <div class="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                             <p class="font-medium text-sm text-gray-600 dark:text-gray-300 mb-2">Reverso:</p>
-                            <img src="https://via.placeholder.com/450x300"
+                            <img src="{{ asset('storage/' . $application->ine_back) }}"
                                  alt="INE reverso"
                                  class="block w-full rounded-lg border border-gray-300 dark:border-gray-700 shadow-sm object-cover">
                         </div>
@@ -92,53 +92,68 @@
             </section>
 
             <!-- Estado -->
-            <section>
+            <section class="space-y-2">
                 <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-circle-info text-blue-500"></i>
                     Estado
                 </h2>
 
-                <p><span class="font-medium">Estado:</span> Pendiente</p>
-                <p><span class="font-medium">Motivo rechazo:</span> —</p>
+                <p class="flex items-center gap-2">
+                    <span class="font-medium">Estado:</span>
+                    @if ($application->status === \App\Models\AgentApplication::STATUS_PENDING)
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold border border-amber-200">Pendiente</span>
+                    @elseif ($application->status === \App\Models\AgentApplication::STATUS_APPROVED)
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold border border-emerald-200">Aprobada</span>
+                    @else
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold border border-red-200">Rechazada</span>
+                    @endif
+                </p>
+
+                <p>
+                    <span class="font-medium">Motivo rechazo:</span>
+                    {{ $application->rejection_reason ?? '—' }}
+                </p>
             </section>
 
             <!-- Acciones -->
             <section>
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4 mt-4">
 
                     <!-- Volver -->
-                    <a onclick="history.back()"
-                       class="cursor-pointer px-5 py-2.5 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-semibold 
+                    <a href="{{ route('admin.agent-applications.index') }}"
+                       class="cursor-pointer px-5 py-2.5 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-semibold
                               text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center gap-2">
                         <i class="fa-solid fa-arrow-left"></i>
                         Volver
                     </a>
 
-                    <!-- Aprobar -->
-                    <button class="px-5 py-2.5 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-check"></i>
-                        Aprobar
-                    </button>
-
-                    <!-- Rechazar -->
-                    <div class="flex items-center gap-2">
-                        <input type="text" placeholder="Motivo"
-                               class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 
-                                      bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 shadow-sm 
-                                      focus:ring-2 focus:ring-red-500 focus:border-red-500">
-
-                        <button class="px-5 py-2.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-semibold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-xmark"></i>
-                            Rechazar
-                        </button>
-                    </div>
-
+                    @if ($application->status === \App\Models\AgentApplication::STATUS_PENDING)
+                        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch w-full">
+                            <!-- Aprobar -->
+                            <form method="POST" action="{{ route('admin.agent-applications.approve', $application) }}" class="flex-1">
+                                @csrf
+                                <button type="submit" class="w-full px-5 py-2.5 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 shadow">
+                                    <i class="fa-solid fa-check"></i>
+                                    Aprobar
+                                </button>
+                            </form>
+                            <!-- Rechazar -->
+                            <form method="POST" action="{{ route('admin.agent-applications.reject', $application) }}" class="flex-1 flex flex-col gap-2">
+                                @csrf
+                                <button type="submit" class="w-full px-5 py-2.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 shadow">
+                                    <i class="fa-solid fa-xmark"></i>
+                                    Rechazar
+                                </button>
+                                <textarea name="rejection_reason" required placeholder="Motivo de rechazo" rows="2"
+                                    class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700
+                                           bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 shadow-sm
+                                           focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
+                            </form>
+                        </div>
+                    @endif
                 </div>
             </section>
-
         </div>
-
     </div>
-
 </body>
 </html>

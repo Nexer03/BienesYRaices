@@ -1,3 +1,42 @@
+@once
+  <script>
+    (() => {
+      const root = document.documentElement;
+
+      const readStored = () => (localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
+
+      const apply = (mode) => {
+        const dark = mode === 'dark';
+        root.classList.toggle('dark', dark);
+
+        const btn = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-toggle-icon');
+        const label = btn?.querySelector('span');
+
+        if (icon) {
+          icon.classList.remove('fa-sun', 'fa-moon');
+          icon.classList.add(dark ? 'fa-moon' : 'fa-sun');
+        }
+        if (label) {
+          label.textContent = dark ? 'Modo oscuro' : 'Modo claro';
+        }
+      };
+
+      const sync = () => apply(readStored());
+
+      sync();
+      window.addEventListener('pageshow', sync);
+      window.addEventListener('storage', (event) => {
+        if (!event.key || event.key === 'theme') {
+          sync();
+        }
+      });
+
+      document.addEventListener('theme:sync', (event) => apply(event.detail?.mode ?? readStored()));
+    })();
+  </script>
+@endonce
+
 <header class="sticky top-0 bg-white dark:bg-gray-900 dark:text-gray-100 shadow-sm z-50">
   {{-- Barra superior: logo + acciones móviles --}}
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -251,7 +290,6 @@
       </form>
     @endauth
   </nav>
-
   @guest
   {{-- Modal de login (fallback) REDISEÑADO + DARK MODE --}}
   <div id="header-login-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden">
@@ -272,6 +310,14 @@
           Accede para guardar favoritos, ver tus reservas y chatear con agentes.
         </p>
       </div>
+      
+      {{-- Mensaje de error de login --}}
+@if ($errors->has('email'))
+    <div class="mb-4 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2">
+        {{ $errors->first('email') }}
+        {{-- Ejemplo típico: "Estas credenciales no coinciden con nuestros registros." --}}
+    </div>
+@endif
 
       {{-- Formulario --}}
       <form method="POST" action="{{ route('login') }}" class="space-y-4">
@@ -281,6 +327,7 @@
             Correo electrónico
           </label>
           <input id="header-login-email" type="email" name="email" required autocomplete="username"
+                 value="{{ old('email') }}"
                  class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-3 text-sm sm:text-base shadow-sm
                         focus:ring-blue-500 focus:border-blue-500">
         </div>

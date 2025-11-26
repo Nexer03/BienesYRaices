@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es" class="scroll-smooth">
 <head>
   <meta charset="utf-8" />
@@ -39,6 +39,33 @@
         background-color 0.4s ease,
         color 0.4s ease,
         border-color 0.4s ease;
+    }
+
+    /* Animación del botón de tema (igual que en la home) */
+    #theme-toggle {
+      transition:
+        background-color .25s ease,
+        color .25s ease,
+        transform .25s ease,
+        box-shadow .25s ease;
+    }
+
+    #theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.55);
+    }
+
+    #theme-toggle.theme-bounce {
+      transform: translateY(-1px) scale(1.04);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.75);
+    }
+
+    #theme-toggle-icon {
+      transition: transform .35s ease, opacity .2s ease;
+    }
+
+    #theme-toggle-icon.theme-spin {
+      transform: rotate(180deg);
     }
   </style>
 </head>
@@ -143,22 +170,22 @@
                 </td>
                 <td class="px-6 py-4 text-right">
 
-    <div class="flex flex-col items-end gap-3">
+    <div class="flex flex-col items-stretch gap-3 w-full sm:w-64 ml-auto">
 
-        {{-- Ver detalles --}}
+        {{-- Ver detalles --}} 
         <a href="{{ route('admin.agent-applications.show', $application) }}"
-           class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition">
+           class="inline-flex items-center justify-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium transition">
             <i class="fa-solid fa-eye"></i>
             Ver detalles
         </a>
 
         @if ($application->status === \App\Models\AgentApplication::STATUS_PENDING)
 
-            {{-- Botón Aprobar (moderno) --}}
-            <form method="POST" action="{{ route('admin.agent-applications.approve', $application) }}">
+            {{-- Botón Aprobar (moderno) --}} 
+            <form method="POST" action="{{ route('admin.agent-applications.approve', $application) }}" class="w-full">
                 @csrf
                 <button type="submit"
-                    class="inline-flex items-center gap-2
+                    class="w-full inline-flex items-center justify-center gap-2
                            bg-emerald-600/90 hover:bg-emerald-500
                            text-white font-semibold text-sm
                            px-4 py-2 rounded-full shadow-md transition">
@@ -167,28 +194,28 @@
                 </button>
             </form>
 
-            {{-- Rechazar con input --}}
+            {{-- Rechazar con input --}} 
             <form method="POST" action="{{ route('admin.agent-applications.reject', $application) }}"
                   class="flex flex-col w-full gap-2">
 
                 @csrf
 
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-comment text-red-400"></i>
-                    <input type="text" name="rejection_reason" required placeholder="Motivo..."
-                        class="flex-1 px-3 py-2 text-sm rounded-full border border-gray-300 dark:border-slate-700
-                               bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-100
-                               focus:ring-2 focus:ring-red-400 transition shadow-sm">
-                </div>
-
                 <button type="submit"
-                    class="inline-flex items-center gap-2
+                    class="w-full inline-flex items-center justify-center gap-2
                            bg-red-600/90 hover:bg-red-500
                            text-white font-semibold text-sm
                            px-4 py-2 rounded-full shadow-md transition">
                     <i class="fa-solid fa-circle-xmark text-lg"></i>
                     Rechazar
                 </button>
+
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-comment text-red-400 pt-1"></i>
+                    <textarea name="rejection_reason" required placeholder="Describe el motivo de rechazo" rows="2"
+                        class="flex-1 px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-slate-700
+                               bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-100
+                               focus:ring-2 focus:ring-red-400 transition shadow-sm"></textarea>
+                </div>
             </form>
 
         @endif
@@ -219,7 +246,7 @@
   <x-main-footer />
 
   <script>
-    // Toggle de modo oscuro con transición suave
+    // Toggle de modo oscuro con transición suave + animación de botón
     (function () {
       const html  = document.documentElement;
       const btn   = document.getElementById('theme-toggle');
@@ -234,6 +261,16 @@
         label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
       }
 
+      function animateButton() {
+        if (!btn || !icon) return;
+        btn.classList.add('theme-bounce');
+        icon.classList.add('theme-spin');
+        setTimeout(() => {
+          btn.classList.remove('theme-bounce');
+          icon.classList.remove('theme-spin');
+        }, 350);
+      }
+
       function apply(mode) {
         const isDark = mode === 'dark';
 
@@ -244,6 +281,7 @@
         try { localStorage.setItem('theme', mode); } catch (e) {}
 
         setIconAndLabel();
+        animateButton();
 
         // Quitar transición después de 400 ms para no afectar otras cosas
         setTimeout(() => {

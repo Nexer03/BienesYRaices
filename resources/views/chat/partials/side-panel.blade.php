@@ -10,6 +10,45 @@
     );
 @endphp
 
+{{-- Ajustes de estilo para los modales del chat (visita + reserva) --}}
+<style>
+  /* Contenedor de los modales en claro */
+  #chatVisitModal > div,
+  #chat-reservation-modal > div {
+    background-color: #ffffff;
+  }
+
+  /* Overlay un poco más oscuro en dark */
+  .dark #chatVisitModal,
+  .dark #chat-reservation-modal {
+    background: rgba(15, 23, 42, 0.85);
+  }
+
+  /* Caja interna de los modales en dark */
+  .dark #chatVisitModal > div,
+  .dark #chat-reservation-modal > div {
+    background-color: #020617 !important; /* slate-950 */
+    color: #e5e7eb;
+    border: 1px solid #1f2937;            /* slate-800 */
+  }
+
+  .dark #chat-reservation-modal .text-muted {
+    color: #9ca3af !important;
+  }
+
+  .dark #chat-reservation-modal input.form-control {
+    background-color: #020617;
+    color: #e5e7eb;
+    border-color: #1f2937;
+  }
+
+  .dark #chat-priceSummary {
+    background-color: #020617;
+    border-color: #1f2937;
+    color: #e5e7eb;
+  }
+</style>
+
 {{-- ==================== TARJETA DE PROPIEDAD ==================== --}}
 @if($property)
   <div class="card shadow-sm mb-3">
@@ -206,7 +245,7 @@
          style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
                 background:rgba(0,0,0,.5);z-index:1200;overflow-y:auto;">
       <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-                  background:white;max-width:720px;width:calc(100% - 32px);
+                  max-width:720px;width:calc(100% - 32px);
                   max-height:calc(100vh - 80px);overflow:auto;
                   border-radius:16px;padding:24px;">
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3">
@@ -533,7 +572,7 @@
   @if($isClient)
     <div id="chat-reservation-modal"
          style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1100;overflow-y:auto;">
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
                   max-width:720px;width:calc(100% - 32px);max-height:calc(100vh - 80px);overflow:auto;
                   border-radius:16px;padding:24px;">
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3">

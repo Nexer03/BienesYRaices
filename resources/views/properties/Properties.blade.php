@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mapa de Propiedades - SIN BECA NO HAY RENTA</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <!-- Anti-flash -->
   <script>
@@ -202,7 +203,9 @@
       </button>
 
       <button type="button"
-              class="absolute right-12 top-3 bg-white/95 dark:bg-gray-800/95 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700">
+              id="favoriteBtn"
+              class="absolute right-12 top-3 bg-white/95 dark:bg-gray-800/95 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Guardar en favoritos">
         <i class="fa-regular fa-heart text-gray-700 dark:text-gray-100 text-sm"></i>
       </button>
 
@@ -224,6 +227,11 @@
   <script>
     // Datos del back
     const properties = @json($properties);
+    let favoriteIds = @json($favoriteIds ?? []);
+    const favoriteToggleUrls = @json($favoriteToggleUrls ?? []);
+    const loginUrl = @json($loginUrl ?? route('login'));
+    const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+    const csrfToken = '{{ csrf_token() }}';
 
     // Estilos de mapa (claro/oscuro)
     const lightMapStyle = [
@@ -314,10 +322,75 @@
       });
     }
 
+    function setFavoriteButtonState(btn, isOn){
+      if(!btn) return;
+      btn.dataset.state = isOn ? 'on' : 'off';
+      const icon = btn.querySelector('i');
+      if(icon){
+        icon.classList.remove('fa-solid','text-red-500');
+        icon.classList.remove('fa-regular','text-gray-700','dark:text-gray-100');
+        if(isOn){
+          icon.classList.add('fa-solid','text-red-500');
+        }else{
+          icon.classList.add('fa-regular','text-gray-700','dark:text-gray-100');
+        }
+      }
+    }
+
+    function updateFavoriteIds(propId, isFav){
+      const numericId = Number(propId);
+      if(isFav){
+        if(!favoriteIds.includes(numericId)) favoriteIds.push(numericId);
+      }else{
+        favoriteIds = favoriteIds.filter(id => id !== numericId);
+      }
+    }
+
+    async function handleFavoriteToggle(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      const btn = ev.currentTarget;
+      const toggleUrl = btn.dataset.toggleUrl;
+      const loginRedirect = btn.dataset.loginUrl;
+
+      if(!toggleUrl){
+        if(loginRedirect) window.location.href = loginRedirect;
+        return;
+      }
+
+      try{
+        const res = await fetch(toggleUrl, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          }
+        });
+
+        if(!res.ok){
+          if(loginRedirect) window.location.href = loginRedirect;
+          return;
+        }
+
+        const data = await res.json();
+        if(!data || data.ok !== true){
+          if(loginRedirect) window.location.href = loginRedirect;
+          return;
+        }
+
+        const isFav = data.favorited === true;
+        updateFavoriteIds(btn.dataset.propertyId, isFav);
+        setFavoriteButtonState(btn, isFav);
+      }catch(e){
+        if(loginRedirect) window.location.href = loginRedirect;
+      }
+    }
+
     function openPropertyModal(prop){
       const modal = document.getElementById('propertyModal');
       const carousel = document.getElementById('propertyCarousel');
       const info = document.getElementById('modalInfo');
+      const favoriteBtn = document.getElementById('favoriteBtn');
       if(!modal || !carousel || !info) return;
 
       carousel.innerHTML = ''; info.innerHTML = '';
@@ -348,6 +421,13 @@
           ${ extra ? `<span class="absolute bottom-3 right-3 bg-black/60 text-white text-[11px] px-2 py-1 rounded-full">+${extra} fotos</span>` : '' }
         </div>
       `;
+      if(favoriteBtn){
+        const isFav = favoriteIds.includes(prop.id);
+        favoriteBtn.dataset.propertyId = prop.id;
+        favoriteBtn.dataset.loginUrl = isAuthenticated ? '' : loginUrl;
+        favoriteBtn.dataset.toggleUrl = isAuthenticated ? (favoriteToggleUrls[String(prop.id)] || '') : '';
+        setFavoriteButtonState(favoriteBtn, isFav);
+      }
       modal.classList.remove('hidden');
     }
 
@@ -364,6 +444,7 @@
       const priceDrop   = document.getElementById('price-dropdown');
       const applyBtn    = document.getElementById('apply-price-button');
       const typeSelect  = document.getElementById('listingType');
+      const favoriteBtn = document.getElementById('favoriteBtn');
 
       const RANGES = { rent: {min:100, max:10000, step:100}, sale: {min:500000, max:10000000, step:50000} };
       const fmt = new Intl.NumberFormat('es-MX', {style:'decimal', maximumFractionDigits:0});
@@ -402,6 +483,7 @@
       applyBtn?.addEventListener('click', ()=>{ priceDrop.classList.add('hidden'); filterMarkers(); });
       window.addEventListener('click', e=>{ if(!priceDrop.classList.contains('hidden') && !priceDrop.contains(e.target) && e.target!==priceBtn){ priceDrop.classList.add('hidden'); } });
       typeSelect?.addEventListener('change', ()=>{ const cfg=rangeForType(); minCompat.value=cfg.min; maxCompat.value=cfg.max; init(); filterMarkers(); });
+      favoriteBtn?.addEventListener('click', handleFavoriteToggle);
 
       init();
     });
@@ -423,22 +505,33 @@
         html.classList.add('theme-fade');
         setTimeout(()=>html.classList.remove('theme-fade'), 420);
       }
-      function apply(mode){
+      function apply(mode, { animate = true, persist = true } = {}){
         const dark = mode==='dark';
-        startFade();
+        if (animate) {
+          startFade();
+        }
         html.classList.toggle('dark', dark);
-        try{ localStorage.setItem('theme', mode); }catch(e){}
+        if (persist) {
+          try{ localStorage.setItem('theme', mode); }catch(e){}
+        }
         setIconAndLabel();
         // Actualiza estilo del mapa sin recrearlo
         if(window.google && map){
           map.setOptions({styles: dark ? darkMapStyle : lightMapStyle});
         }
       }
-      setIconAndLabel();
+
+      function syncFromStorage(){
+        const stored = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+        apply(stored, { animate: false, persist: false });
+      }
+      syncFromStorage();
       btn?.addEventListener('click', ()=>{
         const next = html.classList.contains('dark') ? 'light' : 'dark';
         apply(next);
       });
+      window.addEventListener('pageshow', syncFromStorage);
+      window.addEventListener('storage', syncFromStorage);
     })();
   </script>
 </body>

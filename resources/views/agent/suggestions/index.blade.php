@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sugerencias de clientes - SIN BECA NO HAY RENTA</title>
 
-    {{-- Anti-flash: por defecto CLARO; si guardaste "dark", lo aplica --}}
+    {{-- Anti-flash: por defecto CLARO; si guardaste "dark", lo aplica ANTES de pintar la página --}}
     <script>
         (function () {
             try {
@@ -29,6 +29,45 @@
     {{-- Iconos --}}
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Fade suave al cambiar de tema (se activa solo mientras se anima) */
+        .theme-transition,
+        .theme-transition * {
+            transition:
+                background-color .35s ease,
+                color .35s ease,
+                border-color .35s ease,
+                fill .35s ease;
+        }
+
+        /* Animación del botón de tema (rebote + sombra) */
+        #theme-toggle {
+            transition:
+                background-color .25s ease,
+                color .25s ease,
+                transform .25s ease,
+                box-shadow .25s ease;
+        }
+
+        #theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.55);
+        }
+
+        #theme-toggle.theme-bounce {
+            transform: translateY(-1px) scale(1.04);
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.75);
+        }
+
+        #theme-toggle-icon {
+            transition: transform .35s ease, opacity .2s ease;
+        }
+
+        #theme-toggle-icon.theme-spin {
+            transform: rotate(180deg);
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 flex flex-col min-h-screen transition-colors duration-300">
@@ -184,7 +223,7 @@
     {{-- Footer global --}}
     <x-main-footer />
 
-    {{-- Script modo oscuro (mismo patrón que la vista de agente) --}}
+    {{-- Script modo oscuro con animación de botón y fade anti-flash en el cambio --}}
     <script>
         (function () {
             const html  = document.documentElement;
@@ -203,25 +242,43 @@
                 }
             }
 
-            // Estado inicial según localStorage (por si cambió en otra vista)
-            try {
-                if (localStorage.getItem('theme') === 'dark') {
-                    html.classList.add('dark');
-                } else {
-                    html.classList.remove('dark');
-                }
-            } catch (e) {}
+            function animateButton() {
+                if (!btn || !icon) return;
+                btn.classList.add('theme-bounce');
+                icon.classList.add('theme-spin');
+                setTimeout(() => {
+                    btn.classList.remove('theme-bounce');
+                    icon.classList.remove('theme-spin');
+                }, 350);
+            }
 
+            function startFade() {
+                html.classList.add('theme-transition');
+                setTimeout(() => {
+                    html.classList.remove('theme-transition');
+                }, 400);
+            }
+
+            function apply(isDark) {
+                // fade suave para que no "encandile"
+                startFade();
+
+                html.classList.toggle('dark', isDark);
+                try {
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                } catch (e) {}
+
+                syncUI();
+                animateButton();
+            }
+
+            // Estado inicial (ya viene de anti-flash del <head>, solo sincronizamos icono/texto)
             syncUI();
 
             if (btn) {
                 btn.addEventListener('click', () => {
-                    const isDark = !html.classList.contains('dark');
-                    html.classList.toggle('dark', isDark);
-                    try {
-                        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                    } catch (e) {}
-                    syncUI();
+                    const nextIsDark = !html.classList.contains('dark');
+                    apply(nextIsDark);
                 });
             }
         })();
