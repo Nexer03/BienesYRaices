@@ -6,6 +6,7 @@ use App\Notifications\NewAgentApplicationSubmitted;
 use App\Notifications\NewMessageNotification;
 use App\Notifications\NewPropertyMatchNotification;
 use App\Notifications\ReservationPaidNotification;
+use App\Notifications\AlertDigestNotification;
 use App\Notifications\AgentSuggestionNotification;
 use App\Notifications\ReservationConfirmationNotification;
 use App\Models\User;
@@ -37,6 +38,7 @@ class NotificationPresenter
             AgentSuggestionNotification::class => route('agent.suggestions.index'),
             NewAgentApplicationSubmitted::class => route('admin.agent-applications.index'),
             NewPropertyMatchNotification::class => $this->propertyUrl($data),
+            AlertDigestNotification::class => $this->digestUrl($data),
             default => route('dashboard'),
         };
     }
@@ -50,6 +52,7 @@ class NotificationPresenter
             AgentSuggestionNotification::class => 'Nueva sugerencia de cliente',
             NewAgentApplicationSubmitted::class => 'Nueva solicitud de agente',
             NewPropertyMatchNotification::class => 'Nueva propiedad recomendada',
+            AlertDigestNotification::class => 'Nuevas propiedades para ti',
             default => 'Notificación',
         };
     }
@@ -65,6 +68,7 @@ class NotificationPresenter
             AgentSuggestionNotification::class => 'Un cliente dejó sugerencias sobre ' . ($data['property_title'] ?? 'tu propiedad'),
             NewAgentApplicationSubmitted::class => ($data['applicant_name'] ?? 'Un usuario') . ' desea convertirse en agente.',
             NewPropertyMatchNotification::class => $this->propertyDescription($data),
+            AlertDigestNotification::class => $this->digestDescription($data),
             default => 'Tienes novedades en la plataforma.',
         };
     }
@@ -78,6 +82,7 @@ class NotificationPresenter
             AgentSuggestionNotification::class => 'fa-solid fa-lightbulb',
             NewAgentApplicationSubmitted::class => 'fa-solid fa-user-tie',
             NewPropertyMatchNotification::class => 'fa-solid fa-house-circle-check',
+            AlertDigestNotification::class => 'fa-regular fa-bell',
             default => 'fa-regular fa-bell',
         };
     }
@@ -135,5 +140,47 @@ class NotificationPresenter
         }
 
         return implode(' ', $parts) . '.';
+    }
+
+    protected function digestUrl(array $data): string
+    {
+        if (!empty($data['primary_property_id'])) {
+            return route('properties.show', $data['primary_property_id']);
+        }
+
+        if (!empty($data['properties'][0]['id'] ?? null)) {
+            return route('properties.show', $data['properties'][0]['id']);
+        }
+
+        return route('alerts.index');
+    }
+
+    protected function digestDescription(array $data): string
+    {
+        $criteriaName = $data['criteria_name'] ?? null;
+        $propertiesCount = $data['properties_count'] ?? count($data['properties'] ?? []);
+
+        $title = $criteriaName
+            ? "Tu alerta \"{$criteriaName}\" encontró {$propertiesCount} nueva(s) propiedad(es)."
+            : "Encontramos {$propertiesCount} nueva(s) propiedad(es) según tus preferencias.";
+
+        $first = $data['properties'][0] ?? null;
+
+        if ($first) {
+            $details = [];
+            $details[] = $first['title'] ?? 'Una propiedad coincide con tus filtros';
+
+            if (!empty($first['city'])) {
+                $details[] = 'en ' . $first['city'];
+            }
+
+            if (!empty($first['price'])) {
+                $details[] = 'por $' . number_format((float) $first['price'], 2);
+            }
+
+            return $title . ' Ejemplo: ' . implode(' ', $details) . '.';
+        }
+
+        return $title;
     }
 }
