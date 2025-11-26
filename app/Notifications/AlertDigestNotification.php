@@ -26,16 +26,24 @@ class AlertDigestNotification extends Notification
 
     public function toArray(object $notifiable): array
     {
-        return [
-            'criteria_id' => $this->criteria->id,
-            'channel' => $this->channel,
-            'properties' => $this->properties->take(5)->map(fn ($property) => [
+        $properties = $this->properties
+            ->take(5)
+            ->map(fn ($property) => [
                 'id' => $property->id,
                 'title' => Str::limit($property->title, 80),
                 'city' => $property->city,
                 'price' => $property->price,
                 'listing_type' => $property->listing_type,
-            ]),
+            ])
+            ->values();
+
+        return [
+            'criteria_id' => $this->criteria->id,
+            'criteria_name' => $this->criteria->name,
+            'channel' => $this->channel,
+            'properties' => $properties,
+            'properties_count' => $this->properties->count(),
+            'primary_property_id' => $properties->first()['id'] ?? null,
         ];
     }
 }
