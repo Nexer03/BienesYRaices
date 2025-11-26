@@ -39,6 +39,9 @@ class UserPreferenceController extends Controller
 
         $validated = $request->validate([
             'preferred_location'      => 'nullable|string|max:255',
+            'pref_latitude'           => 'nullable|numeric',
+            'pref_longitude'          => 'nullable|numeric',
+            'pref_radius'             => 'nullable|numeric|min:0',
             'min_price'               => 'nullable|numeric|min:0',
             'max_price'               => 'nullable|numeric|min:0|gte:min_price',
             'preferred_listing_type'  => 'nullable|in:sale,rent',
