@@ -232,11 +232,11 @@
                     </a>
                     <form method="POST"
                           action="{{ route('admin.commissions.destroy', $commission) }}"
-                          onsubmit="return confirm('¿Deseas eliminar esta comisión?');">
+                          class="delete-commission-form">
                       @csrf
                       @method('DELETE')
-                      <button type="submit"
-                              class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium">
+                      <button type="button"
+                              class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium btn-delete-commission">
                               <i class="fa-solid fa-trash-can"></i> Eliminar
                       </button>
                     </form>
@@ -260,7 +260,46 @@
   {{-- FOOTER GLOBAL --}}
   <x-main-footer />
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Configuración de SweetAlert2 con estilos de Tailwind (Dark/Light)
+      const swalOpts = {
+        buttonsStyling: false,
+        reverseButtons: true,
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, eliminar',
+        customClass: {
+          popup: 'rounded-xl bg-white text-gray-900 border border-gray-200 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700',
+          title: 'text-gray-900 dark:text-gray-100',
+          htmlContainer: 'text-gray-700 dark:text-gray-300',
+          actions: 'gap-3',
+          confirmButton: 'px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none',
+          cancelButton: 'px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
+        },
+      };
+
+      // Manejo del botón eliminar
+      document.querySelectorAll('.btn-delete-commission').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const form = this.closest('.delete-commission-form');
+          
+          Swal.fire({
+            ...swalOpts,
+            icon: 'warning',
+            title: '¿Eliminar comisión?',
+            text: 'Esta acción no se puede deshacer.',
+            confirmButtonText: 'Sí, eliminar',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              form.submit();
+            }
+          });
+        });
+      });
+    });
+
     // Toggle de modo oscuro con transición suave
     (function () {
       const html  = document.documentElement;
