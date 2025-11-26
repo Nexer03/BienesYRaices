@@ -89,7 +89,8 @@
                   <th class="px-4 py-2 text-right font-medium text-gray-600 dark:text-gray-300">Disponibles</th>
                   <th class="px-4 py-2 text-right font-medium text-gray-600 dark:text-gray-300">Vendidas</th>
                   <th class="px-4 py-2 text-right font-medium text-gray-600 dark:text-gray-300">Rentadas</th>
-                  <th class="px-4 py-2 text-right font-medium text-gray-600 dark:text-gray-300">Precio promedio</th>
+                  <th class="px-4 py-2 text-right font-medium text-gray-600 dark:text-gray-300">Promedio venta</th>
+                  <th class="px-4 py-2 text-right font-medium text-gray-600 dark:text-gray-300">Promedio renta</th>
               </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -100,11 +101,12 @@
                       <td class="px-4 py-2 text-right">{{ number_format($zone->available_count) }}</td>
                       <td class="px-4 py-2 text-right">{{ number_format($zone->sold_count) }}</td>
                       <td class="px-4 py-2 text-right">{{ number_format($zone->rented_count) }}</td>
-                      <td class="px-4 py-2 text-right">${{ number_format($zone->average_price, 2, '.', ',') }}</td>
+                        <td class="px-4 py-2 text-right">${{ number_format($zone->average_sale_price, 2, '.', ',') }}</td>
+                      <td class="px-4 py-2 text-right">${{ number_format($zone->average_rent_price, 2, '.', ',') }}</td>
                   </tr>
               @empty
                   <tr>
-                      <td colspan="6" class="px-4 py-6 text-center text-gray-500 dark:text-gray-300">
+                     <td colspan="7" class="px-4 py-6 text-center text-gray-500 dark:text-gray-300">
                           No hay información suficiente para comparar zonas.
                       </td>
                   </tr>
