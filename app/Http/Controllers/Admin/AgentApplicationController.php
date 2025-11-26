@@ -57,7 +57,10 @@ class AgentApplicationController extends Controller
             $agentApplication->user->notify(new AgentApplicationApproved($agentApplication));
         });
 
-        return back()->with('success', 'Solicitud aprobada correctamente.');
+       return redirect()
+            ->route('admin.agent-applications.index')
+            ->with('success', 'Solicitud aprobada correctamente.');
+    
     }
 
     public function reject(Request $request, AgentApplication $agentApplication): RedirectResponse
@@ -75,6 +78,8 @@ class AgentApplicationController extends Controller
             'rejection_reason' => $validated['rejection_reason'],
         ]);
 
-        return back()->with('success', 'Solicitud rechazada correctamente.');
+          return redirect()
+            ->route('admin.agent-applications.index')
+            ->with('success', 'Solicitud rechazada correctamente.');
     }
 }
