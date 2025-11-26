@@ -253,6 +253,10 @@ class AdminReportController extends Controller
             ->selectRaw(
                 "AVG(CASE WHEN listing_type = 'rent'{$rentalDateFilter} THEN price END) as average_rent_price",
                 $rentalDateBindings
+                  )
+            ->selectRaw(
+                "AVG(CASE\n                    WHEN listing_type = 'sale' AND sold_at IS NOT NULL{$salesDateFilter} THEN price\n                    WHEN listing_type = 'rent'{$rentalDateFilter} THEN price\n                END) as average_price",
+                array_merge($salesDateBindings, $rentalDateBindings)
             );
 
         if ($filters['agent']) {
