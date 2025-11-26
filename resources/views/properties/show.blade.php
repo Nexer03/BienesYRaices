@@ -631,9 +631,7 @@
         {{-- Reseñas (solo renta) --}}
         @if($isRent)
           <section>
-            <h2 class="text-xl md:text-2xl font-semibold border-b border-gray-100 dark:border-gray-800 pb-2 mb-3 text-gray-900 dark:text-gray-50">
-              Reseñas
-            </h2>
+
 
             @if(session('success'))
               <div class="mb-3 p-3 rounded-xl bg-green-50 text-green-700 border border-green-200 text-sm">
@@ -666,7 +664,7 @@
                   <span class="text-gray-500 dark:text-gray-400">· {{ $count }} reseña{{ $count>1?'s':'' }}</span>
                 </div>
               @else
-                <div class="text-gray-500 dark:text-gray-400 text-sm">Aún no hay reseñas.</div>
+
               @endif
             </div>
 
