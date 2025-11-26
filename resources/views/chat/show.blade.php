@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+
+
 {{-- Frame principal del chat (layout + mensajes + panel lateral) --}}
 @include('chat.partials.frame', [
   'conversation' => $conversation,

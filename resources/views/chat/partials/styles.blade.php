@@ -77,6 +77,16 @@
   }
 
   /* ================== Calendario de reservas (Flatpickr) ================== */
+    /* ================== Calendario de reservas (Flatpickr) ================== */
+  /* Forzar que el calendario tenga sólo 7 columnas (ocultar columna de semanas) */
+  .fp-shell .flatpickr-weekwrapper{
+    display:none !important;           /* oculta la columna de números de semana si estuviera activa */
+  }
+
+  .fp-shell .flatpickr-calendar.hasWeeks .flatpickr-days{
+    margin-left:0 !important;          /* corrige el desplazamiento cuando hasWeeks está presente */
+  }
+
   .fp-hidden-input{
     position:absolute !important;
     width:1px !important;
@@ -93,16 +103,117 @@
     position:static !important;
     border:0 !important;
     box-shadow:none !important;
-    width:100% !important;
-    max-width:100%;
-    background:#fff;
+    font-size:14px;
+  }
+  .fp-shell .flatpickr-innerContainer{
+    padding:8px 8px 12px;
+  }
+  .fp-shell .flatpickr-days{
+    padding:0 4px 4px;
+  }
+  .fp-shell .flatpickr-weekdays{
+    margin-bottom:4px;
+  }
+  .fp-shell .flatpickr-weekday{
+    font-weight:600;
+    font-size:11px;
+    color:#6b7280;
+  }
+  .fp-shell .flatpickr-day{
+    border-radius:9999px;
+    height:32px;
+    line-height:32px;
+    margin:1px;
+  }
+  .fp-shell .flatpickr-day:hover{
+    background:#e5f0ff;
+    color:#111827;
+  }
+  .fp-shell .flatpickr-day.selected,
+  .fp-shell .flatpickr-day.startRange,
+  .fp-shell .flatpickr-day.endRange,
+  .fp-shell .flatpickr-day.selected.inRange{
+    background:#2563eb;
+    color:#ffffff;
+  }
+  .fp-shell .flatpickr-day.inRange{
+    background:#dbeafe;
+    color:#1f2937;
+  }
+  .fp-shell .flatpickr-day.disabled,
+  .fp-shell .flatpickr-day.disabled:hover{
+    color:#9ca3af;
+    background:transparent;
+    cursor:not-allowed;
+    text-decoration:line-through;
+    opacity:0.6;
+  }
+
+  /* Navegación de meses */
+  .fp-shell .flatpickr-months .flatpickr-prev-month,
+  .fp-shell .flatpickr-months .flatpickr-next-month{
+    top:10px;
+    color:#4b5563;
+    fill:#4b5563;
+    cursor:pointer;
+  }
+  .fp-shell .flatpickr-months .flatpickr-prev-month{ left:3px; }
+  .fp-shell .flatpickr-months .flatpickr-next-month{ right:3px; }
+  .fp-shell .flatpickr-months .flatpickr-prev-month:hover,
+  .fp-shell .flatpickr-months .flatpickr-next-month:hover{
+    color:#111827;
+    fill:#111827;
+  }
+  .fp-shell .flatpickr-months .flatpickr-current-month{
+    font-size:110%;
+  }
+  .fp-shell .flatpickr-months .flatpickr-current-month .cur-month{
+    font-weight:700;
+    color:#111827;
+  }
+  .fp-shell .flatpickr-months .flatpickr-current-month input.cur-year{
+    font-weight:600;
+  }
+
+  /* Dark mode del calendario */
+  .dark .fp-shell .flatpickr-calendar{
+    background:#020617 !important;
+    color:#e5e7eb;
+  }
+  .dark .fp-shell .flatpickr-weekday{
+    color:#9ca3af;
+  }
+  .dark .fp-shell .flatpickr-day{
+    color:#e5e7eb;
+  }
+  .dark .fp-shell .flatpickr-day:hover{
+    background:#1d4ed8;
+  }
+  .dark .fp-shell .flatpickr-day.selected,
+  .dark .fp-shell .flatpickr-day.startRange,
+  .dark .fp-shell .flatpickr-day.endRange,
+  .dark .fp-shell .flatpickr-day.selected.inRange{
+    background:#3b82f6;
+    color:#f9fafb;
+  }
+  .dark .fp-shell .flatpickr-day.inRange{
+    background:rgba(59,130,246,0.25);
+    color:#e5e7eb;
+  }
+  .dark .fp-shell .flatpickr-day.disabled,
+  .dark .fp-shell .flatpickr-day.disabled:hover{
+    color:#6b7280;
+    text-decoration:line-through;
+    opacity:0.6;
   }
 
   /* ====== LOOK tipo Airbnb (modo claro) ====== */
   .fp-shell .flatpickr-months{
     display:flex;
     background:#fff;
-    padding:10px 0 0;
+    padding:10px 0 20px; /* More bottom padding */
+    margin-bottom: 20px; /* More separation from grid */
+    position: relative;
   }
   .fp-shell .flatpickr-months .flatpickr-month{
     flex:1;
@@ -115,21 +226,27 @@
   .fp-shell .flatpickr-months .flatpickr-prev-month,
   .fp-shell .flatpickr-months .flatpickr-next-month{
     position:absolute;
-    top:50%;
-    width:20px;
-    height:20px;
-    margin-top:-10px;
-    border-radius:9999px;
+    top:20px; /* Adjusted top to match new padding */
+    width:36px; /* Larger touch target */
+    height:36px;
+    margin-top:-18px; /* Centered */
+    border-radius:50%;
     color:#717171;
     fill:#717171;
     cursor:pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    z-index: 10;
   }
-  .fp-shell .flatpickr-months .flatpickr-prev-month{ left:3px; }
-  .fp-shell .flatpickr-months .flatpickr-next-month{ right:3px; }
+  .fp-shell .flatpickr-months .flatpickr-prev-month{ left:0; } /* At the very edge */
+  .fp-shell .flatpickr-months .flatpickr-next-month{ right:0; } /* At the very edge */
   .fp-shell .flatpickr-months .flatpickr-prev-month:hover,
   .fp-shell .flatpickr-months .flatpickr-next-month:hover{
     color:#222;
     fill:#222;
+    background-color: #f3f4f6;
   }
   .fp-shell .flatpickr-months .flatpickr-current-month{
     font-size:110%;
@@ -169,6 +286,11 @@
   .fp-shell .dayContainer{
     padding:1px 0 10px;
     min-width:315px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    transform: translate3d(0,0,0);
+    opacity: 1;
   }
   .fp-shell .flatpickr-day{
     color:#222;
@@ -243,6 +365,15 @@
     .fp-shell .flatpickr-days .dayContainer:nth-child(1){
       border-right:1px solid #e5e7eb;
     }
+  }
+
+  /* ==== Fix para que los días del mes anterior/siguiente ocupen espacio ==== */
+  .fp-shell .flatpickr-day.prevMonthDay,
+  .fp-shell .flatpickr-day.nextMonthDay {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 0 !important; /* Ocultos visualmente pero ocupan espacio */
+    pointer-events: none;
   }
 
   /* ==================Aqui termina Flatpickr (base) ================== */

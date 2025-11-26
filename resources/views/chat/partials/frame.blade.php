@@ -55,16 +55,6 @@
         <div class="chat-status" aria-live="polite">
           <span class="status-dot" id="chat-presence-dot"></span>
           <span id="chat-typing-text">En línea recientemente</span>
-
-          <button
-            type="button"
-            class="chat-notify-btn"
-            id="chat-notify-btn"
-            title="Activar notificaciones"
-            aria-label="Activar notificaciones"
-          >
-            🔔
-          </button>
         </div>
       </div>
 
