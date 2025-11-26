@@ -96,10 +96,10 @@
         </p>
       </div>
 
-<<<<<<< HEAD
+
       <form action="{{ route('agent.register.store') }}" method="POST"
             id="agentForm" class="space-y-6" enctype="multipart/form-data">
-=======
+
         {{-- Mensajes de estado --}}
       @if (session('success'))
         <div class="mb-4 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-white-1000 dark:border-green-700 dark:bg-green-900/40">
@@ -125,7 +125,7 @@
       @endif
 
       <form action="{{ route('agent.register.store') }}" method="POST" id="agentForm" class="space-y-6" enctype="multipart/form-data">
->>>>>>> develop
+
         @csrf
 
         {{-- RFC --}}
@@ -239,22 +239,7 @@
   </main>
  <br><br>
   {{-- FOOTER --}}
-<<<<<<< HEAD
-  <footer class="bg-white border-t border-gray-200 text-gray-600 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-300 py-6 mt-auto">
-    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
-      <p class="text-sm">
-        &copy; {{ date('Y') }} SIN BECA NO HAY RENTA. Todos los derechos reservados.
-      </p>
-      <div class="flex space-x-4 mt-3 md:mt-0 text-gray-500 dark:text-gray-400">
-        <a href="#" class="hover:text-blue-500"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" class="hover:text-blue-500"><i class="fab fa-twitter"></i></a>
-        <a href="#" class="hover:text-pink-500"><i class="fab fa-instagram"></i></a>
-      </div>
-    </div>
-  </footer>
-=======
   <x-main-footer />
->>>>>>> develop
 
   {{-- Botón Tema --}}
   <button id="theme-toggle"
