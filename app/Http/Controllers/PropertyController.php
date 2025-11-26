@@ -128,8 +128,9 @@ class PropertyController extends Controller
                     }
                 }
 
-                if (in_array($typeFilter, ['sale', 'rent'])) {
-                    $prefQuery->where('listing_type', $typeFilter);
+                 $requestedType = $request->input('type');
+                if ($request->filled('type') && in_array($requestedType, ['sale', 'rent'])) {
+                    $prefQuery->where('listing_type', $requestedType);
                 }
 
                 if (!($userPreferences->pref_latitude && $userPreferences->pref_longitude && $userPreferences->pref_radius)) {
