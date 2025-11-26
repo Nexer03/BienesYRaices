@@ -80,6 +80,7 @@ class PropertyController extends Controller
 
             if ($userPreferences) {
                 $prefQuery = Property::with('images')->where('status', 'available');
+                $hasAmenityPreference = false;
 
                 if ($userPreferences->pref_latitude && $userPreferences->pref_longitude && $userPreferences->pref_radius) {
                     $lat = $userPreferences->pref_latitude;
@@ -118,23 +119,33 @@ class PropertyController extends Controller
                 }
 
                 if ($userPreferences->preferred_amenities) {
-                    $amenityIds = explode(',', $userPreferences->preferred_amenities);
-                    foreach ($amenityIds as $amenityId) {
-                        if (trim($amenityId)) {
-                            $prefQuery->whereHas('amenities', function ($q) use ($amenityId) {
-                                $q->where('amenities.id', trim($amenityId));
-                            });
-                        }
+                    $amenityIds = collect(explode(',', $userPreferences->preferred_amenities))
+                        ->map(fn ($id) => (int) trim($id))
+                        ->filter()
+                        ->unique();
+
+                    if ($amenityIds->isNotEmpty()) {
+                        // Preferimos propiedades con amenities coincidentes, pero no excluimos
+                        // aquellas que no tengan todas para no penalizar demasiado este filtro.
+                        $prefQuery->withCount([
+                            'amenities as matched_amenities_count' => fn ($q) => $q->whereIn('amenities.id', $amenityIds),
+                        ]);
+                        $hasAmenityPreference = true;
                     }
                 }
 
-                 $requestedType = $request->input('type');
+                $requestedType = $request->input('type');
                 if ($request->filled('type') && in_array($requestedType, ['sale', 'rent'])) {
                     $prefQuery->where('listing_type', $requestedType);
                 }
 
                 if (!($userPreferences->pref_latitude && $userPreferences->pref_longitude && $userPreferences->pref_radius)) {
                     $prefQuery->latest();
+                }
+
+                if ($hasAmenityPreference) {
+                    // Priorizamos amenities solo como desempate: primero aplica orden por distancia/recencia.
+                    $prefQuery->orderByDesc('matched_amenities_count');
                 }
 
                 $recommendedProperties = $prefQuery->take(6)->get();
