@@ -245,7 +245,8 @@
     {{-- Filtro principal --}}
     <section id="filter-panel"
              class="bg-white dark:bg-gray-900 dark:text-gray-100 shadow-md w-full py-6
-                    fixed md:static top-16 left-0 z-50">
+                    fixed top-16 left-0 z-30
+                    hidden md:static md:block">
 
         <div class="max-w-6xl mx-auto px-6">
             <form id="property-filter-form" method="GET" action="{{ route('home') }}"
@@ -637,7 +638,7 @@
                 label.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
             }
 
-             function startPageFade() {
+            function startPageFade() {
                 html.classList.add('theme-fade');
                 setTimeout(() => html.classList.remove('theme-fade'), 500);
             }
@@ -654,7 +655,7 @@
 
             function apply(mode, { animate = true, persist = true } = {}) {
                 const isDark = mode === 'dark';
-                 if (animate) { startPageFade(); }
+                if (animate) { startPageFade(); }
                 html.classList.toggle('dark', isDark);
                 if (persist) {
                     try {
@@ -819,24 +820,27 @@
             const filterPanel  = document.getElementById('filter-panel');
             if (!searchToggle || !filterPanel) return;
 
-            let isFilterVisible = false;
-
-            function toggleFilter() {
-                if (window.innerWidth < 768) {
-                    isFilterVisible = !isFilterVisible;
-                    filterPanel.style.transform = isFilterVisible ? 'translateY(0)' : 'translateY(-100%)';
+            function handleResize() {
+                if (window.innerWidth >= 768) {
+                    // En desktop el filtro siempre visible
+                    filterPanel.classList.remove('hidden');
+                } else {
+                    // En móvil lo dejamos oculto por defecto;
+                    // el usuario lo abre con el botón de búsqueda
+                    filterPanel.classList.add('hidden');
                 }
             }
 
-            searchToggle.addEventListener('click', toggleFilter);
+            // Estado inicial
+            handleResize();
 
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
-                    filterPanel.style.transform = 'translateY(0)';
-                } else if (!isFilterVisible) {
-                    filterPanel.style.transform = 'translateY(-100%)';
-                }
+            // Toggle solo en móvil
+            searchToggle.addEventListener('click', function () {
+                if (window.innerWidth >= 768) return;
+                filterPanel.classList.toggle('hidden');
             });
+
+            window.addEventListener('resize', handleResize);
         })();
     </script>
 
