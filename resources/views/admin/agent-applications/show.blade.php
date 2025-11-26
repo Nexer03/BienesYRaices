@@ -137,7 +137,6 @@
                                     Aprobar
                                 </button>
                             </form>
-
                             <!-- Rechazar -->
                             <form method="POST" action="{{ route('admin.agent-applications.reject', $application) }}" class="flex-1 flex flex-col gap-2">
                                 @csrf
@@ -152,13 +151,9 @@
                             </form>
                         </div>
                     @endif
-
                 </div>
             </section>
-
         </div>
-
     </div>
-
 </body>
 </html>

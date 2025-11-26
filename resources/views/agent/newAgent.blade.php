@@ -23,6 +23,30 @@
         <p class="text-gray-500 dark:text-gray-400 mt-2">Completa los siguientes campos para enviar tu solicitud</p>
       </div>
 
+        {{-- Mensajes de estado --}}
+      @if (session('success'))
+        <div class="mb-4 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-white-1000 dark:border-green-700 dark:bg-green-900/40">
+          <i class="fa-solid fa-circle-check mr-2"></i>{{ session('success') }}
+        </div>
+      @endif
+
+      @if (session('error'))
+        <div class="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-white-1000 dark:border-red-700 dark:bg-red-900/40">
+          <i class="fa-solid fa-circle-exclamation mr-2"></i>{{ session('error') }}
+        </div>
+      @endif
+
+      @if ($errors->any())
+        <div class="mb-4 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-yellow-900 dark:border-yellow-600 dark:bg-yellow-900/50">
+          <p class="font-semibold mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Corrige los siguientes campos:</p>
+          <ul class="list-disc list-inside space-y-1 text-sm">
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
       <form action="{{ route('agent.register.store') }}" method="POST" id="agentForm" class="space-y-6" enctype="multipart/form-data">
         @csrf
 
