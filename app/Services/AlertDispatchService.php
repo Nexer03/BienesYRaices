@@ -7,6 +7,7 @@ use App\Models\AlertCriteria;
 use App\Models\AlertDeliveryLog;
 use App\Models\Property;
 use App\Notifications\AlertDigestNotification;
+use App\Notifications\NewPropertyMatchNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -76,7 +77,16 @@ class AlertDispatchService
         $sentAt = now();
 
         try {
-            $criteria->user->notify(new AlertDigestNotification($criteria, $properties, $channel->channel));
+            // Para el canal de campanita entregamos una notificación por propiedad
+            // para que aparezca en el header y permita ir directo al detalle.
+            if ($channel->channel === 'bell') {
+                foreach ($properties as $property) {
+                    $criteria->user->notify(new NewPropertyMatchNotification($property));
+                }
+            } else {
+                // Otros canales siguen usando el digest agrupado.
+                $criteria->user->notify(new AlertDigestNotification($criteria, $properties, $channel->channel));
+            }
 
             $channel->forceFill(['last_sent_at' => $sentAt])->save();
             $criteria->forceFill([
