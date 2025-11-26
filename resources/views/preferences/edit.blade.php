@@ -418,16 +418,42 @@
         }
       });
 
+    // ================== Google Maps con modo oscuro ==================
+    const lightMapStyle = [
+        {featureType:"poi",stylers:[{visibility:"off"}]},
+        {featureType:"transit",stylers:[{visibility:"off"}]},
+        {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]}
+    ];
+    const darkMapStyle = [
+        {elementType:"geometry",stylers:[{color:"#1f2937"}]},
+        {elementType:"labels.text.fill",stylers:[{color:"#93a4b8"}]},
+        {elementType:"labels.text.stroke",stylers:[{color:"#1f2937"}]},
+        {featureType:"administrative",elementType:"geometry",stylers:[{color:"#334155"}]},
+        {featureType:"poi",stylers:[{visibility:"off"}]},
+        {featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]},
+        {featureType:"road",elementType:"geometry",stylers:[{color:"#2b3647"}]},
+        {featureType:"road",elementType:"geometry.stroke",stylers:[{color:"#374151"}]},
+        {featureType:"water",elementType:"geometry",stylers:[{color:"#0b1220"}]},
+        {featureType:"transit",stylers:[{visibility:"off"}]}
+    ];
+
     function initPrefMap() {
         const initialLat = parseFloat(latInput.value) || 20.6597;
         const initialLng = parseFloat(lonInput.value) || -103.3496;
         const initialRadius = parseInt(radiusInput.value) || 5000;
         const center = { lat: initialLat, lng: initialLng };
 
+        const isDark = document.documentElement.classList.contains('dark');
+
         map = new google.maps.Map(document.getElementById("preference-map"), {
             center: center,
-            zoom: 12
+            zoom: 12,
+            styles: isDark ? darkMapStyle : lightMapStyle
         });
+
+        // Exponer mapa y estilos globalmente para el toggle
+        window._prefMap = map;
+        window._prefMapStyles = { light: lightMapStyle, dark: darkMapStyle };
 
         marker = new google.maps.Marker({
             map: map,
@@ -605,6 +631,13 @@
                 } catch (e) {}
                 setIconAndLabel();
                 animateButton();
+
+                // Actualizar estilos del mapa si existe
+                if (window._prefMap && window._prefMapStyles) {
+                    window._prefMap.setOptions({
+                        styles: isDark ? window._prefMapStyles.dark : window._prefMapStyles.light
+                    });
+                }
             }
 
             // Inicializar icono/texto según estado actual
