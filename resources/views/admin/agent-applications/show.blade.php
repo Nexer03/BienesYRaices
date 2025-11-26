@@ -120,7 +120,7 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4 mt-4">
 
                     <!-- Volver -->
-                    <a onclick="history.back()"
+                    <a href="{{ route('admin.agent-applications.index') }}"
                        class="cursor-pointer px-5 py-2.5 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-semibold
                               text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center gap-2">
                         <i class="fa-solid fa-arrow-left"></i>

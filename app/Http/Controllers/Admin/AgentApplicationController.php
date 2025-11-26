@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AgentApplication;
 use App\Notifications\AgentApplicationApproved;
+use App\Notifications\AgentApplicationRejected;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,7 +58,9 @@ class AgentApplicationController extends Controller
             $agentApplication->user->notify(new AgentApplicationApproved($agentApplication));
         });
 
-        return back()->with('success', 'Solicitud aprobada correctamente.');
+        return redirect()
+            ->route('admin.agent-applications.index')
+            ->with('success', 'Solicitud aprobada correctamente.');
     }
 
     public function reject(Request $request, AgentApplication $agentApplication): RedirectResponse
@@ -70,11 +73,17 @@ class AgentApplicationController extends Controller
             'rejection_reason' => 'required|string|max:1000',
         ]);
 
-        $agentApplication->update([
-            'status' => AgentApplication::STATUS_REJECTED,
-            'rejection_reason' => $validated['rejection_reason'],
-        ]);
+        DB::transaction(function () use ($agentApplication, $validated) {
+            $agentApplication->update([
+                'status' => AgentApplication::STATUS_REJECTED,
+                'rejection_reason' => $validated['rejection_reason'],
+            ]);
 
-        return back()->with('success', 'Solicitud rechazada correctamente.');
+            $agentApplication->user->notify(new AgentApplicationRejected($agentApplication));
+        });
+
+        return redirect()
+            ->route('admin.agent-applications.index')
+            ->with('success', 'Solicitud rechazada correctamente.');
     }
 }
