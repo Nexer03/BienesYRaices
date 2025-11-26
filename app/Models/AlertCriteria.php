@@ -29,13 +29,13 @@ class AlertCriteria extends Model
     ];
 
     protected $casts = [
-        'filters' => 'array',
-        'is_paused' => 'boolean',
-        'consented_at' => 'datetime',
-        'last_sent_at' => 'datetime',
-        'last_matched_at' => 'datetime',
+        'filters'                 => 'array',
+        'is_paused'               => 'boolean',
+        'consented_at'            => 'datetime',
+        'last_sent_at'            => 'datetime',
+        'last_matched_at'         => 'datetime',
         'last_consent_refresh_at' => 'datetime',
-        'last_unsubscribe_at' => 'datetime',
+        'last_unsubscribe_at'     => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -53,28 +53,82 @@ class AlertCriteria extends Model
         return $this->hasMany(AlertDeliveryLog::class);
     }
 
+    /**
+     * Determina si esta propiedad hace match con los filtros del criterio.
+     * Aquí solo delegamos a la lógica reutilizable.
+     */
     public function matchesProperty(Property $property): bool
     {
-        $filters = $this->filters ?? [];
-
         if ($this->is_paused) {
             return false;
         }
 
-        $checks = [
-            fn () => !Arr::get($filters, 'city') || $property->city === Arr::get($filters, 'city'),
-            fn () => !Arr::get($filters, 'listing_type') || $property->listing_type === Arr::get($filters, 'listing_type'),
-            fn () => !Arr::get($filters, 'type') || $property->type === Arr::get($filters, 'type'),
-            fn () => !Arr::get($filters, 'price_min') || $property->price >= (float) Arr::get($filters, 'price_min'),
-            fn () => !Arr::get($filters, 'price_max') || $property->price <= (float) Arr::get($filters, 'price_max'),
-            fn () => !Arr::get($filters, 'bedrooms') || $property->bedrooms >= (int) Arr::get($filters, 'bedrooms'),
-            fn () => !Arr::get($filters, 'bathrooms') || $property->bathrooms >= (int) Arr::get($filters, 'bathrooms'),
-        ];
+        $filters = $this->filters ?? [];
 
-        foreach ($checks as $check) {
-            if (! $check()) {
+        return self::propertyMatchesFilters($property, $filters);
+    }
+
+    /**
+     * Lógica central para decidir si una Property cumple con un arreglo de filtros.
+     * Esta función la puedes reutilizar también desde otros lugares (por ejemplo,
+     * para sacar propiedades recomendadas en el welcome).
+     */
+    public static function propertyMatchesFilters(Property $property, array $filters): bool
+    {
+        // 🔹 1) Status básico: no notificar vendidas / no disponibles
+        if (in_array($property->status, ['sold', 'unavailable'], true)) {
+            return false;
+        }
+
+        // 🔹 2) Ciudad (flexible – similar a cómo se filtra visualmente)
+        $filterCity = trim((string) Arr::get($filters, 'city', ''));
+        if ($filterCity !== '') {
+            $propCity        = mb_strtolower(trim((string) $property->city));
+            $filterCityLower = mb_strtolower($filterCity);
+
+            // Si alguna viene vacía o ninguna contiene a la otra, no hace match
+            if (
+                $propCity === '' ||
+                (!str_contains($propCity, $filterCityLower) && !str_contains($filterCityLower, $propCity))
+            ) {
                 return false;
             }
+        }
+
+        // 🔹 3) Tipo de publicación (rent/sale, etc.)
+        $filterListingType = Arr::get($filters, 'listing_type');
+        if (!empty($filterListingType) && (string) $property->listing_type !== (string) $filterListingType) {
+            return false;
+        }
+
+        // 🔹 4) Tipo de propiedad (casa, departamento, etc.) si lo usas
+        $filterType = Arr::get($filters, 'type');
+        if (!empty($filterType) && (string) $property->type !== (string) $filterType) {
+            return false;
+        }
+
+        // 🔹 5) Precio mínimo
+        $priceMin = Arr::get($filters, 'price_min');
+        if (!empty($priceMin) && (float) $property->price < (float) $priceMin) {
+            return false;
+        }
+
+        // 🔹 6) Precio máximo
+        $priceMax = Arr::get($filters, 'price_max');
+        if (!empty($priceMax) && (float) $property->price > (float) $priceMax) {
+            return false;
+        }
+
+        // 🔹 7) Recámaras mínimas
+        $minBedrooms = Arr::get($filters, 'bedrooms');
+        if (!empty($minBedrooms) && (int) $property->bedrooms < (int) $minBedrooms) {
+            return false;
+        }
+
+        // 🔹 8) Baños mínimos
+        $minBathrooms = Arr::get($filters, 'bathrooms');
+        if (!empty($minBathrooms) && (int) $property->bathrooms < (int) $minBathrooms) {
+            return false;
         }
 
         return true;

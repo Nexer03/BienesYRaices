@@ -11,6 +11,7 @@ use App\Notifications\NewAgentApplicationSubmitted;
 use App\Notifications\AgentApplicationApproved;
 use App\Notifications\NewMessageNotification;
 use App\Notifications\NewPropertyMatchNotification;
+use App\Notifications\AlertDigestNotification;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -191,6 +192,47 @@ class AppServiceProvider extends ServiceProvider
                     }
                 }
 
+                // 2.f) Digest de alertas con múltiples propiedades
+                if ($type === AlertDigestNotification::class) {
+                    $criteriaName    = $data['criteria_name']    ?? null;
+                    $propertiesCount = $data['properties_count'] ?? count($data['properties'] ?? []);
+                    $firstProperty   = $data['properties'][0]    ?? null;
+
+                    if (!$title) {
+                        $title = 'Propiedades según tus preferencias';
+                    }
+
+                    if (!$description) {
+                        $parts = [];
+
+                        if ($criteriaName) {
+                            $parts[] = "La alerta \"{$criteriaName}\" encontró {$propertiesCount} opción(es).";
+                        } else {
+                            $parts[] = "Encontramos {$propertiesCount} nueva(s) propiedad(es) para ti.";
+                        }
+
+                        if ($firstProperty) {
+                            $sample = $firstProperty['title'] ?? 'Una de ellas';
+                            $city = $firstProperty['city'] ?? null;
+                            $price = $firstProperty['price'] ?? null;
+
+                            $details = [$sample];
+
+                            if ($city) {
+                                $details[] = "en {$city}";
+                            }
+
+                            if ($price) {
+                                $details[] = 'por $' . number_format((float) $price, 2);
+                            }
+
+                            $parts[] = 'Ejemplo: ' . implode(' ', $details) . '.';
+                        }
+
+                        $description = implode(' ', $parts);
+                    }
+                }
+
                 // 3) Fallback
                 if (!$title) {
                     $title = 'Notificación';
@@ -208,6 +250,7 @@ class AppServiceProvider extends ServiceProvider
                     AgentApplicationApproved::class         => 'fa-solid fa-circle-check',
                     NewMessageNotification::class           => 'fa-regular fa-comment-dots',
                     NewPropertyMatchNotification::class     => 'fa-solid fa-house-circle-check',
+                    AlertDigestNotification::class          => 'fa-regular fa-bell',
                     default                                 => 'fa-regular fa-bell',
                 };
 
