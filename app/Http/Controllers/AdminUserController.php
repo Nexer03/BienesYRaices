@@ -142,9 +142,38 @@ class AdminUserController extends Controller
              return redirect()->route('admin.users.index')->with('error', 'No puedes eliminar al último administrador.');
          }
 
-        // Delete the user (cascading delete should handle related data if set up)
-        $user->delete();
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($user) {
+                // 1. Eliminar preferencias
+                $user->preferences()->delete();
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuario eliminado exitosamente.');
+                // 2. Desvincular favoritos
+                $user->favoriteProperties()->detach();
+
+                // 3. Eliminar reseñas hechas por el usuario
+                $user->reviews()->delete();
+
+                // 4. Eliminar criterios de alerta
+                $user->alertCriteria()->delete();
+
+                // 5. Eliminar propiedades (si es agente)
+                // Iteramos para que se disparen eventos de modelo si los hubiera (ej. borrar imágenes)
+                foreach($user->properties as $property) {
+                    $property->delete();
+                }
+
+                // 6. Eliminar visitas (como cliente y como agente)
+                $user->visitsAsClient()->delete();
+                $user->visitsAsAgent()->delete();
+
+                // 7. Finalmente eliminar el usuario
+                $user->delete();
+            });
+
+            return redirect()->route('admin.users.index')->with('success', 'Usuario y todos sus datos asociados eliminados exitosamente.');
+
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users.index')->with('error', 'Ocurrió un error al eliminar el usuario: ' . $e->getMessage());
+        }
     }
 }
