@@ -68,19 +68,64 @@
     }
 
     /* ====== LOOK tipo Airbnb (modo claro) ====== */
-    .fp-shell .flatpickr-months{display:flex;background:#fff;padding:10px 0 0;}
-    .fp-shell .flatpickr-months .flatpickr-month{flex:1;color:#222;height:50px;line-height:50px;text-align:center;position:relative;}
+    .fp-shell .flatpickr-months{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fff;
+      padding:10px 0 10px;
+      margin-bottom:10px;
+      position:relative;
+    }
+    .fp-shell .flatpickr-months .flatpickr-month{
+      flex:1;
+      color:#222;
+      height:40px;
+      line-height:40px;
+      text-align:center;
+      position:relative;
+    }
+
+    /* Flechas SIEMPRE a la misma altura y centradas verticalmente */
     .fp-shell .flatpickr-months .flatpickr-prev-month,
     .fp-shell .flatpickr-months .flatpickr-next-month{
-      position:absolute;top:50%;width:20px;height:20px;margin-top:-10px;border-radius:9999px;color:#717171;fill:#717171;cursor:pointer;
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      width:32px;
+      height:32px;
+      border-radius:9999px;
+      color:#717171;
+      fill:#717171;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:background-color .2s;
+      z-index:10;
     }
-    .fp-shell .flatpickr-months .flatpickr-prev-month{left:3px;}
-    .fp-shell .flatpickr-months .flatpickr-next-month{right:3px;}
+    .fp-shell .flatpickr-months .flatpickr-prev-month{ left:0; }
+    .fp-shell .flatpickr-months .flatpickr-next-month{ right:0; }
+
     .fp-shell .flatpickr-months .flatpickr-prev-month:hover,
-    .fp-shell .flatpickr-months .flatpickr-next-month:hover{color:#222;fill:#222;}
-    .fp-shell .flatpickr-months .flatpickr-current-month{font-size:110%;}
-    .fp-shell .flatpickr-months .flatpickr-current-month .cur-month{font-weight:700;color:#222;}
-    .fp-shell .flatpickr-months .flatpickr-current-month .cur-year{font-weight:400;color:#717171;background:transparent;}
+    .fp-shell .flatpickr-months .flatpickr-next-month:hover{
+      color:#222;
+      fill:#222;
+      background-color:#f3f4f6;
+    }
+
+    .fp-shell .flatpickr-months .flatpickr-current-month{
+      font-size:110%;
+    }
+    .fp-shell .flatpickr-months .flatpickr-current-month .cur-month{
+      font-weight:700;
+      color:#222;
+    }
+    .fp-shell .flatpickr-months .flatpickr-current-month .cur-year{
+      font-weight:400;
+      color:#717171;
+      background:transparent;
+    }
 
     /* Cabecera L M M J V S D en una sola fila por mes */
     .fp-shell .flatpickr-weekdays{
@@ -105,7 +150,9 @@
     }
 
     /* Cada mes (dayContainer) = grid de 7 columnas, así no hay 8 días por fila */
-    .fp-shell .flatpickr-days{width:100%;}
+    .fp-shell .flatpickr-days{
+      width:100%;
+    }
     .fp-shell .dayContainer{
       display:grid;
       grid-template-columns:repeat(7,minmax(0,1fr));
@@ -138,6 +185,15 @@
     .fp-shell .flatpickr-day.startRange{border-radius:50% 0 0 50%}
     .fp-shell .flatpickr-day.endRange{border-radius:0 50% 50% 0}
     .fp-shell .flatpickr-day.startRange.endRange{border-radius:50%}
+
+    /* ==== Fix para que los días del mes anterior/siguiente ocupen espacio ==== */
+    .fp-shell .flatpickr-day.prevMonthDay,
+    .fp-shell .flatpickr-day.nextMonthDay {
+      display:block !important;
+      visibility:hidden !important;
+      opacity:0 !important;
+      pointer-events:none;
+    }
 
     .fp-shell .flatpickr-day.disabled,
     .fp-shell .flatpickr-day.disabled:hover{color:#d9d9d9!important;background:none!important;border-color:transparent!important;cursor:default;text-decoration:line-through}
@@ -385,6 +441,90 @@
       color:#6b7280 !important;
     }
 
+    /* ================== Custom Calendar Styles (from Chat) ================== */
+    .custom-calendar-container {
+      /* Container styles if needed */
+    }
+
+    /* Variables para colores tipo chat */
+    :root {
+      --chat-primary: #2563eb;
+    }
+    .dark {
+      --chat-primary: #60a5fa;
+    }
+
+    /* Grid EXACTO 7 columnas bajo DOM–SÁB */
+    .calendar-grid {
+      display:grid;
+      grid-template-columns:repeat(7, minmax(0,1fr));
+    }
+
+    .custom-day,
+    .custom-day--empty {
+      width:100%;
+      height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .custom-day {
+      cursor:pointer;
+      border-radius:50%;
+      font-size:14px;
+      color:#222;
+      transition:background-color .15s ease, color .15s ease;
+    }
+
+    .dark .custom-day {
+      color:#e5e7eb;
+    }
+
+    .custom-day:hover {
+      background-color:#f3f4f6;
+    }
+    .dark .custom-day:hover {
+      background-color:#1f2937;
+    }
+
+    .custom-day.bg-primary {
+      background-color:var(--chat-primary) !important;
+      color:white !important;
+    }
+
+    .custom-day.text-muted {
+      color:#9ca3af !important;
+      cursor:not-allowed;
+      opacity:.5;
+    }
+
+    /* Modal specific overrides for dark mode (visitas) */
+    .dark #visitModal > div {
+      background-color: #020617;
+      color: #e5e7eb;
+      border: 1px solid #1f2937;
+    }
+    .dark #visitModal h3 {
+      color: #e5e7eb;
+    }
+    .dark #visitModal .text-muted {
+      color: #9ca3af !important;
+    }
+    .dark #visitModal .btn-light {
+      background-color: #1f2937;
+      color: #e5e7eb;
+      border-color: #374151;
+    }
+    .dark #visitModal .btn-outline-secondary {
+      color: #9ca3af;
+      border-color: #4b5563;
+    }
+    .dark #visitModal .btn-outline-secondary:hover {
+      background-color: #374151;
+      color: #e5e7eb;
+    }
+
   </style>
 </head>
 
@@ -405,6 +545,22 @@
 @php
   $isRent = $property->listing_type === 'rent';
   $isOwner = auth()->check() && auth()->id() === $property->user_id;
+
+  // Logic for visit slots (copied from chat side-panel)
+  $visitSlots = [];
+  if (method_exists($property, 'visits')) {
+      $futureVisits = $property->visits()
+          ->whereDate('visit_date', '>=', now()->toDateString())
+          ->where('status', '!=', 'cancelled')
+          ->get();
+
+      foreach ($futureVisits as $visit) {
+          if (!$visit->visit_date) continue;
+          $date = \Illuminate\Support\Carbon::parse($visit->visit_date)->format('Y-m-d');
+          $hour = \Illuminate\Support\Carbon::parse($visit->visit_date)->format('H:i');
+          $visitSlots[$date][] = $hour;
+      }
+  }
 @endphp
 
 <main class="max-w-6xl mx-auto mt-8 md:mt-10 px-4 lg:px-0 space-y-8 md:space-y-10 mb-10">
@@ -899,21 +1055,66 @@
 </main>
 
 {{-- Modal visita --}}
-<div id="visitModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.65);z-index:1000;">
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:16px;min-width:320px;max-width:420px;padding:20px;"
+<div id="visitModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.65);z-index:1000;overflow-y:auto;">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:16px;max-width:720px;width:calc(100% - 32px);max-height:calc(100vh - 80px);overflow:auto;padding:24px;"
        class="shadow-xl">
-    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
-      <i class="fa-solid fa-calendar-day text-blue-500"></i>
-      <span>Selecciona fecha y hora para tu visita</span>
-    </h3>
-    <input type="datetime-local" id="visitDateTime" class="w-full p-2 border rounded-lg mb-4 text-sm">
-    <div class="flex gap-2 justify-end">
+    
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+      <div>
+        <h3 class="text-lg font-semibold mb-1 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+          <i class="fa-solid fa-calendar-day text-blue-500"></i>
+          <span>Selecciona fecha y horario</span>
+        </h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">
+          Primero elige un día y luego un bloque de una hora.
+        </p>
+      </div>
+    </div>
+
+    {{-- Custom Calendar Container --}}
+    <div class="custom-calendar-container mb-4">
+        <div class="flex justify-between items-center mb-2">
+            <button type="button" id="visit-prev-month" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span id="visit-month-label" class="font-bold text-gray-900 dark:text-gray-100"></span>
+            <button type="button" id="visit-next-month" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="flex text-gray-500 dark:text-gray-400 text-xs font-semibold mb-1">
+            <div style="width: 14.28%; text-align: center;">Dom</div>
+            <div style="width: 14.28%; text-align: center;">Lun</div>
+            <div style="width: 14.28%; text-align: center;">Mar</div>
+            <div style="width: 14.28%; text-align: center;">Mié</div>
+            <div style="width: 14.28%; text-align: center;">Jue</div>
+            <div style="width: 14.28%; text-align: center;">Vie</div>
+            <div style="width: 14.28%; text-align: center;">Sáb</div>
+        </div>
+        <div id="visit-calendar-grid" class="calendar-grid">
+            {{-- Days generated by JS --}}
+        </div>
+    </div>
+
+    <div class="mt-4">
+      <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
+        Horarios disponibles (bloques de 1 hora, de 8:00 a 20:00):
+      </p>
+      <div id="visitSlotsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {{-- Slots generated by JS --}}
+      </div>
+      <p id="visitNoSlotsMsg" class="text-xs text-red-500 mt-2 hidden">
+        No hay horarios disponibles para esta fecha. Prueba con otro día.
+      </p>
+    </div>
+
+    <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
       <button onclick="closeModal()"
-              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm">
+              class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 text-sm font-semibold">
         Cancelar
       </button>
-      <button onclick="scheduleVisit()"
-              class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 text-sm">
+      <button id="confirmVisitBtn" onclick="scheduleVisit()" disabled
+              class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
         Agendar visita
       </button>
     </div>
@@ -1104,27 +1305,144 @@
     window._propertyMapStyles = { light: lightMapStyle, dark: darkMapStyle };
   }
 
-  // ================== VISITAS ==================
-  function openVisitCalendar(){
-    const now=new Date();
-    const defaultDate=new Date(); defaultDate.setDate(now.getDate()+2); defaultDate.setHours(10,0,0,0);
-    const input=document.getElementById('visitDateTime');
-    input.min=now.toISOString().slice(0,16);
-    input.value=defaultDate.toISOString().slice(0,16);
-    document.getElementById('visitModal').style.display='block';
-  }
-  function closeModal(){ document.getElementById('visitModal').style.display='none'; }
-  function scheduleVisit(){
-    const visitDate=document.getElementById('visitDateTime').value;
-    if(!visitDate){
-      showFeedbackModal('Por favor selecciona una fecha y hora para agendar tu visita.', { variant: 'info', title: 'Selecciona fecha' });
-      return;
-    }
-    fetch('/visits',{
+  // ================== VISITAS (Custom Calendar) ==================
+  const visitSlots = @json($visitSlots ?? []);
+  const VISIT_SLOT_HOURS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
+  const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
+  let currentVisitDate = new Date();
+  let selectedVisitDate = null; // YYYY-MM-DD
+  let selectedVisitTime = null; // HH:MM
+
+  function openVisitCalendar(){
+    document.getElementById('visitModal').style.display='block';
+    document.body.classList.add('overflow-hidden');
+    renderVisitCalendar();
+  }
+
+  function closeModal(){
+    document.getElementById('visitModal').style.display='none';
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  function renderVisitCalendar() {
+    const grid = document.getElementById('visit-calendar-grid');
+    const label = document.getElementById('visit-month-label');
+    grid.innerHTML = '';
+
+    const year = currentVisitDate.getFullYear();
+    const month = currentVisitDate.getMonth();
+    label.textContent = `${MONTH_NAMES[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay(); // 0 = Sunday
+
+    // Padding para el mes anterior (alineado a DOM–SÁB)
+    for(let i=0; i<startDay; i++){
+      const pad = document.createElement('div');
+      pad.className = 'custom-day--empty';
+      grid.appendChild(pad);
+    }
+
+    const todayIso = new Date().toISOString().split('T')[0];
+
+    for(let d=1; d<=daysInMonth; d++){
+      const dateObj = new Date(year, month, d);
+      // ISO sin problemas de zona horaria
+      const iso = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
+
+      const el = document.createElement('div');
+      el.textContent = d;
+      el.className = 'custom-day';
+      
+      if(iso < todayIso){
+        el.classList.add('text-muted');
+      } else {
+        el.addEventListener('click', () => selectVisitDate(iso, el));
+      }
+
+      if(iso === selectedVisitDate){
+        el.classList.add('bg-primary');
+      }
+
+      grid.appendChild(el);
+    }
+  }
+
+  function selectVisitDate(iso, el){
+    // Limpiar selección previa
+    const days = document.querySelectorAll('.custom-day');
+    days.forEach(d => d.classList.remove('bg-primary'));
+    el.classList.add('bg-primary');
+    
+    selectedVisitDate = iso;
+    renderVisitSlots(iso);
+  }
+
+  function renderVisitSlots(dateStr){
+    const grid = document.getElementById('visitSlotsGrid');
+    const noSlotsMsg = document.getElementById('visitNoSlotsMsg');
+    const confirmBtn = document.getElementById('confirmVisitBtn');
+    
+    grid.innerHTML = '';
+    selectedVisitTime = null;
+    confirmBtn.disabled = true;
+
+    const booked = new Set((visitSlots[dateStr] || []).map(t => t.slice(0,5)));
+    let available = 0;
+
+    VISIT_SLOT_HOURS.forEach(time => {
+      const btn = document.createElement('button');
+      const startHour = parseInt(time.slice(0,2));
+      const endHour = startHour + 1;
+      btn.textContent = `${startHour}:00 - ${endHour}:00`;
+      // Tailwind classes
+      btn.className = 'w-full py-2 px-1 text-sm border rounded-lg transition-colors';
+      
+      if(booked.has(time)){
+        btn.disabled = true;
+        btn.classList.add('bg-gray-100', 'text-gray-400', 'cursor-not-allowed', 'dark:bg-gray-800', 'dark:text-gray-600', 'border-transparent');
+      } else {
+        available++;
+        btn.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-blue-50', 'hover:border-blue-500', 'dark:border-gray-700', 'dark:text-gray-300', 'dark:hover:bg-blue-900/30');
+        btn.addEventListener('click', () => {
+           // Deseleccionar otros
+           Array.from(grid.children).forEach(b => {
+             b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+             b.classList.add('border-gray-300', 'text-gray-700', 'dark:border-gray-700', 'dark:text-gray-300');
+           });
+           // Seleccionar este
+           btn.classList.remove('border-gray-300', 'text-gray-700', 'dark:border-gray-700', 'dark:text-gray-300', 'hover:bg-blue-50', 'dark:hover:bg-blue-900/30');
+           btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+           
+           selectedVisitTime = time;
+           confirmBtn.disabled = false;
+        });
+      }
+      grid.appendChild(btn);
+    });
+
+    if(available === 0){
+      noSlotsMsg.classList.remove('hidden');
+    } else {
+      noSlotsMsg.classList.add('hidden');
+    }
+  }
+
+  function scheduleVisit(){
+    if(!selectedVisitDate || !selectedVisitTime){
+       showFeedbackModal('Por favor selecciona una fecha y hora.', { variant: 'info' });
+       return;
+    }
+    
+    const visitDateTime = `${selectedVisitDate} ${selectedVisitTime}:00`;
+
+    fetch('/visits',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-      body:JSON.stringify({ property_id:propertyId, agent_id:{{ $property->user_id }}, visit_date:visitDate })
+      body:JSON.stringify({ property_id:propertyId, agent_id:{{ $property->user_id }}, visit_date:visitDateTime })
     }).then(r=>r.json()).then(data=>{
       if(data.success){
         showFeedbackModal('Tu visita ha sido agendada correctamente.', { title: 'Visita agendada', variant: 'success' });
@@ -1136,6 +1454,16 @@
       }
     }).catch(()=>showFeedbackModal('Error al agendar la visita. Intenta nuevamente en unos minutos.', { title: 'Error de red', variant: 'error' }));
   }
+
+  // Navigation listeners
+  document.getElementById('visit-prev-month').addEventListener('click', () => {
+    currentVisitDate.setMonth(currentVisitDate.getMonth() - 1);
+    renderVisitCalendar();
+  });
+  document.getElementById('visit-next-month').addEventListener('click', () => {
+    currentVisitDate.setMonth(currentVisitDate.getMonth() + 1);
+    renderVisitCalendar();
+  });
 
   // ================== RESERVA (Flatpickr) ==================
   let selectedRange={start:null,end:null}, fpInstance=null;
@@ -1158,7 +1486,7 @@
     const esLocale={
       weekdays:{ shorthand:['D','L','M','M','J','V','S'], longhand:['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] },
       months:{ shorthand:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'], longhand:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] },
-      firstDayOfWeek:1, rangeSeparator:' a '
+      firstDayOfWeek:0, rangeSeparator:' a '
     };
 
     const formatDate = (date) => {

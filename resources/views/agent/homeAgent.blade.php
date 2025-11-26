@@ -29,6 +29,29 @@
     <!-- Iconos -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Botón de tema: animación */
+        #theme-toggle {
+            transition: background-color .25s ease,
+                        color .25s ease,
+                        transform .25s ease,
+                        box-shadow .25s ease;
+        }
+
+        #theme-toggle.theme-bounce {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(0,0,0,.18);
+        }
+
+        #theme-toggle-icon {
+            transition: transform .35s ease, opacity .2s ease;
+        }
+
+        #theme-toggle-icon.theme-spin {
+            transform: rotate(180deg);
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 flex flex-col min-h-screen transition-colors duration-300">
@@ -204,6 +227,14 @@
                         localStorage.setItem('theme', isDark ? 'dark' : 'light');
                     } catch (e) {}
                     syncUI();
+
+                    // Animación
+                    btn.classList.add('theme-bounce');
+                    icon.classList.add('theme-spin');
+                    setTimeout(() => {
+                        btn.classList.remove('theme-bounce');
+                        icon.classList.remove('theme-spin');
+                    }, 500);
                 });
             }
         })();

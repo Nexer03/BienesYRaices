@@ -218,8 +218,11 @@
           reverseButtons: true,
           buttonsStyling: false,
           customClass: {
+            popup: 'dark:bg-gray-900 dark:border dark:border-gray-800',
+            title: 'dark:text-gray-100',
+            htmlContainer: 'dark:text-gray-300',
             confirmButton: 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg mx-2',
-            cancelButton: 'bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg'
+            cancelButton: 'bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
           }
         });
 
@@ -244,7 +247,12 @@
             title: 'Eliminada',
             text: 'Se quitó de tus favoritos.',
             timer: 1400,
-            showConfirmButton: false
+            showConfirmButton: false,
+            customClass: {
+              popup: 'dark:bg-gray-900 dark:border dark:border-gray-800',
+              title: 'dark:text-gray-100',
+              htmlContainer: 'dark:text-gray-300'
+            }
           });
 
           if (!document.querySelector('[data-fav-card]')) location.reload();
@@ -252,7 +260,14 @@
           Swal.fire({
             icon: 'error',
             title: 'Ups...',
-            text: 'No pudimos quitarla. Intenta de nuevo.'
+            text: 'No pudimos quitarla. Intenta de nuevo.',
+            buttonsStyling: false,
+            customClass: {
+              popup: 'dark:bg-gray-900 dark:border dark:border-gray-800',
+              title: 'dark:text-gray-100',
+              htmlContainer: 'dark:text-gray-300',
+              confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg'
+            }
           });
         }
       });
